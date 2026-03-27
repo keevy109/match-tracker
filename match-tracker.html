@@ -1603,7 +1603,8 @@ function updateTickerUI(data, lastScore) {
 // ─── TICKER SHARE UI ─────────────────────────────────────────────────────────
 function showTickerShare() {
   if (!activeMatchId) { showToast('Kein aktives Spiel'); return; }
-  const url = window.location.origin + window.location.pathname + '?ticker=' + activeMatchId;
+  const BASE_URL = 'https://keevy109.github.io/match-tracker/match-tracker.html';
+  const url = BASE_URL + '?ticker=' + activeMatchId;
   document.getElementById('tickerURL').textContent = url;
 
   // Generate QR code
