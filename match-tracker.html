@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Match Tracker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #191919;
+    --surface2: #222;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #666;
+    --accent: #c8f542;
+    --red: #ff4d4d;
+    --own: #f5a623;
+    --mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overscroll-behavior: none; }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  header {
+    padding: 18px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .match-meta { flex: 1; min-width: 0; }
+  .match-meta input {
+    background: none; border: none; color: var(--muted);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; width: 100%; outline: none;
+  }
+  .match-meta input::placeholder { color: #2e2e2e; }
+  .match-meta input:focus { color: var(--text); }
+
+  .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .match-date { font-family: var(--mono); font-size: 11px; color: #333; white-space: nowrap; }
+
+  /* TAB BAR */
+  .tab-bar {
+    display: flex; gap: 0; padding: 12px 20px 0; border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: none; border: none; color: #444;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 8px 16px 10px; cursor: pointer;
+    border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: #888; }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .tab-content.active { display: flex; }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    padding: 22px 20px 14px;
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 12px;
+  }
+  .team-name { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: var(--muted); text-transform: uppercase; }
+  .team-name.home { text-align: left; }
+  .team-name.away { text-align: right; }
+
+  .score-display { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  .score-num { font-family: var(--mono); font-size: 64px; font-weight: 500; line-height: 1; width: 56px; text-align: center; }
+  .score-num.home { color: var(--accent); }
+  .score-num.away { color: var(--red); }
+  .score-num.bump { animation: bump 0.25s ease; }
+  @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
+  .score-sep { font-family: var(--mono); font-size: 40px; color: #252525; line-height: 1; }
+
+  .timer-row { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 20px 14px; }
+  .timer-display { font-family: var(--mono); font-size: 28px; color: var(--text); letter-spacing: 0.05em; min-width: 80px; text-align: center; }
+  .timer-display.running { color: var(--accent); }
+
+  .btn-timer {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-timer:active { background: #222; }
+  #btnStart  { border-color: var(--accent); color: var(--accent); }
+  #btnPause  { border-color: #555; color: #888; }
+  #btnPause.active { border-color: var(--own); color: var(--own); }
+  #btnReset  { border-color: #2a2a2a; color: #444; font-size: 15px; }
+
+  .minute-input-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 20px 4px; }
+  .minute-input-row label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .minute-input-row input[type=number] {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--mono); font-size: 16px; width: 64px; text-align: center;
+    padding: 6px 8px; border-radius: 6px; outline: none; -moz-appearance: textfield;
+  }
+  .minute-input-row input[type=number]::-webkit-inner-spin-button { display: none; }
+  .minute-input-row input[type=number]:focus { border-color: var(--accent); }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 20px 14px; }
+
+  .goal-section { padding: 0 20px; }
+  .section-label {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 10px;
+  }
+
+  .goal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .btn-goal {
+    border: none; border-radius: 10px; padding: 18px 14px; font-family: var(--sans);
+    cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+    transition: opacity 0.1s, transform 0.1s;
+  }
+  .btn-goal:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-goal .btn-label { font-size: 11px; font-weight: 400; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.06em; }
+  .btn-goal .btn-main { font-size: 17px; font-weight: 700; }
+  .btn-home { background: var(--accent); color: #0f0f0f; }
+  .btn-away { background: var(--red); color: #fff; }
+
+  .events-section { flex: 1; padding: 0 20px 14px; overflow-y: auto; min-height: 80px; }
+  .events-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .events-header span { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .btn-clear { background: none; border: none; color: #3a3a3a; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: color 0.1s; }
+  .btn-clear:hover { color: var(--red); }
+
+  .events-list { display: flex; flex-direction: column; gap: 6px; }
+  .event-item {
+    display: grid; grid-template-columns: 38px 1fr auto auto;
+    align-items: center; gap: 10px; padding: 9px 12px;
+    background: var(--surface); border-radius: 8px; border-left: 3px solid transparent;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+  .event-item.home { border-left-color: var(--accent); }
+  .event-item.away { border-left-color: var(--red); }
+  .event-item.own  { border-left-color: var(--own); }
+  .event-min { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: right; }
+  .event-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .event-scorer { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+  .event-score { font-family: var(--mono); font-size: 13px; color: #555; white-space: nowrap; }
+  .event-delete { background: none; border: none; color: #2a2a2a; cursor: pointer; font-size: 18px; padding: 0 2px; line-height: 1; transition: color 0.1s; }
+  .event-delete:hover { color: var(--red); }
+  .empty-state { text-align: center; color: #2e2e2e; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; padding: 28px 0; }
+
+  /* EXPORT ROW */
+  .export-row { display: flex; gap: 8px; padding: 0 20px 10px; }
+  .btn-export {
+    flex: 1; background: none; border: 1px solid #1e1e1e; color: #444;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 10px; border-radius: 8px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-export:hover { border-color: #444; color: var(--text); }
+
+  .reset-row { padding: 0 20px 24px; display: flex; gap: 8px; }
+  .btn-reset {
+    flex: 1; background: none; border: 1px solid #1a1a1a; color: #333;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 12px; border-radius: 8px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-reset:hover { border-color: var(--red); color: var(--red); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #2a2a2a; color: var(--text); font-family: var(--mono); font-size: 13px;
+    padding: 10px 20px; border-radius: 8px; z-index: 500;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* BOTTOM SHEET (Player Picker) */
+  .sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+  }
+  .sheet-overlay.active { opacity: 1; pointer-events: all; }
+
+  .bottom-sheet {
+    position: fixed; bottom: 0; left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    width: 100%; max-width: 480px; background: #141414;
+    border-radius: 18px 18px 0 0; z-index: 101;
+    transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+    max-height: 78svh; display: flex; flex-direction: column;
+  }
+  .bottom-sheet.active { transform: translateX(-50%) translateY(0); }
+
+  .sheet-handle { width: 36px; height: 4px; background: #2e2e2e; border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+  .sheet-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; padding: 14px 20px 10px; flex-shrink: 0; }
+
+  .sheet-search {
+    margin: 0 20px 10px; flex-shrink: 0;
+    background: var(--surface2); border: 1px solid #2e2e2e; color: var(--text);
+    font-family: var(--sans); font-size: 16px; padding: 10px 14px;
+    border-radius: 8px; outline: none; width: calc(100% - 40px);
+  }
+  .sheet-search:focus { border-color: #444; }
+  .sheet-search::placeholder { color: #3a3a3a; }
+
+  .sheet-players { overflow-y: auto; flex: 1; padding: 4px 12px 8px; }
+  .player-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+
+  .player-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 8px; cursor: pointer; text-align: center;
+    transition: background 0.1s, border-color 0.1s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .player-btn:active { transform: scale(0.95); }
+  .player-btn.selected { background: #1b280a; border-color: var(--accent); }
+  .player-btn.own-goal-btn { background: #241c0a; border-color: #3a3010; }
+  .player-btn.own-goal-btn .p-name { color: var(--own); }
+  .player-btn.own-goal-btn .p-num { color: #8a7030; }
+  .p-num { font-family: var(--mono); font-size: 11px; color: #555; }
+  .p-name { font-size: 13px; font-weight: 500; line-height: 1.2; word-break: break-word; color: var(--text); }
+  .player-btn.selected .p-name { color: var(--accent); }
+  .player-btn.selected .p-num  { color: #7aaa20; }
+
+  .sheet-no-players { text-align: center; color: #333; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; padding: 32px 20px; line-height: 2.2; }
+  .sheet-no-players a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+  .sheet-footer { padding: 12px 20px 20px; border-top: 1px solid #1e1e1e; flex-shrink: 0; display: flex; gap: 8px; }
+  .btn-sheet-cancel { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-family: var(--sans); font-size: 15px; padding: 14px 20px; border-radius: 10px; cursor: pointer; }
+
+  /* KADER TAB */
+  .kader-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .kader-add-row { display: flex; gap: 8px; padding: 16px 20px; flex-shrink: 0; border-bottom: 1px solid #191919; }
+  .kader-add-row input {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--sans); font-size: 16px; padding: 10px 14px;
+    border-radius: 8px; outline: none; flex: 1; min-width: 0;
+  }
+  .kader-add-row input:focus { border-color: #444; }
+  .kader-add-row input::placeholder { color: #3a3a3a; }
+  .kader-num-input { width: 60px !important; flex: none !important; font-family: var(--mono) !important; text-align: center; -moz-appearance: textfield; }
+  .kader-num-input::-webkit-inner-spin-button { display: none; }
+  .btn-add-player { background: var(--accent); border: none; color: #0f0f0f; font-size: 22px; font-weight: 700; width: 44px; height: 44px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  .kader-list { flex: 1; overflow-y: auto; padding: 8px 20px 20px; }
+  .kader-player-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: var(--surface); border-radius: 8px; margin-bottom: 6px; animation: slideIn 0.2s ease; }
+  .kader-player-num { font-family: var(--mono); font-size: 13px; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
+  .kader-player-name { flex: 1; font-size: 15px; font-weight: 500; }
+  .btn-remove-player { background: none; border: none; color: #2e2e2e; cursor: pointer; font-size: 20px; padding: 0 4px; line-height: 1; transition: color 0.1s; }
+  .btn-remove-player:hover { color: var(--red); }
+  .kader-empty { text-align: center; color: #2e2e2e; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; padding: 40px 0; }
+
+  /* SPIELPLAN TAB */
+  .spielplan-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .spielplan-add { padding: 16px 20px; border-bottom: 1px solid #191919; flex-shrink: 0; }
+  .spielplan-add-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+  .spielplan-form { display: flex; flex-direction: column; gap: 8px; }
+  .spielplan-form-row { display: flex; gap: 8px; }
+  .spielplan-form input, .spielplan-form select {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--sans); font-size: 14px; padding: 10px 12px;
+    border-radius: 8px; outline: none; flex: 1; min-width: 0;
+  }
+  .spielplan-form input:focus, .spielplan-form select:focus { border-color: #444; }
+  .spielplan-form input::placeholder { color: #3a3a3a; }
+  .spielplan-form select { cursor: pointer; -webkit-appearance: none; }
+  .spielplan-form input[type=date], .spielplan-form input[type=time] { font-family: var(--mono); font-size: 13px; color-scheme: dark; }
+  .btn-add-match {
+    background: var(--accent); border: none; color: #0f0f0f;
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
+    padding: 12px; border-radius: 8px; cursor: pointer; width: 100%;
+    transition: opacity 0.15s;
+  }
+  .btn-add-match:disabled { opacity: 0.25; cursor: default; }
+
+  .spielplan-list { flex: 1; overflow-y: auto; padding: 12px 20px 20px; }
+  .spielplan-item {
+    background: var(--surface); border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 8px; border-left: 3px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .spielplan-item.has-result { border-left-color: var(--accent); }
+  .spielplan-item.is-loss { border-left-color: var(--red); }
+  .spielplan-item.is-draw { border-left-color: var(--own); }
+  .spielplan-item-top { display: flex; justify-content: space-between; align-items: center; }
+  .spielplan-teams { font-size: 14px; font-weight: 600; }
+  .spielplan-result { font-family: var(--mono); font-size: 16px; font-weight: 700; }
+  .spielplan-result.win { color: var(--accent); }
+  .spielplan-result.loss { color: var(--red); }
+  .spielplan-result.draw { color: var(--own); }
+  .spielplan-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+  .spielplan-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .btn-start-match {
+    background: none; border: 1px solid var(--accent); color: var(--accent);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-start-match:hover { background: #1b280a; }
+  .btn-delete-match {
+    background: none; border: 1px solid #1e1e1e; color: #333;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: color 0.15s;
+  }
+  .btn-delete-match:hover { color: var(--red); border-color: var(--red); }
+  .spielplan-empty { text-align: center; color: #2e2e2e; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; padding: 40px 0; }
+
+  /* SETUP WIZARD */
+  .setup-overlay {
+    position: fixed; inset: 0; background: var(--bg); z-index: 400;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 24px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    max-width: 480px; margin: 0 auto;
+  }
+  .setup-overlay.active { opacity: 1; pointer-events: all; }
+
+  .setup-step { width: 100%; display: none; flex-direction: column; gap: 20px; }
+  .setup-step.active { display: flex; }
+
+  .setup-label {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    letter-spacing: 0.1em; text-transform: uppercase; text-align: center;
+  }
+  .setup-title { font-size: 22px; font-weight: 700; text-align: center; line-height: 1.3; }
+
+  .setup-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .setup-option {
+    background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
+    padding: 22px 16px; cursor: pointer; text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .setup-option:active { transform: scale(0.97); }
+  .setup-option.selected { border-color: var(--accent); background: #1b280a; }
+  .setup-option .opt-icon { font-size: 28px; }
+  .setup-option .opt-label { font-size: 14px; font-weight: 600; }
+  .setup-option .opt-sub { font-size: 12px; color: var(--muted); }
+
+  .setup-input {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--sans); font-size: 20px; font-weight: 500;
+    padding: 14px 18px; border-radius: 10px; outline: none; width: 100%; text-align: center;
+  }
+  .setup-input:focus { border-color: #555; }
+  .setup-input::placeholder { color: #3a3a3a; font-size: 16px; font-weight: 400; }
+
+  .setup-hint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.5; }
+
+  .btn-setup-next {
+    background: var(--accent); border: none; color: #0f0f0f;
+    font-family: var(--sans); font-size: 16px; font-weight: 700;
+    padding: 16px; border-radius: 12px; cursor: pointer; width: 100%;
+    transition: opacity 0.15s;
+  }
+  .btn-setup-next:disabled { opacity: 0.25; cursor: default; }
+
+  /* CONFIRM */
+  .confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .confirm-overlay.active { opacity: 1; pointer-events: all; }
+  .confirm-box { background: #191919; border: 1px solid #2e2e2e; border-radius: 14px; padding: 28px 24px 20px; max-width: 340px; width: 100%; text-align: center; }
+  .confirm-icon { font-size: 32px; margin-bottom: 12px; }
+  .confirm-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .confirm-msg { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 22px; }
+  .confirm-btns { display: flex; gap: 8px; }
+  .btn-confirm-yes { flex: 1; background: var(--red); border: none; color: #fff; font-family: var(--sans); font-size: 15px; font-weight: 600; padding: 13px; border-radius: 10px; cursor: pointer; }
+  .btn-confirm-no  { flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 15px; padding: 13px; border-radius: 10px; cursor: pointer; }
+
+  /* Hidden canvas for export */
+  #exportCanvas { display: none; }
+
+  /* ─── TICKER MODE ─────────────────────────────────────────────────── */
+  body.ticker-mode header,
+  body.ticker-mode .tab-bar,
+  body.ticker-mode .goal-section,
+  body.ticker-mode .timer-row,
+  body.ticker-mode .minute-row,
+  body.ticker-mode .export-row,
+  body.ticker-mode .reset-row,
+  body.ticker-mode .event-delete,
+  body.ticker-mode .events-header,
+  body.ticker-mode .setup-overlay,
+  body.ticker-mode .confirm-overlay { display: none !important; }
+
+  .ticker-header {
+    display: none;
+    text-align: center;
+    padding: 16px 16px 0;
+  }
+  body.ticker-mode .ticker-header { display: block; }
+
+  .ticker-live-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--red); text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .ticker-live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red);
+    animation: livePulse 1.5s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.7); }
+  }
+  .ticker-date {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    margin-bottom: 2px;
+  }
+  .ticker-updated {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    text-align: center; padding: 16px 0 24px;
+  }
+
+  body.ticker-mode .scoreboard { margin-top: 8px; }
+  body.ticker-mode .score { font-size: 80px; }
+  body.ticker-mode .team-name { font-size: 15px; }
+  body.ticker-mode .events-section { padding-top: 8px; }
+  body.ticker-mode .event-item { cursor: default; }
+
+  /* Ticker overlay for sharing */
+  .ticker-share-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .ticker-share-overlay.active { opacity: 1; pointer-events: all; }
+  .ticker-share-box {
+    background: #191919; border: 1px solid #2e2e2e; border-radius: 14px;
+    padding: 24px; max-width: 340px; width: 100%; text-align: center;
+  }
+  .ticker-share-box h3 {
+    font-size: 17px; font-weight: 700; margin-bottom: 16px;
+  }
+  .ticker-qr { margin: 16px auto; background: #fff; padding: 12px; border-radius: 8px; display: inline-block; }
+  .ticker-qr canvas { display: block; }
+  .ticker-url {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    word-break: break-all; margin: 12px 0; padding: 10px;
+    background: var(--surface2); border-radius: 8px;
+  }
+  .ticker-share-btns { display: flex; gap: 8px; margin-top: 16px; }
+  .ticker-share-btns button {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .btn-ticker-copy { background: var(--accent); color: #000; }
+  .btn-ticker-close { background: var(--surface2); border: 1px solid var(--border) !important; color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- Ticker header (only visible in ticker mode) -->
+<div class="ticker-header">
+  <div class="ticker-live-badge"><div class="ticker-live-dot"></div> LIVE</div>
+  <div class="ticker-date" id="tickerDate"></div>
+</div>
+
+<header>
+  <div class="match-meta">
+    <input type="text" id="matchTitle" placeholder="Heimteam vs. Gegner" maxlength="40" oninput="save()" />
+  </div>
+  <div class="header-right">
+    <div class="match-date" id="matchDate"></div>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('spiel')">Spiel</button>
+  <button class="tab-btn" onclick="switchTab('kader')">Kader</button>
+  <button class="tab-btn" onclick="switchTab('spielplan')">Spielplan</button>
+</nav>
+
+<!-- ═══ TAB: SPIEL ═══ -->
+<section class="tab-content active" id="tabSpiel">
+
+  <div class="scoreboard">
+    <div class="team-name home">Heim</div>
+    <div class="score-display">
+      <div class="score-num home" id="scoreHome">0</div>
+      <div class="score-sep">:</div>
+      <div class="score-num away" id="scoreAway">0</div>
+    </div>
+    <div class="team-name away">Gast</div>
+  </div>
+
+  <div class="timer-row">
+    <button class="btn-timer" id="btnStart" onclick="startTimer()" title="Start">▶</button>
+    <button class="btn-timer" id="btnPause" onclick="pauseTimer()" title="Pause">⏸</button>
+    <div class="timer-display" id="timerDisplay">00:00</div>
+    <button class="btn-timer" id="btnReset" onclick="resetTimer()" title="Reset">↺</button>
+  </div>
+
+  <div class="minute-input-row">
+    <label>Minute:</label>
+    <input type="number" id="minuteInput" value="1" min="1" max="120" oninput="save()" />
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="goal-section">
+    <span class="section-label">Tor erfassen</span>
+    <div class="goal-btns">
+      <button class="btn-goal btn-home" id="btnGoalOurs" onclick="handleOurGoal()">
+        <span class="btn-label">Tor</span><span class="btn-main">Heim ⚽</span>
+      </button>
+      <button class="btn-goal btn-away" id="btnGoalTheirs" onclick="handleTheirGoal()">
+        <span class="btn-label">Gegentor</span><span class="btn-main">Gast ⚽</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="events-section">
+    <div class="events-header">
+      <span>Tore</span>
+      <button class="btn-clear" onclick="confirmAction('tore')">Alle löschen</button>
+    </div>
+    <div class="events-list" id="eventsList">
+      <div class="empty-state" id="emptyState">Noch keine Tore</div>
+    </div>
+  </div>
+
+  <div class="export-row">
+    <button class="btn-export" onclick="exportText()">Text kopieren</button>
+    <button class="btn-export" onclick="exportImage()">Bild teilen</button>
+    <button class="btn-export" onclick="showTickerShare()" id="btnTickerShare" style="display:none">📡 Live-Ticker</button>
+  </div>
+
+  <div class="reset-row">
+    <button class="btn-reset" id="btnEndMatch" onclick="confirmAction('beenden')" style="display:none">Spiel beenden</button>
+    <button class="btn-reset" onclick="confirmAction('spiel')">Neues Spiel</button>
+  </div>
+
+</section>
+
+<!-- ═══ TAB: KADER ═══ -->
+<section class="tab-content" id="tabKader">
+  <div class="kader-section">
+    <div class="kader-add-row">
+      <input type="number" class="kader-num-input" id="newPlayerNum" placeholder="#" min="1" max="99" />
+      <input type="text" id="newPlayerName" placeholder="Name des Spielers" maxlength="30"
+        onkeydown="if(event.key==='Enter')addPlayer()" />
+      <button class="btn-add-player" onclick="addPlayer()">+</button>
+    </div>
+    <div class="kader-list" id="kaderList"></div>
+  </div>
+</section>
+
+<!-- ═══ TAB: SPIELPLAN ═══ -->
+<section class="tab-content" id="tabSpielplan">
+  <div class="spielplan-section">
+    <div class="spielplan-add">
+      <div class="spielplan-add-title">Spiel hinzufügen</div>
+      <div class="spielplan-form">
+        <input type="text" id="spGegner" placeholder="Gegner" maxlength="40" oninput="validateSpForm()" />
+        <div class="spielplan-form-row">
+          <select id="spVenue" onchange="validateSpForm()">
+            <option value="home">Heimspiel</option>
+            <option value="away">Auswärts</option>
+          </select>
+        </div>
+        <div class="spielplan-form-row">
+          <input type="date" id="spDate" />
+          <input type="time" id="spTime" />
+        </div>
+        <button class="btn-add-match" id="btnAddMatch" onclick="addScheduleMatch()" disabled>Hinzufügen</button>
+      </div>
+    </div>
+    <div class="spielplan-list" id="spielplanList">
+      <div class="spielplan-empty">Noch keine Spiele geplant</div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAYER PICKER -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closePicker()"></div>
+<div class="bottom-sheet" id="pickerSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Torschütze wählen</div>
+  <input class="sheet-search" id="sheetSearch" type="text" placeholder="Name oder Nummer…" oninput="renderPickerPlayers()" autocomplete="off" />
+  <div class="sheet-players">
+    <div class="player-grid" id="playerGrid"></div>
+    <div class="sheet-no-players" id="sheetEmpty" style="display:none">
+      Kein Kader hinterlegt.<br>
+      <a onclick="closePicker();switchTab('kader')">Jetzt Spieler anlegen</a>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button class="btn-sheet-cancel" onclick="pickAndScore(null)" style="flex:1">Ohne Torschütze</button>
+  </div>
+</div>
+
+<!-- SETUP WIZARD -->
+<div class="setup-overlay" id="setupOverlay" style="opacity:0;pointer-events:none">
+  <div class="setup-step active" id="setupStep1">
+    <div class="setup-label">Spieltag-Setup</div>
+    <div class="setup-title">Wo spielt der<br>SSV Berghausen?</div>
+    <div class="setup-options">
+      <div class="setup-option" id="optHome" onclick="selectVenue('home')">
+        <span class="opt-icon">🏠</span>
+        <span class="opt-label">Heimspiel</span>
+        <span class="opt-sub">Wir sind Heim</span>
+      </div>
+      <div class="setup-option" id="optAway" onclick="selectVenue('away')">
+        <span class="opt-icon">🚌</span>
+        <span class="opt-label">Auswärts</span>
+        <span class="opt-sub">Wir sind Gast</span>
+      </div>
+    </div>
+    <button class="btn-setup-next" id="btnStep1Next" onclick="goStep(2)" disabled>Weiter</button>
+  </div>
+
+  <div class="setup-step" id="setupStep2">
+    <div class="setup-label">Spieltag-Setup</div>
+    <div class="setup-title">Wer ist der Gegner?</div>
+    <input class="setup-input" id="opponentInput" type="text" placeholder="Vereinsname…" maxlength="40"
+      oninput="document.getElementById('btnStep2Next').disabled = !this.value.trim()"
+      onkeydown="if(event.key==='Enter' && this.value.trim()) goToSquadOrFinish()" />
+    <button class="btn-setup-next" id="btnStep2Next" onclick="goToSquadOrFinish()" disabled>Weiter</button>
+  </div>
+
+  <div class="setup-step" id="setupStep3">
+    <div class="setup-label">Einmalig</div>
+    <div class="setup-title">Kader anlegen</div>
+    <div class="setup-hint">Trage deine Spieler ein. Dieser Schritt erscheint nur einmal.</div>
+    <div style="display:flex;gap:8px;">
+      <input type="number" class="kader-num-input setup-input" id="setupPlayerNum" placeholder="#" min="1" max="99"
+        style="width:70px;font-size:16px;flex:none;" />
+      <input type="text" id="setupPlayerName" class="setup-input" placeholder="Name" maxlength="30" style="flex:1;text-align:left;"
+        onkeydown="if(event.key==='Enter') addSetupPlayer()" />
+      <button class="btn-add-player" onclick="addSetupPlayer()" style="flex-shrink:0">+</button>
+    </div>
+    <div id="setupSquadPreview" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+    <button class="btn-setup-next" onclick="finishSetup()">Los geht's ⚽</button>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle"></div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="btn-confirm-no" onclick="closeConfirm()">Abbrechen</button>
+      <button class="btn-confirm-yes" id="btnConfirmYes">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<!-- Ticker: last updated (only visible in ticker mode) -->
+<div class="ticker-updated" id="tickerUpdated"></div>
+
+<!-- Ticker share overlay -->
+<div class="ticker-share-overlay" id="tickerShareOverlay">
+  <div class="ticker-share-box">
+    <h3>📡 Live-Ticker teilen</h3>
+    <div class="ticker-qr" id="tickerQR"></div>
+    <div class="ticker-url" id="tickerURL"></div>
+    <div class="ticker-share-btns">
+      <button class="btn-ticker-copy" onclick="copyTickerURL()">Link kopieren</button>
+      <button class="btn-ticker-close" onclick="closeTickerShare()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="exportCanvas"></canvas>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let homeScore = 0, awayScore = 0;
+let events = [], squad = [], schedule = [];
+let confirmCallback = null;
+let isHomeTeam = true;
+let setupVenue = null;
+let activeMatchId = null; // links to schedule entry
+
+// Timer: wall-clock approach
+let timerBase   = null;
+let timerOffset = 0;
+let timerRAF    = null;
+
+function elapsedSeconds() {
+  if (timerBase === null) return timerOffset;
+  return timerOffset + Math.floor((Date.now() - timerBase) / 1000);
+}
+
+const OUR_TEAM = 'SSV Berghausen';
+
+// ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', b.textContent.toLowerCase().replace('ü','u') === name.replace('ü','u') ||
+      ['spiel','kader','spielplan'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+  const tab = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (tab) tab.classList.add('active');
+  if (name === 'kader') setTimeout(() => document.getElementById('newPlayerName')?.focus(), 100);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  // Skip normal init in ticker mode
+  if (new URLSearchParams(window.location.search).get('ticker')) return;
+  try {
+    const d = JSON.parse(localStorage.getItem('matchtracker_v3') || 'null');
+    if (d) {
+      homeScore     = d.homeScore     || 0;
+      awayScore     = d.awayScore     || 0;
+      events        = d.events        || [];
+      squad         = d.squad         || [];
+      schedule      = d.schedule      || [];
+      timerOffset   = d.timerOffset   || 0;
+      timerBase     = d.timerBase     || null;
+      isHomeTeam    = d.isHomeTeam    !== undefined ? d.isHomeTeam : true;
+      activeMatchId = d.activeMatchId || null;
+      document.getElementById('matchTitle').value  = d.matchTitle || '';
+      document.getElementById('minuteInput').value = d.minute     || 1;
+
+      if (!d.matchReady) {
+        openSetup(squad.length > 0);
+      } else {
+        updateScoreLabels();
+        updateGoalButtons();
+        closeSetup();
+      }
+    } else {
+      openSetup(false);
+    }
+  } catch(e) {
+    openSetup(false);
+  }
+
+  document.getElementById('matchDate').textContent =
+    new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  if (timerBase !== null) {
+    startTimerLoop();
+    document.getElementById('timerDisplay').classList.add('running');
+    document.getElementById('btnPause').classList.add('active');
+  } else {
+    updateTimerDisplay();
+  }
+
+  updateScore(false);
+  renderEvents();
+  renderKaderList();
+  renderSpielplan();
+  updateEndMatchBtn();
+
+  // Auto-start: Wenn heutiges Datum im Spielplan matched und kein Spiel aktiv
+  if (!activeMatchId) {
+    const today = new Date().toISOString().slice(0, 10);
+    const todayMatch = schedule.find(m => m.date === today && !m.result);
+    if (todayMatch) {
+      startMatchFromSchedule(todayMatch.id);
+    }
+  }
+})();
+
+// ─── PERSIST ──────────────────────────────────────────────────────────────────
+function save(matchReady) {
+  try {
+    const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
+    localStorage.setItem('matchtracker_v3', JSON.stringify({
+      ...existing,
+      homeScore, awayScore, events, squad, schedule,
+      timerOffset: elapsedSeconds(),
+      timerBase,
+      isHomeTeam,
+      activeMatchId,
+      matchTitle: document.getElementById('matchTitle').value,
+      minute:     document.getElementById('minuteInput').value,
+      matchReady: matchReady !== undefined ? matchReady : (existing.matchReady || false),
+    }));
+    syncToFirebase();
+  } catch(e) {}
+}
+
+// ─── TIMER ────────────────────────────────────────────────────────────────────
+function startTimerLoop() {
+  if (timerRAF) return;
+  let lastSec = -1;
+  function tick() {
+    const sec = elapsedSeconds();
+    if (sec !== lastSec) {
+      lastSec = sec;
+      updateTimerDisplay();
+      document.getElementById('minuteInput').value = Math.min(Math.floor(sec / 60) + 1, 120);
+    }
+    timerRAF = requestAnimationFrame(tick);
+  }
+  timerRAF = requestAnimationFrame(tick);
+}
+
+function stopTimerLoop() {
+  if (timerRAF) { cancelAnimationFrame(timerRAF); timerRAF = null; }
+}
+
+function startTimer() {
+  if (timerBase !== null) return;
+  timerBase = Date.now();
+  startTimerLoop();
+  document.getElementById('timerDisplay').classList.add('running');
+  document.getElementById('btnPause').classList.add('active');
+  save();
+}
+
+function pauseTimer() {
+  if (timerBase === null) return;
+  timerOffset = elapsedSeconds();
+  timerBase   = null;
+  stopTimerLoop();
+  updateTimerDisplay();
+  document.getElementById('timerDisplay').classList.remove('running');
+  document.getElementById('btnPause').classList.remove('active');
+  save();
+}
+
+function resetTimer() {
+  timerBase   = null;
+  timerOffset = 0;
+  stopTimerLoop();
+  updateTimerDisplay();
+  document.getElementById('timerDisplay').classList.remove('running');
+  document.getElementById('btnPause').classList.remove('active');
+  document.getElementById('minuteInput').value = 1;
+  save();
+}
+
+function updateTimerDisplay() {
+  const sec = elapsedSeconds();
+  const m = Math.floor(sec / 60), s = sec % 60;
+  document.getElementById('timerDisplay').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+document.addEventListener('visibilitychange', () => { save(); });
+window.addEventListener('pagehide', () => { save(); });
+
+// ─── GOAL BUTTONS ─────────────────────────────────────────────────────────────
+function updateGoalButtons() {
+  const title = document.getElementById('matchTitle').value;
+  const parts = title.split(/\s+vs\.?\s+/i);
+  const homeName = parts[0]?.trim() || 'Heim';
+  const awayName = parts[1]?.trim() || 'Gast';
+
+  const btnOurs = document.getElementById('btnGoalOurs');
+  const btnTheirs = document.getElementById('btnGoalTheirs');
+
+  const container = btnOurs.parentElement;
+
+  if (isHomeTeam) {
+    // Heim: unser Button links (grün), Gegner rechts (rot)
+    btnOurs.querySelector('.btn-main').textContent = homeName + ' ⚽';
+    btnOurs.querySelector('.btn-label').textContent = 'Tor';
+    btnOurs.className = 'btn-goal btn-home';
+    btnTheirs.querySelector('.btn-main').textContent = awayName + ' ⚽';
+    btnTheirs.querySelector('.btn-label').textContent = 'Gegentor';
+    btnTheirs.className = 'btn-goal btn-away';
+    container.insertBefore(btnOurs, btnTheirs);
+  } else {
+    // Auswärts: Gegner links (grün/home), unser Button rechts (rot/away)
+    btnTheirs.querySelector('.btn-main').textContent = homeName + ' ⚽';
+    btnTheirs.querySelector('.btn-label').textContent = 'Gegentor';
+    btnTheirs.className = 'btn-goal btn-home';
+    btnOurs.querySelector('.btn-main').textContent = OUR_TEAM + ' ⚽';
+    btnOurs.querySelector('.btn-label').textContent = 'Tor';
+    btnOurs.className = 'btn-goal btn-away';
+    container.insertBefore(btnTheirs, btnOurs);
+  }
+}
+
+function handleOurGoal() {
+  // Our team scores → open picker (with Eigentor option)
+  const team = isHomeTeam ? 'home' : 'away';
+  openPickerForGoal(team, false);
+}
+
+function handleTheirGoal() {
+  // Opponent scores → direct entry, no name
+  const team = isHomeTeam ? 'away' : 'home';
+  addGoal(team, false, null);
+}
+
+// ─── PICKER + GOALS ───────────────────────────────────────────────────────────
+let pendingGoal = null;
+
+function openPickerForGoal(team, isOwnGoal) {
+  pendingGoal = { team, isOwnGoal };
+  document.getElementById('sheetSearch').value = '';
+  renderPickerPlayers();
+  document.getElementById('sheetOverlay').classList.add('active');
+  document.getElementById('pickerSheet').classList.add('active');
+}
+
+function closePicker() {
+  document.getElementById('sheetOverlay').classList.remove('active');
+  document.getElementById('pickerSheet').classList.remove('active');
+  pendingGoal = null;
+}
+
+function pickAndScore(player) {
+  if (!pendingGoal) return;
+  const { team, isOwnGoal } = pendingGoal;
+  closePicker();
+  addGoal(team, isOwnGoal, player);
+}
+
+function pickOwnGoal() {
+  if (!pendingGoal) return;
+  // Own goal: the OTHER team gets the point
+  const ourTeam = pendingGoal.team;
+  const otherTeam = ourTeam === 'home' ? 'away' : 'home';
+  closePicker();
+  addGoal(otherTeam, true, null);
+}
+
+function renderPickerPlayers() {
+  const q     = document.getElementById('sheetSearch').value.toLowerCase();
+  const grid  = document.getElementById('playerGrid');
+  const empty = document.getElementById('sheetEmpty');
+  if (!grid) return;
+  if (squad.length === 0) {
+    grid.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  grid.innerHTML = '';
+
+  // Eigentor option at top (only if search is empty or matches)
+  const etMatch = !q || 'eigentor'.includes(q) || 'et'.includes(q);
+  if (etMatch) {
+    const etBtn = document.createElement('button');
+    etBtn.className = 'player-btn own-goal-btn';
+    etBtn.innerHTML = '<span class="p-num">ET</span><span class="p-name">Eigentor</span>';
+    etBtn.onclick = () => pickOwnGoal();
+    grid.appendChild(etBtn);
+  }
+
+  const list = squad
+    .filter(p => p.name.toLowerCase().includes(q) || String(p.num||'').includes(q))
+    .sort((a,b) => (a.num||999)-(b.num||999));
+  list.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'player-btn';
+    btn.innerHTML = `<span class="p-num">${p.num ? '#'+p.num : '&nbsp;'}</span><span class="p-name">${esc(p.name)}</span>`;
+    btn.onclick = () => pickAndScore(p);
+    grid.appendChild(btn);
+  });
+}
+
+function addGoal(team, isOwnGoal, player) {
+  const minute = parseInt(document.getElementById('minuteInput').value) || 1;
+  if (team==='home') homeScore++; else awayScore++;
+  events.unshift({
+    id: Date.now(), team, isOwnGoal, minute,
+    scorer:    player ? player.name : '—',
+    scorerNum: player?.num || null,
+    snapshot:  `${homeScore}:${awayScore}`
+  });
+  updateScore(true); renderEvents(); save();
+}
+
+function deleteEvent(id) {
+  const idx = events.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  if (events[idx].team==='home') homeScore = Math.max(0,homeScore-1);
+  else awayScore = Math.max(0,awayScore-1);
+  events.splice(idx,1);
+  let h=0,a=0;
+  [...events].sort((x,y)=>x.id-y.id).forEach(ev => {
+    if (ev.team==='home') h++; else a++;
+    ev.snapshot = `${h}:${a}`;
+  });
+  homeScore=h; awayScore=a;
+  updateScore(true); renderEvents(); save();
+}
+
+function updateScore(animate) {
+  const h = document.getElementById('scoreHome');
+  const a = document.getElementById('scoreAway');
+  h.textContent = homeScore; a.textContent = awayScore;
+  if (animate) {
+    h.classList.remove('bump'); a.classList.remove('bump');
+    void h.offsetWidth;
+    h.classList.add('bump'); a.classList.add('bump');
+  }
+}
+
+function renderEvents() {
+  const list = document.getElementById('eventsList');
+  if (!list) return;
+  if (events.length === 0) {
+    list.innerHTML = '<div class="empty-state">Noch keine Tore</div>';
+    return;
+  }
+  list.innerHTML = '';
+  const title = document.getElementById('matchTitle').value;
+  const parts = title.split(/\s+vs\.?\s+/i);
+  const homeName = parts[0]?.trim() || 'Heim';
+  const awayName = parts[1]?.trim() || 'Gast';
+
+  [...events].sort((a,b) => b.id - a.id).forEach(e => {
+    const cls = e.isOwnGoal ? 'own' : e.team;
+    const tag = e.isOwnGoal ? 'Eigentor' : (e.team==='home' ? homeName : awayName);
+    const numTag = e.scorerNum ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:5px">#${e.scorerNum}</span>` : '';
+    const item = document.createElement('div');
+    item.className = `event-item ${cls}`;
+    item.innerHTML = `
+      <div class="event-min">${e.minute}'</div>
+      <div class="event-info">
+        <div class="event-scorer">${numTag}${esc(e.scorer)}</div>
+        <div class="event-tag">${tag}</div>
+      </div>
+      <div class="event-score">${e.snapshot}</div>
+      <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`;
+    list.appendChild(item);
+  });
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+function getMatchTeams() {
+  const title = document.getElementById('matchTitle').value;
+  const parts = title.split(/\s+vs\.?\s+/i);
+  return { home: parts[0]?.trim() || 'Heim', away: parts[1]?.trim() || 'Gast' };
+}
+
+function exportText() {
+  const { home, away } = getMatchTeams();
+  let text = `${home} ${homeScore}:${awayScore} ${away}\n\n`;
+  const sorted = [...events].sort((a,b) => b.id - a.id);
+  sorted.forEach(e => {
+    const name = (e.scorer && e.scorer !== '—') ? ` ${e.scorer}` : '';
+    text += `${e.snapshot} ${e.minute}'${name}\n`;
+  });
+  navigator.clipboard.writeText(text.trim()).then(() => {
+    showToast('Kopiert!');
+  }).catch(() => {
+    showToast('Kopieren fehlgeschlagen');
+  });
+}
+
+function exportImage() {
+  const { home, away } = getMatchTeams();
+  const canvas = document.getElementById('exportCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = 720, h = 480;
+  const sorted = [...events].sort((a,b) => b.id - a.id);
+  const lineH = 22;
+  const goalsH = sorted.length * lineH;
+  const totalH = Math.max(h, 340 + goalsH);
+  canvas.width = w;
+  canvas.height = totalH;
+
+  // Background
+  ctx.fillStyle = '#0f0f0f';
+  ctx.fillRect(0, 0, w, totalH);
+
+  // Accent line top
+  ctx.fillStyle = '#c8f542';
+  ctx.fillRect(0, 0, w, 3);
+
+  // Date
+  ctx.fillStyle = '#444';
+  ctx.font = '13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}), w/2, 30);
+
+  // Team names
+  ctx.fillStyle = '#888';
+  ctx.font = '600 16px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(home, w/2 - 60, 70);
+  ctx.textAlign = 'left';
+  ctx.fillText(away, w/2 + 60, 70);
+
+  // Score
+  ctx.font = '500 72px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#c8f542';
+  ctx.fillText(String(homeScore), w/2 - 50, 150);
+  ctx.fillStyle = '#252525';
+  ctx.fillText(':', w/2, 150);
+  ctx.fillStyle = '#ff4d4d';
+  ctx.fillText(String(awayScore), w/2 + 50, 150);
+
+  // Divider
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(60, 180);
+  ctx.lineTo(w - 60, 180);
+  ctx.stroke();
+
+  // Goals header
+  ctx.fillStyle = '#555';
+  ctx.font = '12px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('TORE', w/2, 205);
+
+  // Goals list - column-aligned
+  const colScore = w/2 - 100; // score right-aligned here
+  const colMin   = w/2 - 40;  // minute right-aligned here
+  const colName  = w/2 - 20;  // name left-aligned here
+  let y = 230;
+  sorted.forEach(e => {
+    const name = (e.scorer && e.scorer !== '—') ? e.scorer : '';
+    ctx.fillStyle = e.isOwnGoal ? '#f5a623' : (e.team === 'home' ? '#c8f542' : '#ff4d4d');
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(e.snapshot, colScore, y);
+    ctx.fillText(`${e.minute}'`, colMin, y);
+    ctx.textAlign = 'left';
+    if (name) ctx.fillText(name, colName, y);
+    y += lineH;
+  });
+
+  // Footer
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, totalH - 30, w, 30);
+  ctx.fillStyle = '#2a2a2a';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('MATCH TRACKER', w/2, totalH - 12);
+
+  canvas.toBlob(blob => {
+    if (!blob) { showToast('Fehler beim Erstellen'); return; }
+    const file = new File([blob], 'ergebnis.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(() => {});
+    } else {
+      // Fallback: download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'ergebnis.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Bild heruntergeladen');
+    }
+  }, 'image/png');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─── SETUP WIZARD ─────────────────────────────────────────────────────────────
+function openSetup(skipSquadStep) {
+  const overlay = document.getElementById('setupOverlay');
+  overlay.dataset.skipSquad = skipSquadStep ? '1' : '0';
+  setupVenue = null;
+  document.getElementById('btnStep1Next').disabled = true;
+  document.getElementById('optHome').classList.remove('selected');
+  document.getElementById('optAway').classList.remove('selected');
+  document.getElementById('opponentInput').value = '';
+  document.getElementById('btnStep2Next').disabled = true;
+  goStep(1);
+  requestAnimationFrame(() => overlay.classList.add('active'));
+}
+
+function goToSquadOrFinish() {
+  const skipSquad = document.getElementById('setupOverlay').dataset.skipSquad === '1';
+  if (skipSquad) { finishSetup(); } else { goStep(3); }
+}
+
+function closeSetup() {
+  document.getElementById('setupOverlay').classList.remove('active');
+}
+
+function goStep(n) {
+  document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
+  const step = document.getElementById('setupStep' + n);
+  if (step) step.classList.add('active');
+  if (n === 2) setTimeout(() => document.getElementById('opponentInput').focus(), 100);
+  if (n === 3) setTimeout(() => document.getElementById('setupPlayerName').focus(), 100);
+}
+
+function selectVenue(venue) {
+  setupVenue = venue;
+  document.getElementById('optHome').classList.toggle('selected', venue === 'home');
+  document.getElementById('optAway').classList.toggle('selected', venue === 'away');
+  document.getElementById('btnStep1Next').disabled = false;
+}
+
+function addSetupPlayer() {
+  const ni   = document.getElementById('setupPlayerName');
+  const ni2  = document.getElementById('setupPlayerNum');
+  const name = ni.value.trim();
+  if (!name) { ni.focus(); return; }
+  squad.push({ id: Date.now(), num: parseInt(ni2.value) || null, name });
+  squad.sort((a,b) => (a.num||999) - (b.num||999));
+  ni.value = ''; ni2.value = ''; ni.focus();
+  renderSetupSquadPreview();
+  save();
+}
+
+function renderSetupSquadPreview() {
+  const container = document.getElementById('setupSquadPreview');
+  container.innerHTML = '';
+  squad.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'kader-player-item';
+    item.innerHTML = `<span class="kader-player-num">${p.num ? '#'+p.num : '—'}</span><span class="kader-player-name">${esc(p.name)}</span><button class="btn-remove-player" onclick="removeSetupPlayer(${p.id})">×</button>`;
+    container.appendChild(item);
+  });
+}
+
+function removeSetupPlayer(id) {
+  squad = squad.filter(p => p.id !== id);
+  renderSetupSquadPreview();
+  save();
+}
+
+function finishSetup() {
+  const opponent = document.getElementById('opponentInput').value.trim();
+  isHomeTeam = setupVenue === 'home';
+
+  const homeTeam = isHomeTeam ? OUR_TEAM : opponent;
+  const awayTeam = isHomeTeam ? opponent : OUR_TEAM;
+  document.getElementById('matchTitle').value = `${homeTeam} vs. ${awayTeam}`;
+
+  updateScoreLabels();
+  updateGoalButtons();
+  renderKaderList();
+  closeSetup();
+  save(true);
+  updateEndMatchBtn();
+}
+
+function updateScoreLabels() {
+  const title = document.getElementById('matchTitle').value;
+  const parts = title.split(/\s+vs\.?\s+/i);
+  const homeEl = document.querySelector('.team-name.home');
+  const awayEl = document.querySelector('.team-name.away');
+  if (homeEl) homeEl.textContent = parts[0]?.trim() || 'Heim';
+  if (awayEl) awayEl.textContent = parts[1]?.trim() || 'Gast';
+}
+
+// ─── KADER ────────────────────────────────────────────────────────────────────
+function addPlayer() {
+  const ni = document.getElementById('newPlayerName');
+  const ni2= document.getElementById('newPlayerNum');
+  const name = ni.value.trim(); if (!name) { ni.focus(); return; }
+  squad.push({ id: Date.now(), num: parseInt(ni2.value)||null, name });
+  squad.sort((a,b)=>(a.num||999)-(b.num||999));
+  ni.value=''; ni2.value=''; ni.focus();
+  renderKaderList(); save();
+}
+
+function removePlayer(id) {
+  squad = squad.filter(p=>p.id!==id);
+  renderKaderList(); save();
+}
+
+function renderKaderList() {
+  const list = document.getElementById('kaderList');
+  if (!list) return;
+  if (!squad.length) { list.innerHTML='<div class="kader-empty">Noch keine Spieler hinterlegt</div>'; return; }
+  list.innerHTML='';
+  squad.forEach(p => {
+    const item = document.createElement('div');
+    item.className='kader-player-item';
+    item.innerHTML=`<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span><button class="btn-remove-player" onclick="removePlayer(${p.id})">×</button>`;
+    list.appendChild(item);
+  });
+}
+
+// ─── SPIELPLAN ────────────────────────────────────────────────────────────────
+function validateSpForm() {
+  document.getElementById('btnAddMatch').disabled = !document.getElementById('spGegner').value.trim();
+}
+
+function addScheduleMatch() {
+  const opponent = document.getElementById('spGegner').value.trim();
+  if (!opponent) return;
+  const venue = document.getElementById('spVenue').value;
+  const date = document.getElementById('spDate').value || null;
+  const time = document.getElementById('spTime').value || null;
+
+  schedule.push({
+    id: Date.now(),
+    opponent,
+    isHome: venue === 'home',
+    date,
+    time,
+    result: null
+  });
+
+  // Sort by date
+  schedule.sort((a,b) => {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'');
+  });
+
+  document.getElementById('spGegner').value = '';
+  document.getElementById('spDate').value = '';
+  document.getElementById('spTime').value = '';
+  validateSpForm();
+  renderSpielplan();
+  save();
+}
+
+function deleteScheduleMatch(id) {
+  schedule = schedule.filter(m => m.id !== id);
+  renderSpielplan(); save();
+}
+
+function startMatchFromSchedule(id) {
+  const match = schedule.find(m => m.id === id);
+  if (!match) return;
+
+  // Reset match state
+  homeScore = 0; awayScore = 0; events = [];
+  resetTimer();
+
+  isHomeTeam = match.isHome;
+  activeMatchId = match.id;
+
+  const homeTeam = match.isHome ? OUR_TEAM : match.opponent;
+  const awayTeam = match.isHome ? match.opponent : OUR_TEAM;
+  document.getElementById('matchTitle').value = `${homeTeam} vs. ${awayTeam}`;
+
+  updateScoreLabels();
+  updateGoalButtons();
+  updateScore(false);
+  renderEvents();
+  updateEndMatchBtn();
+  save(true);
+  switchTab('spiel');
+}
+
+function endCurrentMatch() {
+  if (!activeMatchId) return;
+  const idx = schedule.findIndex(m => m.id === activeMatchId);
+  if (idx === -1) return;
+
+  // Determine our score vs opponent score
+  const ourScore = isHomeTeam ? homeScore : awayScore;
+  const theirScore = isHomeTeam ? awayScore : homeScore;
+
+  schedule[idx].result = {
+    home: homeScore,
+    away: awayScore,
+    ourScore,
+    theirScore,
+    events: [...events]
+  };
+
+  activeMatchId = null;
+  updateEndMatchBtn();
+  renderSpielplan();
+  save();
+  showToast('Ergebnis gespeichert');
+}
+
+function updateEndMatchBtn() {
+  const btn = document.getElementById('btnEndMatch');
+  btn.style.display = activeMatchId ? 'block' : 'none';
+}
+
+function renderSpielplan() {
+  const list = document.getElementById('spielplanList');
+  if (!list) return;
+  if (!schedule.length) {
+    list.innerHTML = '<div class="spielplan-empty">Noch keine Spiele geplant</div>';
+    return;
+  }
+  list.innerHTML = '';
+  schedule.forEach(m => {
+    const homeName = m.isHome ? OUR_TEAM : m.opponent;
+    const awayName = m.isHome ? m.opponent : OUR_TEAM;
+    const item = document.createElement('div');
+
+    let resultClass = '';
+    let resultHTML = '';
+    let actionsHTML = '';
+
+    if (m.result) {
+      const { ourScore, theirScore } = m.result;
+      const outcome = ourScore > theirScore ? 'win' : ourScore < theirScore ? 'loss' : 'draw';
+      resultClass = outcome === 'win' ? 'has-result' : outcome === 'loss' ? 'is-loss' : 'is-draw';
+      resultHTML = `<span class="spielplan-result ${outcome}">${m.result.home}:${m.result.away}</span>`;
+    } else {
+      if (activeMatchId === m.id) {
+        resultHTML = '<span class="spielplan-result" style="color:var(--accent)">LIVE</span>';
+      }
+      actionsHTML = activeMatchId === m.id ? '' :
+        `<div class="spielplan-actions">
+          <button class="btn-start-match" onclick="startMatchFromSchedule(${m.id})">Spiel starten</button>
+          <button class="btn-delete-match" onclick="deleteScheduleMatch(${m.id})">Löschen</button>
+        </div>`;
+    }
+
+    const meta = [];
+    if (m.date) {
+      const d = new Date(m.date + 'T00:00:00');
+      meta.push(d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}));
+    }
+    if (m.time) meta.push(m.time + ' Uhr');
+    meta.push(m.isHome ? 'Heim' : 'Auswärts');
+
+    item.className = `spielplan-item ${resultClass}`;
+    item.innerHTML = `
+      <div class="spielplan-item-top">
+        <span class="spielplan-teams">${esc(homeName)} vs. ${esc(awayName)}</span>
+        ${resultHTML}
+      </div>
+      <div class="spielplan-meta">${meta.join(' · ')}</div>
+      ${actionsHTML}`;
+    list.appendChild(item);
+  });
+}
+
+// ─── CONFIRM ──────────────────────────────────────────────────────────────────
+function confirmAction(type) {
+  let cfg;
+  if (type === 'tore') {
+    cfg = { icon:'🗑️', title:'Alle Tore löschen?', msg:'Spielstand und alle Tor-Einträge werden gelöscht.',
+      cb: ()=>{ events=[]; homeScore=0; awayScore=0; updateScore(false); renderEvents(); save(); } };
+  } else if (type === 'beenden') {
+    cfg = { icon:'🏁', title:'Spiel beenden?', msg:'Das Ergebnis wird im Spielplan gespeichert.',
+      btn: 'Beenden',
+      cb: ()=>{ endCurrentMatch(); } };
+  } else {
+    cfg = { icon:'⚠️', title:'Neues Spiel starten?', msg:'Spielstand, Tore und Uhr werden zurückgesetzt. Der Kader bleibt erhalten.',
+      cb: ()=>{ events=[]; homeScore=0; awayScore=0; activeMatchId=null; resetTimer(); document.getElementById('matchTitle').value=''; updateScore(false); renderEvents(); updateEndMatchBtn(); save(false); openSetup(true); } };
+  }
+  document.getElementById('confirmIcon').textContent  = cfg.icon;
+  document.getElementById('confirmTitle').textContent = cfg.title;
+  document.getElementById('confirmMsg').textContent   = cfg.msg;
+  document.getElementById('btnConfirmYes').textContent = cfg.btn || 'Löschen';
+  confirmCallback = cfg.cb;
+  document.getElementById('btnConfirmYes').onclick = ()=>{ confirmCallback?.(); closeConfirm(); };
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('active'); }
+document.getElementById('confirmOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeConfirm(); });
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────
+// Trage hier deine Firebase-Projekt-Config ein (siehe Anleitung)
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBwou6b9PdygoYVI9uh2zpe41SFcfvnQ80",
+  authDomain: "match-tracker-891ac.firebaseapp.com",
+  databaseURL: "https://match-tracker-891ac-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "match-tracker-891ac",
+  storageBucket: "match-tracker-891ac.firebasestorage.app",
+  messagingSenderId: "288508319365",
+  appId: "1:288508319365:web:b62e1c1f794cd19e64fbec"
+};
+
+let firebaseReady = false;
+let syncTimeout = null;
+
+function initFirebase() {
+  if (!FIREBASE_CONFIG.databaseURL || typeof firebase === 'undefined') return false;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    firebaseReady = true;
+    // Show ticker button when Firebase is configured
+    const btn = document.getElementById('btnTickerShare');
+    if (btn) btn.style.display = '';
+    return true;
+  } catch(e) {
+    console.warn('Firebase init failed:', e);
+    return false;
+  }
+}
+
+function syncToFirebase() {
+  if (!firebaseReady || !activeMatchId) return;
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(() => {
+    try {
+      const { home, away } = getMatchTeams();
+      firebase.database().ref('matches/' + activeMatchId).set({
+        homeTeam: home,
+        awayTeam: away,
+        homeScore,
+        awayScore,
+        isHomeTeam,
+        events: events || [],
+        minute: parseInt(document.getElementById('minuteInput').value) || 1,
+        matchDate: document.getElementById('matchDate').textContent,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    } catch(e) { console.warn('Firebase sync failed:', e); }
+  }, 300);
+}
+
+// ─── TICKER MODE ─────────────────────────────────────────────────────────────
+function initTickerMode(matchId) {
+  document.body.classList.add('ticker-mode');
+  document.title = 'Live-Ticker';
+
+  // Set date
+  document.getElementById('tickerDate').textContent =
+    new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  if (typeof firebase === 'undefined' || !FIREBASE_CONFIG.databaseURL) {
+    document.getElementById('tickerUpdated').textContent = 'Firebase nicht konfiguriert';
+    return;
+  }
+
+  firebase.initializeApp(FIREBASE_CONFIG);
+
+  let lastScore = null;
+  firebase.database().ref('matches/' + matchId).on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) {
+      document.getElementById('tickerUpdated').textContent = 'Kein Spiel gefunden';
+      return;
+    }
+    updateTickerUI(data, lastScore);
+    lastScore = { h: data.homeScore, a: data.awayScore };
+  });
+}
+
+function updateTickerUI(data, lastScore) {
+  // Team names
+  const labels = document.querySelectorAll('.team-name');
+  if (labels.length >= 2) {
+    labels[0].textContent = data.homeTeam || 'Heim';
+    labels[1].textContent = data.awayTeam || 'Gast';
+  }
+
+  // Score
+  const scoreH = document.getElementById('scoreHome');
+  const scoreA = document.getElementById('scoreAway');
+  scoreH.textContent = data.homeScore;
+  scoreA.textContent = data.awayScore;
+
+  // Animate if score changed
+  if (lastScore && (lastScore.h !== data.homeScore || lastScore.a !== data.awayScore)) {
+    scoreH.classList.remove('bump'); scoreA.classList.remove('bump');
+    void scoreH.offsetWidth;
+    scoreH.classList.add('bump'); scoreA.classList.add('bump');
+  }
+
+  // Events list
+  const list = document.getElementById('eventsList');
+  if (!list) return;
+  const evts = data.events || [];
+  if (evts.length === 0) {
+    list.innerHTML = '<div class="empty-state">Noch keine Tore</div>';
+  } else {
+    list.innerHTML = '';
+    [...evts].sort((a,b) => b.id - a.id).forEach(e => {
+      const cls = e.isOwnGoal ? 'own' : e.team;
+      const tag = e.isOwnGoal ? 'Eigentor' : (e.team === 'home' ? (data.homeTeam||'Heim') : (data.awayTeam||'Gast'));
+      const numTag = e.scorerNum ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:5px">#${e.scorerNum}</span>` : '';
+      const item = document.createElement('div');
+      item.className = 'event-item ' + cls;
+      item.innerHTML = `
+        <div class="event-min">${e.minute}'</div>
+        <div class="event-info">
+          <div class="event-scorer">${numTag}${esc(e.scorer)}</div>
+          <div class="event-tag">${tag}</div>
+        </div>
+        <div class="event-score">${e.snapshot}</div>`;
+      list.appendChild(item);
+    });
+  }
+
+  // Updated timestamp
+  if (data.updatedAt) {
+    const ago = Math.round((Date.now() - data.updatedAt) / 1000);
+    const txt = ago < 5 ? 'gerade eben' : ago < 60 ? `vor ${ago}s` : `vor ${Math.round(ago/60)} Min`;
+    document.getElementById('tickerUpdated').textContent = 'Letzte Aktualisierung: ' + txt;
+  }
+
+  // Update page title
+  document.title = `${data.homeScore}:${data.awayScore} ${data.homeTeam||''} vs ${data.awayTeam||''} - Live`;
+}
+
+// ─── TICKER SHARE UI ─────────────────────────────────────────────────────────
+function showTickerShare() {
+  if (!activeMatchId) { showToast('Kein aktives Spiel'); return; }
+  const url = window.location.origin + window.location.pathname + '?ticker=' + activeMatchId;
+  document.getElementById('tickerURL').textContent = url;
+
+  // Generate QR code
+  const qrContainer = document.getElementById('tickerQR');
+  qrContainer.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  generateQR(canvas, url, 160);
+  qrContainer.appendChild(canvas);
+
+  document.getElementById('tickerShareOverlay').classList.add('active');
+}
+
+function closeTickerShare() {
+  document.getElementById('tickerShareOverlay').classList.remove('active');
+}
+document.getElementById('tickerShareOverlay')?.addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeTickerShare();
+});
+
+function copyTickerURL() {
+  const url = document.getElementById('tickerURL').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Link kopiert!');
+  }).catch(() => showToast('Kopieren fehlgeschlagen'));
+}
+
+// ─── MINIMAL QR CODE GENERATOR ───────────────────────────────────────────────
+function generateQR(canvas, text, size) {
+  // Uses a simple QR encoding via an image from a public API
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, size, size);
+  };
+  img.onerror = () => {
+    // Fallback: just show URL text
+    canvas.width = size; canvas.height = 40;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,size,40);
+    ctx.fillStyle = '#000'; ctx.font = '10px monospace';
+    ctx.fillText('QR nicht verfügbar', 10, 25);
+  };
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&bgcolor=ffffff&color=000000&format=png`;
+}
+
+// ─── STARTUP: Check ticker mode or init Firebase ─────────────────────────────
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const tickerId = params.get('ticker');
+  if (tickerId) {
+    initTickerMode(tickerId);
+  } else {
+    initFirebase();
+  }
+})();
+</script>
+
+<!-- Firebase SDK (loaded after main script, only needed features) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// Re-init Firebase after SDK loads (if not in ticker mode)
+if (!new URLSearchParams(window.location.search).get('ticker')) {
+  initFirebase();
+}
+</script>
+</body>
+</html>
