@@ -1831,11 +1831,11 @@ function linCh(c) {
 function relLum(r, g, b) {
   return 0.2126*linCh(r) + 0.7152*linCh(g) + 0.0722*linCh(b);
 }
-// Contrast of color against app background #0f0f0f
-const BG_LUM = relLum(15, 15, 15);
+// Contrast of color against app background #0f0f0f (inlined — avoids TDZ with const)
 function contrastVsBg(r, g, b) {
   const L = relLum(r, g, b);
-  return (Math.max(L, BG_LUM) + 0.05) / (Math.min(L, BG_LUM) + 0.05);
+  const bgL = relLum(15, 15, 15);
+  return (Math.max(L, bgL) + 0.05) / (Math.min(L, bgL) + 0.05);
 }
 
 function rgbToHsl(r, g, b) {
