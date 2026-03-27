@@ -268,6 +268,7 @@
   .kader-player-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--surface); border-radius: 10px; margin-bottom: 6px; animation: slideIn 0.2s ease; }
   .kader-player-num { font-family: var(--mono); font-size: 13px; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
   .kader-player-name { flex: 1; font-size: 15px; font-weight: 500; }
+  .kader-player-goals { font-family: var(--mono); font-size: 12px; color: var(--muted); flex-shrink: 0; }
   .btn-remove-player { background: none; border: none; color: #555; cursor: pointer; font-size: 20px; padding: 0 4px; line-height: 1; transition: color 0.1s; }
   .btn-remove-player:hover { color: var(--red); }
   .kader-empty { text-align: center; color: #555; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; padding: 40px 0; }
@@ -1201,14 +1202,23 @@ function addGoal(team, isOwnGoal, player) {
     scorerPhoto: player?.photo || '',
     snapshot:  `${homeScore}:${awayScore}`
   });
+  if (player && !isOwnGoal) {
+    const sp = squad.find(s => s.id === player.id);
+    if (sp) { sp.goals = (sp.goals || 0) + 1; }
+  }
   updateScore(true); renderEvents(); save();
 }
 
 function deleteEvent(id) {
   const idx = events.findIndex(e => e.id === id);
   if (idx === -1) return;
-  if (events[idx].team==='home') homeScore = Math.max(0,homeScore-1);
+  const ev = events[idx];
+  if (ev.team==='home') homeScore = Math.max(0,homeScore-1);
   else awayScore = Math.max(0,awayScore-1);
+  if (ev.scorerId && !ev.isOwnGoal) {
+    const sp = squad.find(s => s.id === ev.scorerId);
+    if (sp && (sp.goals || 0) > 0) sp.goals--;
+  }
   events.splice(idx,1);
   let h=0,a=0;
   [...events].sort((x,y)=>x.id-y.id).forEach(ev => {
@@ -1504,7 +1514,7 @@ function addPlayer() {
   const ni = document.getElementById('newPlayerName');
   const ni2= document.getElementById('newPlayerNum');
   const name = ni.value.trim(); if (!name) { ni.focus(); return; }
-  squad.push({ id: Date.now(), num: parseInt(ni2.value)||null, name, photo: pendingPlayerPhoto || '' });
+  squad.push({ id: Date.now(), num: parseInt(ni2.value)||null, name, photo: pendingPlayerPhoto || '', goals: 0 });
   squad.sort((a,b)=>(a.num||999)-(b.num||999));
   ni.value=''; ni2.value=''; ni.focus();
   pendingPlayerPhoto = '';
@@ -1533,7 +1543,8 @@ function renderKaderList() {
       : `<label class="player-avatar-placeholder" title="Foto hinzufügen">
            <input type="file" accept="image/*" class="player-photo-file" onchange="updatePlayerPhoto(${p.id}, this)">📷
          </label>`;
-    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span><button class="btn-row-edit" onclick="editPlayer(${p.id})" title="Bearbeiten">✎</button><button class="btn-remove-player btn-row-delete" onclick="removePlayer(${p.id})">×</button>`;
+    const goalsTag = (p.goals||0) > 0 ? `<span class="kader-player-goals">${p.goals} ⚽</span>` : '';
+    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span>${goalsTag}<button class="btn-row-edit" onclick="editPlayer(${p.id})" title="Bearbeiten">✎</button><button class="btn-remove-player btn-row-delete" onclick="removePlayer(${p.id})">×</button>`;
     list.appendChild(item);
   });
 }
