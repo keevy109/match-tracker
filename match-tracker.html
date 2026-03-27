@@ -533,7 +533,7 @@
     max-width: 300px; width: 88%;
     border: 2px solid var(--home-color);
     box-shadow: 0 0 30px 4px color-mix(in srgb, var(--home-color) 30%, transparent);
-    animation: goalCardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: goalCardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, glowPulse 2.5s ease-in-out 0.4s infinite;
     --glow-color: var(--home-color);
   }
   .goal-overlay-card.away-glow {
@@ -546,32 +546,9 @@
     box-shadow: 0 0 30px 4px color-mix(in srgb, var(--own) 30%, transparent);
     --glow-color: var(--own);
   }
-  .goal-overlay-card::before {
-    content: '';
-    position: absolute;
-    inset: -18px;
-    border-radius: 32px;
-    background: conic-gradient(from var(--glow-angle, 0deg),
-      transparent 0deg,
-      color-mix(in srgb, var(--glow-color) 50%, transparent) 60deg,
-      transparent 120deg,
-      color-mix(in srgb, var(--glow-color) 30%, transparent) 200deg,
-      transparent 260deg,
-      color-mix(in srgb, var(--glow-color) 40%, transparent) 320deg,
-      transparent 360deg
-    );
-    filter: blur(16px);
-    z-index: -1;
-    animation: glowRotate 3s linear infinite;
-  }
-  @property --glow-angle {
-    syntax: '<angle>';
-    initial-value: 0deg;
-    inherits: false;
-  }
-  @keyframes glowRotate {
-    from { --glow-angle: 0deg; }
-    to   { --glow-angle: 360deg; }
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 30px 4px color-mix(in srgb, var(--glow-color) 30%, transparent); }
+    50%      { box-shadow: 0 0 50px 12px color-mix(in srgb, var(--glow-color) 45%, transparent); }
   }
 
   @keyframes goalCardPop {
