@@ -1626,6 +1626,9 @@ function endCurrentMatch() {
   const idx = schedule.findIndex(m => m.id === activeMatchId);
   if (idx === -1) return;
 
+  // Uhr anhalten
+  pauseTimer();
+
   // Determine our score vs opponent score
   const ourScore = isHomeTeam ? homeScore : awayScore;
   const theirScore = isHomeTeam ? awayScore : homeScore;
@@ -1637,6 +1640,19 @@ function endCurrentMatch() {
     theirScore,
     events: [...events]
   };
+
+  // Letzten Firebase-Write mit matchFinished:true BEVOR activeMatchId geleert wird
+  if (firebaseReady && activeMatchId) {
+    try {
+      const { home, away } = getMatchTeams();
+      firebase.database().ref('matches/' + activeMatchId).update({
+        matchFinished: true,
+        timerRunning: false,
+        elapsedSecs: elapsedSeconds(),
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    } catch(e) {}
+  }
 
   activeMatchId = null;
   updateEndMatchBtn();
@@ -2333,6 +2349,10 @@ function initTickerMode(matchId) {
     if (tickerData.timerRunning && tickerDataReceivedAt) {
       secs += Math.floor((Date.now() - tickerDataReceivedAt) / 1000);
     }
+    if (tickerData.matchFinished) {
+      clockEl.textContent = 'Spiel beendet';
+      return;
+    }
     const m = Math.floor(secs / 60);
     const s = String(secs % 60).padStart(2, '0');
     clockEl.textContent = tickerData.timerRunning ? `${m}:${s}` : (secs > 0 ? `${m}:${s} – Pause` : '');
@@ -2501,7 +2521,8 @@ function updateTickerUI(data, lastScore) {
   }
 
   // Page title
-  document.title = `${data.homeScore ?? 0}:${data.awayScore ?? 0} ${data.homeTeam||''} vs ${data.awayTeam||''} – LIVE`;
+  const statusTag = data.matchFinished ? '– Abpfiff' : '– LIVE';
+  document.title = `${data.homeScore ?? 0}:${data.awayScore ?? 0} ${data.homeTeam||''} vs ${data.awayTeam||''} ${statusTag}`;
 }
 
 // ─── TICKER SHARE UI ─────────────────────────────────────────────────────────
