@@ -552,6 +552,8 @@
     opacity: 0.15;
     filter: blur(20px);
     z-index: -1;
+  }
+  .goal-overlay.active .goal-overlay-card::after {
     animation: glowPulse 2.5s ease-in-out infinite;
   }
   @keyframes glowPulse {
@@ -2442,11 +2444,9 @@ function showGoalOverlay(event, data) {
   document.getElementById('goalOverlayScorer').textContent = scorer ? `${numPrefix}${scorer}` : (event.isOwnGoal ? 'Eigentor' : '');
   document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
 
-  // Reset animation (force reflow so iOS restarts CSS animations)
-  overlay.classList.remove('fading');
-  card.style.animation = 'none';
-  void card.offsetHeight;
-  card.style.animation = '';
+  // Reset: overlay kurz deaktivieren, reflow, dann aktivieren
+  overlay.classList.remove('active', 'fading');
+  void overlay.offsetHeight;
   overlay.classList.add('active');
 
   clearTimeout(goalOverlayTimeout);
