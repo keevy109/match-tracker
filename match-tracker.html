@@ -1512,7 +1512,8 @@ function syncToFirebase() {
         awayScore,
         isHomeTeam,
         events: events || [],
-        minute: parseInt(document.getElementById('minuteInput').value) || 1,
+        elapsedSecs: elapsedSeconds(),
+        timerRunning: timerBase !== null,
         matchDate: document.getElementById('matchDate').textContent,
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       });
@@ -1537,12 +1538,33 @@ function initTickerMode(matchId) {
   firebase.initializeApp(FIREBASE_CONFIG);
 
   let lastScore = null;
+  let tickerData = null;
+  let tickerDataReceivedAt = null;
+
+  // Lokale Spieluhr – läuft im Ticker weiter ohne Firebase-Ping
+  setInterval(() => {
+    if (!tickerData) return;
+    const minEl = document.getElementById('tickerMinute');
+    if (!minEl) return;
+    let secs = tickerData.elapsedSecs || 0;
+    if (tickerData.timerRunning && tickerDataReceivedAt) {
+      secs += Math.floor((Date.now() - tickerDataReceivedAt) / 1000);
+    }
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    minEl.textContent = tickerData.timerRunning
+      ? `${m}:${String(s).padStart(2,'0')}`
+      : (m > 0 ? `${m}:${String(s).padStart(2,'0')} – Pause` : '');
+  }, 1000);
+
   firebase.database().ref('matches/' + matchId).on('value', snapshot => {
     const data = snapshot.val();
     if (!data) {
       document.getElementById('tickerUpdated').textContent = 'Kein Spiel gefunden';
       return;
     }
+    tickerData = data;
+    tickerDataReceivedAt = Date.now();
     updateTickerUI(data, lastScore);
     lastScore = { h: data.homeScore, a: data.awayScore };
   });
@@ -1568,10 +1590,6 @@ function updateTickerUI(data, lastScore) {
     void scoreH.offsetWidth;
     scoreH.classList.add('bump'); scoreA.classList.add('bump');
   }
-
-  // Minute
-  const minEl = document.getElementById('tickerMinute');
-  if (minEl && data.minute) minEl.textContent = data.minute + '. Minute';
 
   // Events — Firebase gibt Arrays als Objekt zurück: {0:{…}, 1:{…}}
   // daher Object.values() statt direktes Array-Spread
