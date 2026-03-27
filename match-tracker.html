@@ -1812,27 +1812,87 @@ function getTeamColor(name) {
   return t?.color || '';
 }
 
-function applyTeamColors() {
-  const r = document.documentElement;
-  r.style.setProperty('--home-color', homeColor || '#c8f542');
-  r.style.setProperty('--away-color', awayColor || '#ff4d4d');
-  r.style.setProperty('--home-color-text', isLight(homeColor || '#c8f542') ? '#0f0f0f' : '#fff');
-  r.style.setProperty('--away-color-text', isLight(awayColor || '#ff4d4d') ? '#0f0f0f' : '#fff');
-}
-
-function isLight(color) {
-  let r = 0, g = 0, b = 0;
+// ─── COLOR UTILITIES ──────────────────────────────────────────────────────────
+function parseRgb(color) {
+  if (!color) return { r:200, g:200, b:200 };
   if (color.startsWith('#')) {
     const hex = color.replace('#','');
     const full = hex.length === 3 ? hex.split('').map(c=>c+c).join('') : hex;
-    r = parseInt(full.slice(0,2),16);
-    g = parseInt(full.slice(2,4),16);
-    b = parseInt(full.slice(4,6),16);
-  } else {
-    const m = color.match(/\d+/g);
-    if (m) { r=+m[0]; g=+m[1]; b=+m[2]; }
+    return { r: parseInt(full.slice(0,2),16), g: parseInt(full.slice(2,4),16), b: parseInt(full.slice(4,6),16) };
   }
+  const m = color.match(/\d+/g);
+  return m ? { r:+m[0], g:+m[1], b:+m[2] } : { r:200, g:200, b:200 };
+}
+
+function linCh(c) {
+  const n = c / 255;
+  return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+}
+function relLum(r, g, b) {
+  return 0.2126*linCh(r) + 0.7152*linCh(g) + 0.0722*linCh(b);
+}
+// Contrast of color against app background #0f0f0f
+const BG_LUM = relLum(15, 15, 15);
+function contrastVsBg(r, g, b) {
+  const L = relLum(r, g, b);
+  return (Math.max(L, BG_LUM) + 0.05) / (Math.min(L, BG_LUM) + 0.05);
+}
+
+function rgbToHsl(r, g, b) {
+  r/=255; g/=255; b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+  let h=0, s=0, l=(mx+mn)/2;
+  if (mx !== mn) {
+    const d = mx-mn;
+    s = l > 0.5 ? d/(2-mx-mn) : d/(mx+mn);
+    switch(mx) {
+      case r: h=((g-b)/d + (g<b?6:0))/6; break;
+      case g: h=((b-r)/d + 2)/6; break;
+      case b: h=((r-g)/d + 4)/6; break;
+    }
+  }
+  return { h, s, l };
+}
+function hslToRgb(h, s, l) {
+  if (s === 0) { const v=Math.round(l*255); return {r:v,g:v,b:v}; }
+  const q = l<0.5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+  const hue = (p, q, t) => {
+    if (t<0) t+=1; if (t>1) t-=1;
+    if (t<1/6) return p+(q-p)*6*t;
+    if (t<1/2) return q;
+    if (t<2/3) return p+(q-p)*(2/3-t)*6;
+    return p;
+  };
+  return { r:Math.round(hue(p,q,h+1/3)*255), g:Math.round(hue(p,q,h)*255), b:Math.round(hue(p,q,h-1/3)*255) };
+}
+
+// Lighten color until it reaches MIN_CONTRAST against the dark background
+const MIN_CONTRAST = 4.0;
+function ensureReadable(color) {
+  let {r, g, b} = parseRgb(color);
+  if (contrastVsBg(r, g, b) >= MIN_CONTRAST) return color;
+  let {h, s, l} = rgbToHsl(r, g, b);
+  for (let i = 0; i < 30 && l < 0.97; i++) {
+    l = Math.min(0.97, l + 0.04);
+    ({r, g, b} = hslToRgb(h, s, l));
+    if (contrastVsBg(r, g, b) >= MIN_CONTRAST) break;
+  }
+  return `rgb(${r},${g},${b})`;
+}
+
+function isLight(color) {
+  const {r, g, b} = parseRgb(color);
   return (0.299*r + 0.587*g + 0.114*b) > 140;
+}
+
+function applyTeamColors() {
+  const root = document.documentElement;
+  const hc = ensureReadable(homeColor || '#c8f542');
+  const ac = ensureReadable(awayColor || '#ff4d4d');
+  root.style.setProperty('--home-color', hc);
+  root.style.setProperty('--away-color', ac);
+  root.style.setProperty('--home-color-text', isLight(hc) ? '#0f0f0f' : '#fff');
+  root.style.setProperty('--away-color-text', isLight(ac) ? '#0f0f0f' : '#fff');
 }
 
 function extractDominantColor(base64, callback) {
@@ -2075,16 +2135,18 @@ function showGoalOverlay(event, data) {
 }
 
 function updateTickerUI(data, lastScore) {
-  // Apply team colors from Firebase data
+  // Apply team colors from Firebase data (with contrast correction for dark bg)
   if (data.homeColor || data.awayColor) {
-    const r = document.documentElement;
+    const root = document.documentElement;
     if (data.homeColor) {
-      r.style.setProperty('--home-color', data.homeColor);
-      r.style.setProperty('--home-color-text', isLight(data.homeColor) ? '#0f0f0f' : '#fff');
+      const hc = ensureReadable(data.homeColor);
+      root.style.setProperty('--home-color', hc);
+      root.style.setProperty('--home-color-text', isLight(hc) ? '#0f0f0f' : '#fff');
     }
     if (data.awayColor) {
-      r.style.setProperty('--away-color', data.awayColor);
-      r.style.setProperty('--away-color-text', isLight(data.awayColor) ? '#0f0f0f' : '#fff');
+      const ac = ensureReadable(data.awayColor);
+      root.style.setProperty('--away-color', ac);
+      root.style.setProperty('--away-color-text', isLight(ac) ? '#0f0f0f' : '#fff');
     }
   }
 
