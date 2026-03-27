@@ -18,6 +18,10 @@
     --accent: #c8f542;
     --red: #ff4d4d;
     --own: #f5a623;
+    --home-color: #c8f542;
+    --home-color-text: #0f0f0f;
+    --away-color: #ff4d4d;
+    --away-color-text: #fff;
     --mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }
@@ -81,8 +85,8 @@
 
   .score-display { display: flex; align-items: center; gap: 0; justify-content: center; }
   .score-num { font-family: var(--mono); font-size: 52px; font-weight: 500; line-height: 1; min-width: 44px; text-align: center; padding: 0 4px; }
-  .score-num.home { color: var(--accent); }
-  .score-num.away { color: var(--red); }
+  .score-num.home { color: var(--home-color); }
+  .score-num.away { color: var(--away-color); }
   .score-num.bump { animation: bump 0.25s ease; }
   @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
   .score-sep { font-family: var(--mono); font-size: 40px; color: #555; line-height: 1; padding: 0 2px; }
@@ -131,8 +135,8 @@
   .btn-goal:active { transform: scale(0.97); opacity: 0.85; }
   .btn-goal .btn-label { font-size: 11px; font-weight: 400; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.06em; }
   .btn-goal .btn-main { font-size: 17px; font-weight: 700; }
-  .btn-home { background: var(--accent); color: #0f0f0f; }
-  .btn-away { background: var(--red); color: #fff; }
+  .btn-home { background: var(--home-color); color: var(--home-color-text); }
+  .btn-away { background: var(--away-color); color: var(--away-color-text); }
 
   .events-section { flex: 1; padding: 0 20px 14px; overflow-y: auto; min-height: 80px; }
   .events-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -148,8 +152,8 @@
     animation: slideIn 0.2s ease;
   }
   @keyframes slideIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
-  .event-item.home { border-left-color: var(--accent); }
-  .event-item.away { border-left-color: var(--red); }
+  .event-item.home { border-left-color: var(--home-color); }
+  .event-item.away { border-left-color: var(--away-color); }
   .event-item.own  { border-left-color: var(--own); }
   .event-min { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: right; }
   .event-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -275,8 +279,8 @@
   .player-btn-photo-placeholder { width: 44px; height: 44px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
   /* Goal overlay player photo */
-  .goal-overlay-player-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); margin-bottom: 12px; background: #222; }
-  .goal-overlay-card.red-glow .goal-overlay-player-photo { border-color: var(--red); }
+  .goal-overlay-player-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--home-color); margin-bottom: 12px; background: #222; }
+  .goal-overlay-card.away-glow .goal-overlay-player-photo { border-color: var(--away-color); }
   .goal-overlay-card.own-glow .goal-overlay-player-photo { border-color: var(--own); }
   .goal-overlay-logo { width: 80px; height: 80px; object-fit: contain; margin-bottom: 12px; }
 
@@ -490,13 +494,13 @@
     padding: 36px 40px 30px;
     text-align: center;
     max-width: 300px; width: 88%;
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 40px 8px color-mix(in srgb, var(--accent) 40%, transparent);
+    border: 2px solid var(--home-color);
+    box-shadow: 0 0 40px 8px color-mix(in srgb, var(--home-color) 40%, transparent);
     animation: goalCardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
-  .goal-overlay-card.red-glow {
-    border-color: var(--red);
-    box-shadow: 0 0 40px 8px color-mix(in srgb, var(--red) 40%, transparent);
+  .goal-overlay-card.away-glow {
+    border-color: var(--away-color);
+    box-shadow: 0 0 40px 8px color-mix(in srgb, var(--away-color) 40%, transparent);
   }
   .goal-overlay-card.own-glow {
     border-color: var(--own);
@@ -511,10 +515,10 @@
   .goal-overlay-emoji { font-size: 48px; margin-bottom: 4px; }
   .goal-overlay-tor {
     font-family: var(--mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 3px; color: var(--accent); text-transform: uppercase;
+    letter-spacing: 3px; color: var(--home-color); text-transform: uppercase;
     margin-bottom: 2px;
   }
-  .goal-overlay-card.red-glow .goal-overlay-tor  { color: var(--red); }
+  .goal-overlay-card.away-glow .goal-overlay-tor  { color: var(--away-color); }
   .goal-overlay-card.own-glow .goal-overlay-tor  { color: var(--own); }
   .goal-overlay-team {
     font-size: 22px; font-weight: 800; color: var(--text);
@@ -836,6 +840,7 @@
 let homeScore = 0, awayScore = 0;
 let events = [], squad = [], schedule = [], teams = [];
 let homeLogo = '', awayLogo = '';
+let homeColor = '', awayColor = '';
 let confirmCallback = null;
 let isHomeTeam = true;
 let setupVenue = null;
@@ -880,6 +885,9 @@ function switchTab(name) {
       teams         = d.teams         || [];
       homeLogo      = d.homeLogo      || '';
       awayLogo      = d.awayLogo      || '';
+      homeColor     = d.homeColor     || '';
+      awayColor     = d.awayColor     || '';
+      applyTeamColors();
       if (!teams.find(t => t.isOurTeam)) {
         teams.unshift({ id: 1, name: OUR_TEAM, logo: '', isOurTeam: true });
       }
@@ -939,7 +947,7 @@ function save(matchReady) {
     const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
     localStorage.setItem('matchtracker_v3', JSON.stringify({
       ...existing,
-      homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo,
+      homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo, homeColor, awayColor,
       timerOffset: elapsedSeconds(),
       timerBase,
       isHomeTeam,
@@ -1716,7 +1724,9 @@ function addTeam() {
   const nameInput = document.getElementById('newTeamName');
   const name = nameInput?.value.trim();
   if (!name) { showToast('Name fehlt'); return; }
-  teams.push({ id: Date.now(), name, logo: pendingLogoBase64 || '', isOurTeam: false });
+  const newTeam = { id: Date.now(), name, logo: pendingLogoBase64 || '', color: '', isOurTeam: false };
+  teams.push(newTeam);
+  const logoForExtract = pendingLogoBase64;
   pendingLogoBase64 = '';
   if (nameInput) nameInput.value = '';
   const btn = document.getElementById('btnLogoUpload');
@@ -1726,6 +1736,13 @@ function addTeam() {
   save();
   renderTeamsList();
   updateSpielplanGegnerSelect();
+  if (logoForExtract) {
+    extractDominantColor(logoForExtract, color => {
+      newTeam.color = color || '';
+      save();
+      renderTeamsList();
+    });
+  }
 }
 
 function deleteTeam(id) {
@@ -1741,7 +1758,21 @@ function setOurTeamLogo(file) {
   if (!file) return;
   resizeLogo(file, base64 => {
     const ourTeam = teams.find(t => t.isOurTeam);
-    if (ourTeam) { ourTeam.logo = base64; save(); renderTeamsList(); }
+    if (!ourTeam) return;
+    ourTeam.logo = base64;
+    save();
+    renderTeamsList();
+    extractDominantColor(base64, color => {
+      ourTeam.color = color || '';
+      save();
+      renderTeamsList();
+      // Refresh current match colors if this team is playing
+      const title = document.getElementById('matchTitle').value;
+      if (title) {
+        const parts = title.split(/\s+vs\.?\s+/i);
+        resolveLogos(parts[0]?.trim() || '', parts[1]?.trim() || '');
+      }
+    });
   });
 }
 
@@ -1758,9 +1789,10 @@ function renderTeamsList() {
   [...(ourTeam ? [ourTeam] : []), ...others].forEach(t => {
     const item = document.createElement('div');
     item.className = 'team-item';
+    const swatchStyle = t.color ? `style="background:${t.color};width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:6px;flex-shrink:0"` : '';
     item.innerHTML = `
       ${t.logo ? `<img class="team-item-logo" src="${t.logo}" alt="">` : `<div class="team-item-logo-placeholder"></div>`}
-      <span class="team-item-name">${esc(t.name)}</span>
+      <span class="team-item-name">${esc(t.name)}</span>${t.color ? `<span ${swatchStyle}></span>` : ''}
       ${t.isOurTeam ? `<span class="team-item-badge">Unser Team</span>` : ''}
       ${t.isOurTeam
         ? `<label class="btn-logo-upload" style="font-size:11px;padding:5px 8px" title="Logo ändern"><input type="file" accept="image/*" style="display:none" onchange="setOurTeamLogo(this.files[0])">📷</label>`
@@ -1773,6 +1805,74 @@ function renderTeamsList() {
 function getTeamLogo(name) {
   const t = teams.find(t => t.name === name);
   return t?.logo || '';
+}
+
+function getTeamColor(name) {
+  const t = teams.find(t => t.name === name);
+  return t?.color || '';
+}
+
+function applyTeamColors() {
+  const r = document.documentElement;
+  r.style.setProperty('--home-color', homeColor || '#c8f542');
+  r.style.setProperty('--away-color', awayColor || '#ff4d4d');
+  r.style.setProperty('--home-color-text', isLight(homeColor || '#c8f542') ? '#0f0f0f' : '#fff');
+  r.style.setProperty('--away-color-text', isLight(awayColor || '#ff4d4d') ? '#0f0f0f' : '#fff');
+}
+
+function isLight(color) {
+  let r = 0, g = 0, b = 0;
+  if (color.startsWith('#')) {
+    const hex = color.replace('#','');
+    const full = hex.length === 3 ? hex.split('').map(c=>c+c).join('') : hex;
+    r = parseInt(full.slice(0,2),16);
+    g = parseInt(full.slice(2,4),16);
+    b = parseInt(full.slice(4,6),16);
+  } else {
+    const m = color.match(/\d+/g);
+    if (m) { r=+m[0]; g=+m[1]; b=+m[2]; }
+  }
+  return (0.299*r + 0.587*g + 0.114*b) > 140;
+}
+
+function extractDominantColor(base64, callback) {
+  const img = new Image();
+  img.onload = function() {
+    try {
+      const canvas = document.createElement('canvas');
+      const size = 60;
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      const data = ctx.getImageData(0, 0, size, size).data;
+      const buckets = {};
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+        if (a < 128) continue;
+        if (r > 220 && g > 220 && b > 220) continue; // skip white
+        if (r < 35 && g < 35 && b < 35) continue;   // skip black
+        const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+        if (mx - mn < 45) continue;                   // skip gray
+        const qr = Math.round(r/32)*32;
+        const qg = Math.round(g/32)*32;
+        const qb = Math.round(b/32)*32;
+        const key = `${qr},${qg},${qb}`;
+        buckets[key] = (buckets[key]||0) + 1;
+      }
+      let bestKey = null, bestCount = 0;
+      for (const [key, count] of Object.entries(buckets)) {
+        if (count > bestCount) { bestCount = count; bestKey = key; }
+      }
+      if (bestKey) {
+        const [cr,cg,cb] = bestKey.split(',').map(Number);
+        callback(`rgb(${cr},${cg},${cb})`);
+      } else {
+        callback(null);
+      }
+    } catch(e) { callback(null); }
+  };
+  img.onerror = () => callback(null);
+  img.src = base64;
 }
 
 function updateSpielplanGegnerSelect() {
@@ -1794,6 +1894,9 @@ function updateSpielplanGegnerSelect() {
 function resolveLogos(homeTeamName, awayTeamName) {
   homeLogo = getTeamLogo(homeTeamName);
   awayLogo = getTeamLogo(awayTeamName);
+  homeColor = getTeamColor(homeTeamName);
+  awayColor = getTeamColor(awayTeamName);
+  applyTeamColors();
   updateScoreboardLogos();
 }
 
@@ -1852,6 +1955,8 @@ function syncToFirebase() {
         matchDate: document.getElementById('matchDate').textContent,
         homeLogo: homeLogo || '',
         awayLogo: awayLogo || '',
+        homeColor: homeColor || '',
+        awayColor: awayColor || '',
         squad: squad || [],
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       });
@@ -1912,15 +2017,14 @@ function showGoalOverlay(event, data) {
   const card    = document.getElementById('goalOverlayCard');
   if (!overlay || !card) return;
 
-  // Glow-Farbe je nach Team
-  card.classList.remove('red-glow', 'own-glow');
+  // Glow-Farbe je nach Team (home-glow = default, away-glow, own-glow)
+  card.classList.remove('away-glow', 'own-glow');
   if (event.isOwnGoal) {
     card.classList.add('own-glow');
-  } else if (event.team !== (data.isHomeTeam ? 'home' : 'away')) {
-    // Gegentor
-    card.classList.add('red-glow');
+  } else if (event.team === 'away') {
+    card.classList.add('away-glow');
   }
-  // else: eigenes Tor → Standard (grün/accent)
+  // team === 'home': kein extra class, Standard verwendet --home-color
 
   // Mannschaftsname ermitteln
   let teamName = '';
@@ -1971,6 +2075,19 @@ function showGoalOverlay(event, data) {
 }
 
 function updateTickerUI(data, lastScore) {
+  // Apply team colors from Firebase data
+  if (data.homeColor || data.awayColor) {
+    const r = document.documentElement;
+    if (data.homeColor) {
+      r.style.setProperty('--home-color', data.homeColor);
+      r.style.setProperty('--home-color-text', isLight(data.homeColor) ? '#0f0f0f' : '#fff');
+    }
+    if (data.awayColor) {
+      r.style.setProperty('--away-color', data.awayColor);
+      r.style.setProperty('--away-color-text', isLight(data.awayColor) ? '#0f0f0f' : '#fff');
+    }
+  }
+
   // Team names — direkt per ID ansprechen, unabhängig von CSS visibility
   const homeLabel = document.querySelector('.team-name.home');
   const awayLabel = document.querySelector('.team-name.away');
