@@ -1866,16 +1866,15 @@ function hslToRgb(h, s, l) {
   return { r:Math.round(hue(p,q,h+1/3)*255), g:Math.round(hue(p,q,h)*255), b:Math.round(hue(p,q,h-1/3)*255) };
 }
 
-// Lighten color until it reaches MIN_CONTRAST against the dark background
-const MIN_CONTRAST = 4.0;
+// Lighten color until it reaches 4.0:1 contrast against the dark background
 function ensureReadable(color) {
   let {r, g, b} = parseRgb(color);
-  if (contrastVsBg(r, g, b) >= MIN_CONTRAST) return color;
+  if (contrastVsBg(r, g, b) >= 4.0) return color;
   let {h, s, l} = rgbToHsl(r, g, b);
   for (let i = 0; i < 30 && l < 0.97; i++) {
     l = Math.min(0.97, l + 0.04);
     ({r, g, b} = hslToRgb(h, s, l));
-    if (contrastVsBg(r, g, b) >= MIN_CONTRAST) break;
+    if (contrastVsBg(r, g, b) >= 4.0) break;
   }
   return `rgb(${r},${g},${b})`;
 }
