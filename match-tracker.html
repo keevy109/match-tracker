@@ -532,23 +532,31 @@
     text-align: center;
     max-width: 300px; width: 88%;
     border: 2px solid var(--home-color);
-    box-shadow: 0 0 30px 4px color-mix(in srgb, var(--home-color) 30%, transparent);
-    animation: goalCardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, glowPulse 2.5s ease-in-out 0.4s infinite;
+    animation: goalCardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     --glow-color: var(--home-color);
   }
   .goal-overlay-card.away-glow {
     border-color: var(--away-color);
-    box-shadow: 0 0 30px 4px color-mix(in srgb, var(--away-color) 30%, transparent);
     --glow-color: var(--away-color);
   }
   .goal-overlay-card.own-glow {
     border-color: var(--own);
-    box-shadow: 0 0 30px 4px color-mix(in srgb, var(--own) 30%, transparent);
     --glow-color: var(--own);
   }
+  .goal-overlay-card::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 26px;
+    background: var(--glow-color);
+    opacity: 0.15;
+    filter: blur(20px);
+    z-index: -1;
+    animation: glowPulse 2.5s ease-in-out infinite;
+  }
   @keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 30px 4px color-mix(in srgb, var(--glow-color) 30%, transparent); }
-    50%      { box-shadow: 0 0 50px 12px color-mix(in srgb, var(--glow-color) 45%, transparent); }
+    0%, 100% { opacity: 0.15; filter: blur(20px); }
+    50%      { opacity: 0.35; filter: blur(30px); }
   }
 
   @keyframes goalCardPop {
