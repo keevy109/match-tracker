@@ -280,9 +280,10 @@
   .player-btn-photo-placeholder { width: 44px; height: 44px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
   /* Goal overlay player photo */
-  .goal-overlay-player-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--home-color); margin-bottom: 12px; background: #222; }
+  .goal-overlay-player-photo { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 4px solid var(--home-color); background: #222; position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); z-index: 1; }
   .goal-overlay-card.away-glow .goal-overlay-player-photo { border-color: var(--away-color); }
   .goal-overlay-card.own-glow .goal-overlay-player-photo { border-color: var(--own); }
+  .goal-overlay-card.has-photo { padding-top: 116px; }
   .goal-overlay-logo { width: 80px; height: 80px; object-fit: contain; margin-bottom: 12px; }
 
   /* SPIELPLAN TAB */
@@ -524,6 +525,7 @@
 
   .goal-overlay-card {
     position: relative;
+    overflow: visible;
     background: #111;
     border-radius: 22px;
     padding: 36px 40px 30px;
@@ -705,10 +707,10 @@
     <span class="section-label">Tor erfassen</span>
     <div class="goal-btns">
       <button class="btn-goal btn-home" id="btnGoalOurs" onclick="handleOurGoal()">
-        <span class="btn-label">Tor</span><span class="btn-main">Heim ⚽</span>
+        <span class="btn-label">Tor</span><span class="btn-main">Heim</span>
       </button>
       <button class="btn-goal btn-away" id="btnGoalTheirs" onclick="handleTheirGoal()">
-        <span class="btn-label">Gegentor</span><span class="btn-main">Gast ⚽</span>
+        <span class="btn-label">Gegentor</span><span class="btn-main">Gast</span>
       </button>
     </div>
   </div>
@@ -1107,19 +1109,19 @@ function updateGoalButtons() {
 
   if (isHomeTeam) {
     // Heim: unser Button links (grün), Gegner rechts (rot)
-    btnOurs.querySelector('.btn-main').textContent = homeName + ' ⚽';
+    btnOurs.querySelector('.btn-main').textContent = homeName;
     btnOurs.querySelector('.btn-label').textContent = 'Tor';
     btnOurs.className = 'btn-goal btn-home';
-    btnTheirs.querySelector('.btn-main').textContent = awayName + ' ⚽';
+    btnTheirs.querySelector('.btn-main').textContent = awayName;
     btnTheirs.querySelector('.btn-label').textContent = 'Gegentor';
     btnTheirs.className = 'btn-goal btn-away';
     container.insertBefore(btnOurs, btnTheirs);
   } else {
     // Auswärts: Gegner links (grün/home), unser Button rechts (rot/away)
-    btnTheirs.querySelector('.btn-main').textContent = homeName + ' ⚽';
+    btnTheirs.querySelector('.btn-main').textContent = homeName;
     btnTheirs.querySelector('.btn-label').textContent = 'Gegentor';
     btnTheirs.className = 'btn-goal btn-home';
-    btnOurs.querySelector('.btn-main').textContent = OUR_TEAM + ' ⚽';
+    btnOurs.querySelector('.btn-main').textContent = OUR_TEAM;
     btnOurs.querySelector('.btn-label').textContent = 'Tor';
     btnOurs.className = 'btn-goal btn-away';
     container.insertBefore(btnTheirs, btnOurs);
@@ -2409,7 +2411,7 @@ function showGoalOverlay(event, data) {
   if (!overlay || !card) return;
 
   // Glow-Farbe je nach Team (home-glow = default, away-glow, own-glow)
-  card.classList.remove('away-glow', 'own-glow');
+  card.classList.remove('away-glow', 'own-glow', 'has-photo');
   if (event.isOwnGoal) {
     card.classList.add('own-glow');
   } else if (event.team === 'away') {
@@ -2435,9 +2437,10 @@ function showGoalOverlay(event, data) {
   if (emojiEl) emojiEl.style.display = 'none';
 
   if (photo) {
-    // Spielerfoto: Kreis mit Glow-Border
+    // Spielerfoto: Kreis mit Glow-Border, ragt über Karte
     if (photoEl) { photoEl.src = photo; photoEl.style.display = ''; }
     if (logoEl)  { logoEl.src = '';    logoEl.style.display = 'none'; }
+    card.classList.add('has-photo');
   } else if (teamLogo) {
     // Team-Logo: gleiche Größe wie Spielerfoto, aber kein Kreis-Clip
     if (photoEl) { photoEl.src = '';        photoEl.style.display = 'none'; }
