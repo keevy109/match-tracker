@@ -1895,13 +1895,26 @@ function editTeam(id) {
     const file = document.getElementById('es-tlogo').files[0];
     if (name) t.name = name;
     const doSave = () => {
-      // Wenn es unser Team ist, OUR_TEAM-Konstante spiegeln
-      applyTeamColors();
+      // Farben des laufenden Spiels aktualisieren falls dieses Team spielt
+      const title = document.getElementById('matchTitle').value;
+      if (title) {
+        const parts = title.split(/\s+vs\.?\s+/i);
+        resolveLogos(parts[0]?.trim() || '', parts[1]?.trim() || '');
+      } else {
+        applyTeamColors();
+      }
       renderTeamsList(); save();
       document.getElementById('editSheet').classList.remove('active');
     };
     if (file) {
-      resizeLogo(file, base64 => { t.logo = base64; doSave(); });
+      resizeLogo(file, base64 => {
+        t.logo = base64;
+        // Dominante Farbe aus neuem Logo extrahieren
+        extractDominantColor(base64, color => {
+          t.color = color || t.color || '';
+          doSave();
+        });
+      });
     } else {
       doSave();
     }
