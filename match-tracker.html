@@ -104,8 +104,7 @@
   #btnPause.active { border-color: var(--own); color: var(--own); }
   #btnReset  { border-color: #2a2a2a; color: #444; font-size: 15px; }
 
-  .minute-input-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 20px 4px; }
-  .minute-input-row label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .minute-input-row { display: none; }
   .minute-input-row input[type=number] {
     background: var(--surface); border: 1px solid var(--border); color: var(--text);
     font-family: var(--mono); font-size: 16px; width: 64px; text-align: center;
@@ -470,11 +469,16 @@
 
   .goal-overlay-emoji { font-size: 48px; margin-bottom: 4px; }
   .goal-overlay-tor {
-    font-family: var(--mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 4px; color: var(--accent); margin-bottom: 14px;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; color: var(--accent); text-transform: uppercase;
+    margin-bottom: 2px;
   }
   .goal-overlay-card.red-glow .goal-overlay-tor  { color: var(--red); }
   .goal-overlay-card.own-glow .goal-overlay-tor  { color: var(--own); }
+  .goal-overlay-team {
+    font-size: 22px; font-weight: 800; color: var(--text);
+    margin-bottom: 18px; line-height: 1.15;
+  }
   .goal-overlay-score {
     font-family: var(--mono); font-size: 52px; font-weight: 700;
     color: var(--text); line-height: 1; margin-bottom: 14px;
@@ -491,6 +495,12 @@
   }
 
   body.ticker-mode .scoreboard { margin-top: 8px; }
+  .ticker-clock {
+    display: none; text-align: center;
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+    margin: 2px 0 12px;
+  }
+  body.ticker-mode .ticker-clock { display: block; }
   body.ticker-mode .score { font-size: 80px; }
   body.ticker-mode .team-name { font-size: 15px; }
   body.ticker-mode .events-section { padding-top: 8px; }
@@ -561,6 +571,7 @@
     </div>
     <div class="team-name away">Gast</div>
   </div>
+  <div class="ticker-clock" id="tickerClock"></div>
 
   <div class="timer-row">
     <button class="btn-timer" id="btnStart" onclick="startTimer()" title="Start">▶</button>
@@ -733,7 +744,8 @@
 <div class="goal-overlay" id="goalOverlay">
   <div class="goal-overlay-card" id="goalOverlayCard">
     <div class="goal-overlay-emoji">⚽</div>
-    <div class="goal-overlay-tor">TOR!</div>
+    <div class="goal-overlay-tor">Tor für</div>
+    <div class="goal-overlay-team" id="goalOverlayTeam"></div>
     <div class="goal-overlay-score" id="goalOverlayScore"></div>
     <div class="goal-overlay-scorer" id="goalOverlayScorer"></div>
     <div class="goal-overlay-minute" id="goalOverlayMinute"></div>
@@ -805,7 +817,6 @@ function switchTab(name) {
       isHomeTeam    = d.isHomeTeam    !== undefined ? d.isHomeTeam : true;
       activeMatchId = d.activeMatchId || null;
       document.getElementById('matchTitle').value  = d.matchTitle || '';
-      document.getElementById('minuteInput').value = d.minute     || 1;
 
       if (!d.matchReady) {
         openSetup(squad.length > 0);
@@ -860,7 +871,6 @@ function save(matchReady) {
       isHomeTeam,
       activeMatchId,
       matchTitle: document.getElementById('matchTitle').value,
-      minute:     document.getElementById('minuteInput').value,
       matchReady: matchReady !== undefined ? matchReady : (existing.matchReady || false),
     }));
     syncToFirebase();
@@ -876,7 +886,6 @@ function startTimerLoop() {
     if (sec !== lastSec) {
       lastSec = sec;
       updateTimerDisplay();
-      document.getElementById('minuteInput').value = Math.min(Math.floor(sec / 60) + 1, 120);
     }
     timerRAF = requestAnimationFrame(tick);
   }
@@ -914,7 +923,6 @@ function resetTimer() {
   updateTimerDisplay();
   document.getElementById('timerDisplay').classList.remove('running');
   document.getElementById('btnPause').classList.remove('active');
-  document.getElementById('minuteInput').value = 1;
   save();
 }
 
@@ -1042,7 +1050,7 @@ function renderPickerPlayers() {
 }
 
 function addGoal(team, isOwnGoal, player) {
-  const minute = parseInt(document.getElementById('minuteInput').value) || 1;
+  const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
   if (team==='home') homeScore++; else awayScore++;
   events.unshift({
     id: Date.now(), team, isOwnGoal, minute,
@@ -1610,7 +1618,19 @@ function initTickerMode(matchId) {
   let tickerData = null;
   let tickerDataReceivedAt = null;
 
-  // Spieluhr-Interval (für spätere Erweiterungen reserviert)
+  // Spieluhr live hochzählen im Ticker
+  setInterval(() => {
+    if (!tickerData) return;
+    const clockEl = document.getElementById('tickerClock');
+    if (!clockEl) return;
+    let secs = tickerData.elapsedSecs || 0;
+    if (tickerData.timerRunning && tickerDataReceivedAt) {
+      secs += Math.floor((Date.now() - tickerDataReceivedAt) / 1000);
+    }
+    const m = Math.floor(secs / 60);
+    const s = String(secs % 60).padStart(2, '0');
+    clockEl.textContent = tickerData.timerRunning ? `${m}:${s}` : (secs > 0 ? `${m}:${s} – Pause` : '');
+  }, 1000);
 
   firebase.database().ref('matches/' + matchId).on('value', snapshot => {
     const data = snapshot.val();
@@ -1641,7 +1661,16 @@ function showGoalOverlay(event, data) {
   }
   // else: eigenes Tor → Standard (grün/accent)
 
+  // Mannschaftsname ermitteln
+  let teamName = '';
+  if (event.isOwnGoal) {
+    teamName = event.team === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
+  } else {
+    teamName = event.team === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
+  }
+
   const scorer = (event.scorer && event.scorer !== '—') ? event.scorer : '';
+  document.getElementById('goalOverlayTeam').textContent   = teamName;
   document.getElementById('goalOverlayScore').textContent  = event.snapshot || '';
   document.getElementById('goalOverlayScorer').textContent = scorer || (event.isOwnGoal ? 'Eigentor' : '');
   document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
