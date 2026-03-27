@@ -1023,7 +1023,7 @@ function renderEvents() {
   const homeName = parts[0]?.trim() || 'Heim';
   const awayName = parts[1]?.trim() || 'Gast';
 
-  [...events].sort((a,b) => b.id - a.id).forEach(e => {
+  [...events].sort((a,b) => a.id - b.id).forEach(e => {
     const cls = e.isOwnGoal ? 'own' : e.team;
     const tag = e.isOwnGoal ? 'Eigentor' : (e.team==='home' ? homeName : awayName);
     const numTag = e.scorerNum ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:5px">#${e.scorerNum}</span>` : '';
@@ -1051,7 +1051,7 @@ function getMatchTeams() {
 function exportText() {
   const { home, away } = getMatchTeams();
   let text = `${home} ${homeScore}:${awayScore} ${away}\n\n`;
-  const sorted = [...events].sort((a,b) => b.id - a.id);
+  const sorted = [...events].sort((a,b) => a.id - b.id);
   sorted.forEach(e => {
     const name = (e.scorer && e.scorer !== '—') ? ` ${e.scorer}` : '';
     text += `${e.snapshot} ${e.minute}'${name}\n`;
@@ -1068,7 +1068,7 @@ function exportImage() {
   const canvas = document.getElementById('exportCanvas');
   const ctx = canvas.getContext('2d');
   const w = 720, h = 480;
-  const sorted = [...events].sort((a,b) => b.id - a.id);
+  const sorted = [...events].sort((a,b) => a.id - b.id);
   const lineH = 22;
   const goalsH = sorted.length * lineH;
   const totalH = Math.max(h, 340 + goalsH);
@@ -1604,7 +1604,7 @@ function updateTickerUI(data, lastScore) {
     list.innerHTML = '<div class="empty-state">Noch keine Tore</div>';
   } else {
     list.innerHTML = '';
-    [...evts].sort((a,b) => b.id - a.id).forEach(e => {
+    [...evts].sort((a,b) => a.id - b.id).forEach(e => {
       const cls = e.isOwnGoal ? 'own' : e.team;
       const tag = e.isOwnGoal ? 'Eigentor' : (e.team === 'home' ? (data.homeTeam||'Heim') : (data.awayTeam||'Gast'));
       const numTag = e.scorerNum ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:5px">#${e.scorerNum}</span>` : '';
