@@ -518,11 +518,10 @@
 
   body.ticker-mode .scoreboard { margin-top: 8px; }
   .ticker-clock {
-    display: none; text-align: center;
-    font-family: var(--mono); font-size: 13px; color: var(--muted);
-    margin: 2px 0 12px;
+    font-family: var(--mono); font-size: 18px; font-weight: 700;
+    color: var(--accent); margin-top: 4px; letter-spacing: 1px;
+    min-height: 24px;
   }
-  body.ticker-mode .ticker-clock { display: block; }
   body.ticker-mode .score { font-size: 80px; }
   body.ticker-mode .team-name { font-size: 15px; }
   body.ticker-mode .events-section { padding-top: 8px; }
@@ -564,6 +563,7 @@
 <div class="ticker-header">
   <div class="ticker-live-badge"><div class="ticker-live-dot"></div> LIVE</div>
   <div class="ticker-date" id="tickerDate"></div>
+  <div class="ticker-clock" id="tickerClock"></div>
 </div>
 
 <header>
@@ -598,7 +598,6 @@
     </div>
     <div class="team-name away">Gast</div>
   </div>
-  <div class="ticker-clock" id="tickerClock"></div>
 
   <div class="timer-row">
     <button class="btn-timer" id="btnStart" onclick="startTimer()" title="Start">▶</button>
@@ -1880,9 +1879,10 @@ function showGoalOverlay(event, data) {
   }
 
   const scorer = (event.scorer && event.scorer !== '—') ? event.scorer : '';
+  const numPrefix = event.scorerNum ? `#${event.scorerNum} ` : '';
   document.getElementById('goalOverlayTeam').textContent   = teamName;
   document.getElementById('goalOverlayScore').textContent  = event.snapshot || '';
-  document.getElementById('goalOverlayScorer').textContent = scorer || (event.isOwnGoal ? 'Eigentor' : '');
+  document.getElementById('goalOverlayScorer').textContent = scorer ? `${numPrefix}${scorer}` : (event.isOwnGoal ? 'Eigentor' : '');
   document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
 
   // Reset animation
