@@ -140,7 +140,7 @@
   .btn-home { background: var(--home-color); color: var(--home-color-text); }
   .btn-away { background: var(--away-color); color: var(--away-color-text); }
 
-  .events-section { flex: 1; padding: 0 20px 14px; overflow-y: auto; min-height: 80px; }
+  .events-section { flex: 1; padding: 0 20px 14px; overflow-y: auto; min-height: 80px; position: relative; -webkit-mask-image: linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent); mask-image: linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent); }
   .events-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .events-header span { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
   .btn-clear { background: none; border: none; color: #666; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: color 0.1s; }
