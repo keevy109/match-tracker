@@ -992,7 +992,7 @@ function save(matchReady) {
       ...existing,
       homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo, homeColor, awayColor,
       timerOffset: elapsedSeconds(),
-      timerBase,
+      timerBase: timerBase !== null ? Date.now() : null,
       isHomeTeam,
       activeMatchId,
       matchTitle: document.getElementById('matchTitle').value,
