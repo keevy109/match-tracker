@@ -1660,7 +1660,8 @@ function endCurrentMatch() {
       firebase.database().ref('matches/' + activeMatchId).update({
         matchFinished: true,
         timerRunning: false,
-        elapsedSecs: elapsedSeconds(),
+        timerBase: null,
+        timerOffset: elapsedSeconds(),
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       });
     } catch(e) {}
@@ -2279,7 +2280,8 @@ function syncToFirebase() {
         awayScore,
         isHomeTeam,
         events: events || [],
-        elapsedSecs: elapsedSeconds(),
+        timerBase: timerBase,
+        timerOffset: timerOffset,
         timerRunning: timerBase !== null,
         matchDate: document.getElementById('matchDate').textContent,
         homeLogo: homeLogo || '',
@@ -2352,22 +2354,25 @@ function initTickerMode(matchId) {
   let tickerData = null;
   let tickerDataReceivedAt = null;
 
-  // Spieluhr live hochzählen im Ticker
+  // Spieluhr live hochzählen im Ticker – berechnet direkt aus Admin-timerBase/timerOffset
   setInterval(() => {
     if (!tickerData) return;
     const clockEl = document.getElementById('tickerClock');
     if (!clockEl) return;
-    let secs = tickerData.elapsedSecs || 0;
-    if (tickerData.timerRunning && tickerDataReceivedAt) {
-      secs += Math.floor((Date.now() - tickerDataReceivedAt) / 1000);
-    }
     if (tickerData.matchFinished) {
       clockEl.textContent = 'Spiel beendet';
       return;
     }
+    const offset = tickerData.timerOffset || 0;
+    const base = tickerData.timerBase || null;
+    let secs = offset;
+    if (base !== null) {
+      secs = offset + Math.floor((Date.now() - base) / 1000);
+    }
+    if (secs <= 0 && base === null) { clockEl.textContent = ''; return; }
     const m = Math.floor(secs / 60);
     const s = String(secs % 60).padStart(2, '0');
-    clockEl.textContent = tickerData.timerRunning ? `${m}:${s}` : (secs > 0 ? `${m}:${s} – Pause` : '');
+    clockEl.textContent = base !== null ? `${m}:${s}` : `${m}:${s} – Pause`;
   }, 1000);
 
   firebase.database().ref('matches/' + matchId).on('value', snapshot => {
