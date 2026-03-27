@@ -422,6 +422,10 @@
     font-family: var(--mono); font-size: 12px; color: var(--accent);
     margin-bottom: 2px;
   }
+  .ticker-minute {
+    font-family: var(--mono); font-size: 22px; font-weight: 700;
+    color: var(--accent); margin: 4px 0 0;
+  }
   .ticker-updated {
     font-family: var(--mono); font-size: 10px; color: var(--muted);
     text-align: center; padding: 16px 0 24px;
@@ -469,6 +473,7 @@
 <div class="ticker-header">
   <div class="ticker-live-badge"><div class="ticker-live-dot"></div> LIVE</div>
   <div class="ticker-date" id="tickerDate"></div>
+  <div class="ticker-minute" id="tickerMinute"></div>
 </div>
 
 <header>
@@ -1544,30 +1549,39 @@ function initTickerMode(matchId) {
 }
 
 function updateTickerUI(data, lastScore) {
-  // Team names
-  const labels = document.querySelectorAll('.team-name');
-  if (labels.length >= 2) {
-    labels[0].textContent = data.homeTeam || 'Heim';
-    labels[1].textContent = data.awayTeam || 'Gast';
-  }
+  // Team names — direkt per ID ansprechen, unabhängig von CSS visibility
+  const homeLabel = document.querySelector('.team-name.home');
+  const awayLabel = document.querySelector('.team-name.away');
+  if (homeLabel) homeLabel.textContent = data.homeTeam || 'Heim';
+  if (awayLabel) awayLabel.textContent = data.awayTeam || 'Gast';
 
   // Score
   const scoreH = document.getElementById('scoreHome');
   const scoreA = document.getElementById('scoreAway');
-  scoreH.textContent = data.homeScore;
-  scoreA.textContent = data.awayScore;
+  if (scoreH) scoreH.textContent = data.homeScore ?? 0;
+  if (scoreA) scoreA.textContent = data.awayScore ?? 0;
 
   // Animate if score changed
-  if (lastScore && (lastScore.h !== data.homeScore || lastScore.a !== data.awayScore)) {
+  if (lastScore && scoreH && scoreA &&
+      (lastScore.h !== data.homeScore || lastScore.a !== data.awayScore)) {
     scoreH.classList.remove('bump'); scoreA.classList.remove('bump');
     void scoreH.offsetWidth;
     scoreH.classList.add('bump'); scoreA.classList.add('bump');
   }
 
-  // Events list
+  // Minute
+  const minEl = document.getElementById('tickerMinute');
+  if (minEl && data.minute) minEl.textContent = data.minute + '. Minute';
+
+  // Events — Firebase gibt Arrays als Objekt zurück: {0:{…}, 1:{…}}
+  // daher Object.values() statt direktes Array-Spread
   const list = document.getElementById('eventsList');
   if (!list) return;
-  const evts = data.events || [];
+  const raw = data.events;
+  const evts = raw
+    ? (Array.isArray(raw) ? raw : Object.values(raw))
+    : [];
+
   if (evts.length === 0) {
     list.innerHTML = '<div class="empty-state">Noch keine Tore</div>';
   } else {
@@ -1596,8 +1610,8 @@ function updateTickerUI(data, lastScore) {
     document.getElementById('tickerUpdated').textContent = 'Letzte Aktualisierung: ' + txt;
   }
 
-  // Update page title
-  document.title = `${data.homeScore}:${data.awayScore} ${data.homeTeam||''} vs ${data.awayTeam||''} - Live`;
+  // Page title
+  document.title = `${data.homeScore ?? 0}:${data.awayScore ?? 0} ${data.homeTeam||''} vs ${data.awayTeam||''} – LIVE`;
 }
 
 // ─── TICKER SHARE UI ─────────────────────────────────────────────────────────
