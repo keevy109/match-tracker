@@ -422,9 +422,68 @@
     font-family: var(--mono); font-size: 12px; color: var(--accent);
     margin-bottom: 2px;
   }
-  .ticker-minute {
-    font-family: var(--mono); font-size: 22px; font-weight: 700;
-    color: var(--accent); margin: 4px 0 0;
+  /* Tor-Overlay */
+  .goal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 500;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(0,0,0,0.55);
+    animation: goalOverlayFadeIn 0.3s ease forwards;
+  }
+  .goal-overlay.active { display: flex; }
+  .goal-overlay.fading { animation: goalOverlayFadeOut 0.6s ease forwards; }
+
+  @keyframes goalOverlayFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes goalOverlayFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+
+  .goal-overlay-card {
+    background: #111;
+    border-radius: 22px;
+    padding: 36px 40px 30px;
+    text-align: center;
+    max-width: 300px; width: 88%;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 40px 8px color-mix(in srgb, var(--accent) 40%, transparent);
+    animation: goalCardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  .goal-overlay-card.red-glow {
+    border-color: var(--red);
+    box-shadow: 0 0 40px 8px color-mix(in srgb, var(--red) 40%, transparent);
+  }
+  .goal-overlay-card.own-glow {
+    border-color: var(--own);
+    box-shadow: 0 0 40px 8px color-mix(in srgb, var(--own) 40%, transparent);
+  }
+
+  @keyframes goalCardPop {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .goal-overlay-emoji { font-size: 48px; margin-bottom: 4px; }
+  .goal-overlay-tor {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 4px; color: var(--accent); margin-bottom: 14px;
+  }
+  .goal-overlay-card.red-glow .goal-overlay-tor  { color: var(--red); }
+  .goal-overlay-card.own-glow .goal-overlay-tor  { color: var(--own); }
+  .goal-overlay-score {
+    font-family: var(--mono); font-size: 52px; font-weight: 700;
+    color: var(--text); line-height: 1; margin-bottom: 14px;
+  }
+  .goal-overlay-scorer {
+    font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px;
+  }
+  .goal-overlay-minute {
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
   }
   .ticker-updated {
     font-family: var(--mono); font-size: 10px; color: var(--muted);
@@ -473,7 +532,6 @@
 <div class="ticker-header">
   <div class="ticker-live-badge"><div class="ticker-live-dot"></div> LIVE</div>
   <div class="ticker-date" id="tickerDate"></div>
-  <div class="ticker-minute" id="tickerMinute"></div>
 </div>
 
 <header>
@@ -670,6 +728,17 @@
 <div class="toast" id="toast"></div>
 <!-- Ticker: last updated (only visible in ticker mode) -->
 <div class="ticker-updated" id="tickerUpdated"></div>
+
+<!-- Tor-Overlay (Ticker) -->
+<div class="goal-overlay" id="goalOverlay">
+  <div class="goal-overlay-card" id="goalOverlayCard">
+    <div class="goal-overlay-emoji">⚽</div>
+    <div class="goal-overlay-tor">TOR!</div>
+    <div class="goal-overlay-score" id="goalOverlayScore"></div>
+    <div class="goal-overlay-scorer" id="goalOverlayScorer"></div>
+    <div class="goal-overlay-minute" id="goalOverlayMinute"></div>
+  </div>
+</div>
 
 <!-- Ticker share overlay -->
 <div class="ticker-share-overlay" id="tickerShareOverlay">
@@ -1541,21 +1610,7 @@ function initTickerMode(matchId) {
   let tickerData = null;
   let tickerDataReceivedAt = null;
 
-  // Lokale Spieluhr – läuft im Ticker weiter ohne Firebase-Ping
-  setInterval(() => {
-    if (!tickerData) return;
-    const minEl = document.getElementById('tickerMinute');
-    if (!minEl) return;
-    let secs = tickerData.elapsedSecs || 0;
-    if (tickerData.timerRunning && tickerDataReceivedAt) {
-      secs += Math.floor((Date.now() - tickerDataReceivedAt) / 1000);
-    }
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    minEl.textContent = tickerData.timerRunning
-      ? `${m}:${String(s).padStart(2,'0')}`
-      : (m > 0 ? `${m}:${String(s).padStart(2,'0')} – Pause` : '');
-  }, 1000);
+  // Spieluhr-Interval (für spätere Erweiterungen reserviert)
 
   firebase.database().ref('matches/' + matchId).on('value', snapshot => {
     const data = snapshot.val();
@@ -1568,6 +1623,38 @@ function initTickerMode(matchId) {
     updateTickerUI(data, lastScore);
     lastScore = { h: data.homeScore, a: data.awayScore };
   });
+}
+
+let goalOverlayTimeout = null;
+function showGoalOverlay(event, data) {
+  const overlay = document.getElementById('goalOverlay');
+  const card    = document.getElementById('goalOverlayCard');
+  if (!overlay || !card) return;
+
+  // Glow-Farbe je nach Team
+  card.classList.remove('red-glow', 'own-glow');
+  if (event.isOwnGoal) {
+    card.classList.add('own-glow');
+  } else if (event.team !== (data.isHomeTeam ? 'home' : 'away')) {
+    // Gegentor
+    card.classList.add('red-glow');
+  }
+  // else: eigenes Tor → Standard (grün/accent)
+
+  const scorer = (event.scorer && event.scorer !== '—') ? event.scorer : '';
+  document.getElementById('goalOverlayScore').textContent  = event.snapshot || '';
+  document.getElementById('goalOverlayScorer').textContent = scorer || (event.isOwnGoal ? 'Eigentor' : '');
+  document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
+
+  // Reset animation
+  overlay.classList.remove('fading');
+  overlay.classList.add('active');
+
+  clearTimeout(goalOverlayTimeout);
+  goalOverlayTimeout = setTimeout(() => {
+    overlay.classList.add('fading');
+    setTimeout(() => overlay.classList.remove('active', 'fading'), 650);
+  }, 6000);
 }
 
 function updateTickerUI(data, lastScore) {
@@ -1583,12 +1670,20 @@ function updateTickerUI(data, lastScore) {
   if (scoreH) scoreH.textContent = data.homeScore ?? 0;
   if (scoreA) scoreA.textContent = data.awayScore ?? 0;
 
-  // Animate if score changed
+  // Animate + Goal Overlay if score changed
   if (lastScore && scoreH && scoreA &&
       (lastScore.h !== data.homeScore || lastScore.a !== data.awayScore)) {
     scoreH.classList.remove('bump'); scoreA.classList.remove('bump');
     void scoreH.offsetWidth;
     scoreH.classList.add('bump'); scoreA.classList.add('bump');
+
+    // Neuestes Tor finden und Overlay anzeigen
+    const raw2 = data.events;
+    const evtsAll = raw2 ? (Array.isArray(raw2) ? raw2 : Object.values(raw2)) : [];
+    if (evtsAll.length > 0) {
+      const newest = evtsAll.reduce((a, b) => (b.id > a.id ? b : a), evtsAll[0]);
+      showGoalOverlay(newest, data);
+    }
   }
 
   // Events — Firebase gibt Arrays als Objekt zurück: {0:{…}, 1:{…}}
