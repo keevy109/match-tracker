@@ -278,6 +278,7 @@
   .goal-overlay-player-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); margin-bottom: 12px; background: #222; }
   .goal-overlay-card.red-glow .goal-overlay-player-photo { border-color: var(--red); }
   .goal-overlay-card.own-glow .goal-overlay-player-photo { border-color: var(--own); }
+  .goal-overlay-logo { width: 80px; height: 80px; object-fit: contain; margin-bottom: 12px; }
 
   /* SPIELPLAN TAB */
   .spielplan-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -806,7 +807,7 @@
   <div class="goal-overlay-card" id="goalOverlayCard">
     <img class="goal-overlay-player-photo" id="goalOverlayPlayerPhoto" src="" alt="" style="display:none">
     <div class="goal-overlay-emoji" id="goalOverlayEmoji">⚽</div>
-    <img class="goal-overlay-logo" id="goalOverlayLogo" src="" alt="" style="display:none; height:40px; width:auto; max-width:70px; object-fit:contain; margin-bottom:6px;">
+    <img class="goal-overlay-logo" id="goalOverlayLogo" src="" alt="" style="display:none;">
     <div class="goal-overlay-tor">Tor für</div>
     <div class="goal-overlay-team" id="goalOverlayTeam"></div>
     <div class="goal-overlay-score" id="goalOverlayScore"></div>
@@ -1929,23 +1930,26 @@ function showGoalOverlay(event, data) {
     teamName = event.team === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
   }
 
-  // Spieler-Foto (direkt aus Event gespeichert)
+  const photo = event.scorerPhoto || '';
+  const teamLogo = event.team === 'home' ? (data.homeLogo || '') : (data.awayLogo || '');
+
+  // Spieler-Foto oder Team-Logo in gleicher Größe — ⚽ Emoji immer ausgeblendet
   const photoEl = document.getElementById('goalOverlayPlayerPhoto');
   const emojiEl = document.getElementById('goalOverlayEmoji');
-  if (photoEl) {
-    const photo = event.scorerPhoto || '';
-    photoEl.src = photo;
-    photoEl.style.display = photo ? '' : 'none';
-    if (emojiEl) emojiEl.style.display = photo ? 'none' : '';
-  }
+  const logoEl  = document.getElementById('goalOverlayLogo');
+  if (emojiEl) emojiEl.style.display = 'none';
 
-  // Team-Logo (nur wenn kein Spielerfoto)
-  const logoEl = document.getElementById('goalOverlayLogo');
-  if (logoEl) {
-    const hasPhoto = !!(event.scorerPhoto);
-    const logo = hasPhoto ? '' : (event.team === 'home' ? (data.homeLogo || '') : (data.awayLogo || ''));
-    logoEl.src = logo;
-    logoEl.style.display = logo ? '' : 'none';
+  if (photo) {
+    // Spielerfoto: Kreis mit Glow-Border
+    if (photoEl) { photoEl.src = photo; photoEl.style.display = ''; }
+    if (logoEl)  { logoEl.src = '';    logoEl.style.display = 'none'; }
+  } else if (teamLogo) {
+    // Team-Logo: gleiche Größe wie Spielerfoto, aber kein Kreis-Clip
+    if (photoEl) { photoEl.src = '';        photoEl.style.display = 'none'; }
+    if (logoEl)  { logoEl.src = teamLogo;   logoEl.style.display = ''; }
+  } else {
+    if (photoEl) { photoEl.style.display = 'none'; }
+    if (logoEl)  { logoEl.style.display = 'none'; }
   }
 
   const scorer = (event.scorer && event.scorer !== '—') ? event.scorer : '';
