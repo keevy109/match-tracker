@@ -543,23 +543,6 @@
     border-color: var(--own);
     --glow-color: var(--own);
   }
-  .goal-overlay-card::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 26px;
-    background: var(--glow-color);
-    opacity: 0.15;
-    filter: blur(20px);
-    z-index: -1;
-  }
-  .goal-overlay.active .goal-overlay-card::after {
-    animation: glowPulse 2.5s ease-in-out infinite;
-  }
-  @keyframes glowPulse {
-    0%, 100% { opacity: 0.15; filter: blur(20px); }
-    50%      { opacity: 0.35; filter: blur(30px); }
-  }
 
   @keyframes goalCardPop {
     from { opacity: 0; transform: scale(0.6); }
@@ -2444,9 +2427,7 @@ function showGoalOverlay(event, data) {
   document.getElementById('goalOverlayScorer').textContent = scorer ? `${numPrefix}${scorer}` : (event.isOwnGoal ? 'Eigentor' : '');
   document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
 
-  // Reset: overlay kurz deaktivieren, reflow, dann aktivieren
-  overlay.classList.remove('active', 'fading');
-  void overlay.offsetHeight;
+  overlay.classList.remove('fading');
   overlay.classList.add('active');
 
   clearTimeout(goalOverlayTimeout);
