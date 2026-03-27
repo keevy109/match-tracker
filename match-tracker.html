@@ -76,14 +76,17 @@
   /* SCOREBOARD */
   .scoreboard {
     padding: 22px 20px 14px;
-    display: grid; grid-template-columns: 1fr 1fr;
-    align-items: center; gap: 6px 12px;
+    display: flex; flex-direction: column; gap: 6px;
   }
-  .score-display { grid-column: 1 / -1; }
-  .scoreboard-left, .scoreboard-right {
-    display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0;
+  .scoreboard-top {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
   }
-  .team-name { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: var(--muted); text-transform: uppercase; text-align: center; word-break: break-word; }
+  .scoreboard-names {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .team-name { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: var(--muted); text-transform: uppercase; word-break: break-word; }
+  .team-name.home { text-align: left; }
+  .team-name.away { text-align: right; }
 
   .score-display { display: flex; align-items: center; gap: 0; justify-content: center; }
   .score-num { font-family: var(--mono); font-size: 52px; font-weight: 500; line-height: 1; min-width: 44px; text-align: center; padding: 0 4px; color: #fff; }
@@ -647,17 +650,17 @@
 <section class="tab-content active" id="tabSpiel">
 
   <div class="scoreboard">
-    <div class="score-display">
-      <div class="score-num home" id="scoreHome">0</div>
-      <div class="score-sep">:</div>
-      <div class="score-num away" id="scoreAway">0</div>
-    </div>
-    <div class="scoreboard-left">
+    <div class="scoreboard-top">
       <img class="team-logo" id="logoHome" src="" alt="" style="display:none">
-      <div class="team-name home">Heim</div>
-    </div>
-    <div class="scoreboard-right">
+      <div class="score-display">
+        <div class="score-num home" id="scoreHome">0</div>
+        <div class="score-sep">:</div>
+        <div class="score-num away" id="scoreAway">0</div>
+      </div>
       <img class="team-logo" id="logoAway" src="" alt="" style="display:none">
+    </div>
+    <div class="scoreboard-names">
+      <div class="team-name home">Heim</div>
       <div class="team-name away">Gast</div>
     </div>
   </div>
