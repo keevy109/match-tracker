@@ -576,6 +576,9 @@
   .goal-overlay-minute {
     font-family: var(--mono); font-size: 13px; color: var(--muted);
   }
+  .goal-overlay-season {
+    font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 4px; font-style: italic;
+  }
   .ticker-updated {
     font-family: var(--mono); font-size: 10px; color: var(--muted);
     text-align: center; padding: 16px 0 24px;
@@ -880,6 +883,7 @@
     <div class="goal-overlay-score" id="goalOverlayScore"></div>
     <div class="goal-overlay-scorer" id="goalOverlayScorer"></div>
     <div class="goal-overlay-minute" id="goalOverlayMinute"></div>
+    <div class="goal-overlay-season" id="goalOverlaySeason"></div>
   </div>
 </div>
 
@@ -1841,15 +1845,20 @@ function editPlayer(id) {
     <label>Trikotnummer
       <input id="es-pnum" type="number" min="1" max="99" value="${p.num || ''}">
     </label>
+    <label>Saisontore
+      <input id="es-pgoals" type="number" min="0" value="${p.goals || 0}">
+    </label>
     <label>Foto
       <input type="file" accept="image/*" id="es-pphoto" style="padding:6px">
     </label>
   `, () => {
     const name = document.getElementById('es-pname').value.trim();
     const num  = document.getElementById('es-pnum').value.trim();
+    const goals = parseInt(document.getElementById('es-pgoals').value) || 0;
     const file = document.getElementById('es-pphoto').files[0];
     if (name) p.name = name;
     p.num = num;
+    p.goals = Math.max(0, goals);
     const doSave = () => { renderKaderList(); save(); document.getElementById('editSheet').classList.remove('active'); };
     if (file) {
       resizeLogo(file, base64 => { p.photo = base64; doSave(); });
@@ -2451,6 +2460,16 @@ function showGoalOverlay(event, data) {
   document.getElementById('goalOverlayScore').textContent  = event.snapshot || '';
   document.getElementById('goalOverlayScorer').textContent = scorer ? `${numPrefix}${scorer}` : (event.isOwnGoal ? 'Eigentor' : '');
   document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
+  const seasonEl = document.getElementById('goalOverlaySeason');
+  if (seasonEl) {
+    if (event.scorerId && !event.isOwnGoal) {
+      const sp = (data.squad || squad || []).find(s => s.id === event.scorerId);
+      const g = sp ? (sp.goals || 0) : 0;
+      seasonEl.textContent = g === 1 ? 'Erstes Saisontor' : g > 1 ? g + '. Saisontor' : '';
+    } else {
+      seasonEl.textContent = '';
+    }
+  }
 
   overlay.classList.remove('fading');
   overlay.classList.add('active');
