@@ -382,6 +382,28 @@
   /* Hidden canvas for export */
   #exportCanvas { display: none; }
 
+  /* ─── TEAMS TAB ──────────────────────────────────────────────────── */
+  .teams-section { padding: 16px; }
+  .teams-add-row { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+  .team-logo-upload { display: none; }
+  .btn-logo-upload { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; font-family: var(--sans); }
+  .btn-logo-upload.has-logo { border-color: var(--accent); color: var(--accent); }
+  .teams-list { display: flex; flex-direction: column; gap: 6px; }
+  .team-item { display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: 10px; padding: 8px 10px; }
+  .team-item-logo { height: 36px; width: 44px; object-fit: contain; flex-shrink: 0; }
+  .team-item-logo-placeholder { height: 36px; width: 44px; flex-shrink: 0; background: var(--surface); border-radius: 4px; }
+  .team-item-name { flex: 1; font-size: 14px; font-weight: 600; }
+  .team-item-badge { font-size: 10px; font-family: var(--mono); color: var(--accent); background: rgba(200,245,66,0.1); border: 1px solid var(--accent); border-radius: 4px; padding: 2px 5px; flex-shrink: 0; }
+  .btn-team-delete { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 2px 8px; line-height: 1; }
+  .kader-name-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 16px; padding: 10px 14px; border-radius: 8px; outline: none; flex: 1; min-width: 0; }
+  .kader-name-input:focus { border-color: #444; }
+  .kader-name-input::placeholder { color: #3a3a3a; }
+
+  /* ─── SCOREBOARD LOGOS ────────────────────────────────────────────── */
+  .scoreboard-logos { display: flex; justify-content: space-between; align-items: center; padding: 8px 24px 0; min-height: 44px; }
+  .team-logo { height: 40px; width: auto; max-width: 64px; object-fit: contain; }
+  body.ticker-mode .team-logo { height: 52px; max-width: 80px; }
+
   /* ─── TICKER MODE ─────────────────────────────────────────────────── */
   body.ticker-mode header,
   body.ticker-mode .tab-bar,
@@ -557,11 +579,16 @@
   <button class="tab-btn active" onclick="switchTab('spiel')">Spiel</button>
   <button class="tab-btn" onclick="switchTab('kader')">Kader</button>
   <button class="tab-btn" onclick="switchTab('spielplan')">Spielplan</button>
+  <button class="tab-btn" onclick="switchTab('teams')">Teams</button>
 </nav>
 
 <!-- ═══ TAB: SPIEL ═══ -->
 <section class="tab-content active" id="tabSpiel">
 
+  <div class="scoreboard-logos">
+    <img class="team-logo" id="logoHome" src="" alt="" style="display:none">
+    <img class="team-logo" id="logoAway" src="" alt="" style="display:none">
+  </div>
   <div class="scoreboard">
     <div class="team-name home">Heim</div>
     <div class="score-display">
@@ -641,7 +668,8 @@
     <div class="spielplan-add">
       <div class="spielplan-add-title">Spiel hinzufügen</div>
       <div class="spielplan-form">
-        <input type="text" id="spGegner" placeholder="Gegner" maxlength="40" oninput="validateSpForm()" />
+        <select id="spGegnerSelect" class="setup-input" style="flex:1" onchange="validateSpForm()"></select>
+        <input type="text" id="spGegner" class="setup-input" placeholder="Gegner" maxlength="40" style="display:none" oninput="validateSpForm()" />
         <div class="spielplan-form-row">
           <select id="spVenue" onchange="validateSpForm()">
             <option value="home">Heimspiel</option>
@@ -658,6 +686,20 @@
     <div class="spielplan-list" id="spielplanList">
       <div class="spielplan-empty">Noch keine Spiele geplant</div>
     </div>
+  </div>
+</section>
+
+<!-- ═══ TAB: TEAMS ═══ -->
+<section class="tab-content" id="tabTeams">
+  <div class="teams-section">
+    <span class="section-label">Teams verwalten</span>
+    <div class="teams-add-row">
+      <input type="file" id="teamLogoFile" class="team-logo-upload" accept="image/*" onchange="handleLogoFileChange(this)">
+      <button class="btn-logo-upload" id="btnLogoUpload" onclick="document.getElementById('teamLogoFile').click()">📷 Logo</button>
+      <input type="text" id="newTeamName" class="kader-name-input" placeholder="Teamname" maxlength="40" onkeydown="if(event.key==='Enter') addTeam()">
+      <button class="btn-add-player" onclick="addTeam()">+</button>
+    </div>
+    <div class="teams-list" id="teamsList"></div>
   </div>
 </section>
 
@@ -744,6 +786,7 @@
 <div class="goal-overlay" id="goalOverlay">
   <div class="goal-overlay-card" id="goalOverlayCard">
     <div class="goal-overlay-emoji">⚽</div>
+    <img class="goal-overlay-logo" id="goalOverlayLogo" src="" alt="" style="display:none; height:56px; width:auto; max-width:90px; object-fit:contain; margin-bottom:8px;">
     <div class="goal-overlay-tor">Tor für</div>
     <div class="goal-overlay-team" id="goalOverlayTeam"></div>
     <div class="goal-overlay-score" id="goalOverlayScore"></div>
@@ -770,7 +813,8 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let homeScore = 0, awayScore = 0;
-let events = [], squad = [], schedule = [];
+let events = [], squad = [], schedule = [], teams = [];
+let homeLogo = '', awayLogo = '';
 let confirmCallback = null;
 let isHomeTeam = true;
 let setupVenue = null;
@@ -792,7 +836,7 @@ const OUR_TEAM = 'SSV Berghausen';
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
     b.classList.toggle('active', b.textContent.toLowerCase().replace('ü','u') === name.replace('ü','u') ||
-      ['spiel','kader','spielplan'][i] === name);
+      ['spiel','kader','spielplan','teams'][i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
   const tab = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
@@ -812,6 +856,12 @@ function switchTab(name) {
       events        = d.events        || [];
       squad         = d.squad         || [];
       schedule      = d.schedule      || [];
+      teams         = d.teams         || [];
+      homeLogo      = d.homeLogo      || '';
+      awayLogo      = d.awayLogo      || '';
+      if (!teams.find(t => t.isOurTeam)) {
+        teams.unshift({ id: 1, name: OUR_TEAM, logo: '', isOurTeam: true });
+      }
       timerOffset   = d.timerOffset   || 0;
       timerBase     = d.timerBase     || null;
       isHomeTeam    = d.isHomeTeam    !== undefined ? d.isHomeTeam : true;
@@ -826,6 +876,7 @@ function switchTab(name) {
         closeSetup();
       }
     } else {
+      teams = [{ id: 1, name: OUR_TEAM, logo: '', isOurTeam: true }];
       openSetup(false);
     }
   } catch(e) {
@@ -847,6 +898,8 @@ function switchTab(name) {
   renderEvents();
   renderKaderList();
   renderSpielplan();
+  renderTeamsList();
+  updateSpielplanGegnerSelect();
   updateEndMatchBtn();
 
   // Auto-start: Wenn heutiges Datum im Spielplan matched und kein Spiel aktiv
@@ -865,7 +918,7 @@ function save(matchReady) {
     const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
     localStorage.setItem('matchtracker_v3', JSON.stringify({
       ...existing,
-      homeScore, awayScore, events, squad, schedule,
+      homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo,
       timerOffset: elapsedSeconds(),
       timerBase,
       isHomeTeam,
@@ -1322,6 +1375,7 @@ function finishSetup() {
   const awayTeam = isHomeTeam ? opponent : OUR_TEAM;
   document.getElementById('matchTitle').value = `${homeTeam} vs. ${awayTeam}`;
 
+  resolveLogos(homeTeam, awayTeam);
   updateScoreLabels();
   updateGoalButtons();
   renderKaderList();
@@ -1333,10 +1387,13 @@ function finishSetup() {
 function updateScoreLabels() {
   const title = document.getElementById('matchTitle').value;
   const parts = title.split(/\s+vs\.?\s+/i);
+  const homeName = parts[0]?.trim() || 'Heim';
+  const awayName = parts[1]?.trim() || 'Gast';
   const homeEl = document.querySelector('.team-name.home');
   const awayEl = document.querySelector('.team-name.away');
-  if (homeEl) homeEl.textContent = parts[0]?.trim() || 'Heim';
-  if (awayEl) awayEl.textContent = parts[1]?.trim() || 'Gast';
+  if (homeEl) homeEl.textContent = homeName;
+  if (awayEl) awayEl.textContent = awayName;
+  resolveLogos(homeName, awayName);
 }
 
 // ─── KADER ────────────────────────────────────────────────────────────────────
@@ -1370,12 +1427,29 @@ function renderKaderList() {
 
 // ─── SPIELPLAN ────────────────────────────────────────────────────────────────
 function validateSpForm() {
-  document.getElementById('btnAddMatch').disabled = !document.getElementById('spGegner').value.trim();
+  const sel = document.getElementById('spGegnerSelect');
+  const txt = document.getElementById('spGegner');
+  let hasOpponent = false;
+  if (sel && sel.style.display !== 'none') {
+    hasOpponent = !!sel.value;
+  } else {
+    hasOpponent = !!(txt?.value.trim());
+  }
+  document.getElementById('btnAddMatch').disabled = !hasOpponent;
 }
 
 function addScheduleMatch() {
-  const opponent = document.getElementById('spGegner').value.trim();
-  if (!opponent) return;
+  const sel = document.getElementById('spGegnerSelect');
+  const txt = document.getElementById('spGegner');
+  let opponent = '', opponentId = null;
+  if (sel && sel.style.display !== 'none' && sel.value) {
+    const opt = sel.options[sel.selectedIndex];
+    opponent = opt.text;
+    opponentId = parseInt(sel.value);
+  } else {
+    opponent = txt?.value.trim() || '';
+  }
+  if (!opponent) { showToast('Gegner fehlt'); return; }
   const venue = document.getElementById('spVenue').value;
   const date = document.getElementById('spDate').value || null;
   const time = document.getElementById('spTime').value || null;
@@ -1383,6 +1457,7 @@ function addScheduleMatch() {
   schedule.push({
     id: Date.now(),
     opponent,
+    opponentId,
     isHome: venue === 'home',
     date,
     time,
@@ -1397,7 +1472,8 @@ function addScheduleMatch() {
     return a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'');
   });
 
-  document.getElementById('spGegner').value = '';
+  if (sel) sel.value = '';
+  if (txt) txt.value = '';
   document.getElementById('spDate').value = '';
   document.getElementById('spTime').value = '';
   validateSpForm();
@@ -1425,6 +1501,7 @@ function startMatchFromSchedule(id) {
   const awayTeam = match.isHome ? match.opponent : OUR_TEAM;
   document.getElementById('matchTitle').value = `${homeTeam} vs. ${awayTeam}`;
 
+  resolveLogos(homeTeam, awayTeam);
   updateScoreLabels();
   updateGoalButtons();
   updateScore(false);
@@ -1546,6 +1623,130 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ─── TEAMS ────────────────────────────────────────────────────────────────────
+let pendingLogoBase64 = '';
+
+function resizeLogo(file, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const maxH = 80;
+      const scale = Math.min(1, maxH / img.height);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/png'));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleLogoFileChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  resizeLogo(file, base64 => {
+    pendingLogoBase64 = base64;
+    const btn = document.getElementById('btnLogoUpload');
+    if (btn) { btn.textContent = '✓ Logo'; btn.classList.add('has-logo'); }
+  });
+}
+
+function addTeam() {
+  const nameInput = document.getElementById('newTeamName');
+  const name = nameInput?.value.trim();
+  if (!name) { showToast('Name fehlt'); return; }
+  teams.push({ id: Date.now(), name, logo: pendingLogoBase64 || '', isOurTeam: false });
+  pendingLogoBase64 = '';
+  if (nameInput) nameInput.value = '';
+  const btn = document.getElementById('btnLogoUpload');
+  if (btn) { btn.textContent = '📷 Logo'; btn.classList.remove('has-logo'); }
+  const fileInput = document.getElementById('teamLogoFile');
+  if (fileInput) fileInput.value = '';
+  save();
+  renderTeamsList();
+  updateSpielplanGegnerSelect();
+}
+
+function deleteTeam(id) {
+  const t = teams.find(t => t.id === id);
+  if (t?.isOurTeam) return;
+  teams = teams.filter(t => t.id !== id);
+  save();
+  renderTeamsList();
+  updateSpielplanGegnerSelect();
+}
+
+function setOurTeamLogo(file) {
+  if (!file) return;
+  resizeLogo(file, base64 => {
+    const ourTeam = teams.find(t => t.isOurTeam);
+    if (ourTeam) { ourTeam.logo = base64; save(); renderTeamsList(); }
+  });
+}
+
+function renderTeamsList() {
+  const list = document.getElementById('teamsList');
+  if (!list) return;
+  if (teams.length === 0) {
+    list.innerHTML = '<div class="empty-state">Noch keine Teams</div>';
+    return;
+  }
+  list.innerHTML = '';
+  const ourTeam = teams.find(t => t.isOurTeam);
+  const others = teams.filter(t => !t.isOurTeam);
+  [...(ourTeam ? [ourTeam] : []), ...others].forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'team-item';
+    item.innerHTML = `
+      ${t.logo ? `<img class="team-item-logo" src="${t.logo}" alt="">` : `<div class="team-item-logo-placeholder"></div>`}
+      <span class="team-item-name">${esc(t.name)}</span>
+      ${t.isOurTeam ? `<span class="team-item-badge">Unser Team</span>` : ''}
+      ${t.isOurTeam
+        ? `<label class="btn-logo-upload" style="font-size:11px;padding:5px 8px" title="Logo ändern"><input type="file" accept="image/*" style="display:none" onchange="setOurTeamLogo(this.files[0])">📷</label>`
+        : `<button class="btn-team-delete" onclick="deleteTeam(${t.id})">×</button>`}
+    `;
+    list.appendChild(item);
+  });
+}
+
+function getTeamLogo(name) {
+  const t = teams.find(t => t.name === name);
+  return t?.logo || '';
+}
+
+function updateSpielplanGegnerSelect() {
+  const sel = document.getElementById('spGegnerSelect');
+  const txt = document.getElementById('spGegner');
+  if (!sel || !txt) return;
+  const opponents = teams.filter(t => !t.isOurTeam);
+  if (opponents.length === 0) {
+    sel.style.display = 'none';
+    txt.style.display = '';
+  } else {
+    sel.style.display = '';
+    txt.style.display = 'none';
+    sel.innerHTML = '<option value="">-- Gegner wählen --</option>' +
+      opponents.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  }
+}
+
+function resolveLogos(homeTeamName, awayTeamName) {
+  homeLogo = getTeamLogo(homeTeamName);
+  awayLogo = getTeamLogo(awayTeamName);
+  updateScoreboardLogos();
+}
+
+function updateScoreboardLogos() {
+  const lh = document.getElementById('logoHome');
+  const la = document.getElementById('logoAway');
+  if (lh) { lh.src = homeLogo || ''; lh.style.display = homeLogo ? '' : 'none'; }
+  if (la) { la.src = awayLogo || ''; la.style.display = awayLogo ? '' : 'none'; }
+}
+
 // ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────
 // Trage hier deine Firebase-Projekt-Config ein (siehe Anleitung)
 const FIREBASE_CONFIG = {
@@ -1592,6 +1793,8 @@ function syncToFirebase() {
         elapsedSecs: elapsedSeconds(),
         timerRunning: timerBase !== null,
         matchDate: document.getElementById('matchDate').textContent,
+        homeLogo: homeLogo || '',
+        awayLogo: awayLogo || '',
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       });
     } catch(e) { console.warn('Firebase sync failed:', e); }
@@ -1669,6 +1872,13 @@ function showGoalOverlay(event, data) {
     teamName = event.team === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
   }
 
+  const logoEl = document.getElementById('goalOverlayLogo');
+  if (logoEl) {
+    const logo = event.team === 'home' ? (data.homeLogo || '') : (data.awayLogo || '');
+    logoEl.src = logo;
+    logoEl.style.display = logo ? '' : 'none';
+  }
+
   const scorer = (event.scorer && event.scorer !== '—') ? event.scorer : '';
   document.getElementById('goalOverlayTeam').textContent   = teamName;
   document.getElementById('goalOverlayScore').textContent  = event.snapshot || '';
@@ -1692,6 +1902,11 @@ function updateTickerUI(data, lastScore) {
   const awayLabel = document.querySelector('.team-name.away');
   if (homeLabel) homeLabel.textContent = data.homeTeam || 'Heim';
   if (awayLabel) awayLabel.textContent = data.awayTeam || 'Gast';
+
+  const lh = document.getElementById('logoHome');
+  const la = document.getElementById('logoAway');
+  if (lh) { lh.src = data.homeLogo || ''; lh.style.display = data.homeLogo ? '' : 'none'; }
+  if (la) { la.src = data.awayLogo || ''; la.style.display = data.awayLogo ? '' : 'none'; }
 
   // Score
   const scoreH = document.getElementById('scoreHome');
