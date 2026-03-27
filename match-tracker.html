@@ -1652,7 +1652,14 @@ function generateQR(canvas, text, size) {
   img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&bgcolor=ffffff&color=000000&format=png`;
 }
 
+</script>
+
+<!-- Firebase SDK – muss VOR dem Startup-Code geladen sein -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
 // ─── STARTUP: Check ticker mode or init Firebase ─────────────────────────────
+// Läuft NACH dem Firebase SDK → firebase ist jetzt definiert
 (function() {
   const params = new URLSearchParams(window.location.search);
   const tickerId = params.get('ticker');
@@ -1662,16 +1669,6 @@ function generateQR(canvas, text, size) {
     initFirebase();
   }
 })();
-</script>
-
-<!-- Firebase SDK (loaded after main script, only needed features) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-// Re-init Firebase after SDK loads (if not in ticker mode)
-if (!new URLSearchParams(window.location.search).get('ticker')) {
-  initFirebase();
-}
 </script>
 </body>
 </html>
