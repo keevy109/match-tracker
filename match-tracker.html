@@ -405,6 +405,39 @@
   /* Hidden canvas for export */
   #exportCanvas { display: none; }
 
+  /* ─── EDIT SHEET ─────────────────────────────────────────────────── */
+  .edit-sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 280;
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .edit-sheet-overlay.active { opacity: 1; pointer-events: all; }
+  .edit-sheet-card {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 20px 20px 32px; width: 100%; max-width: 480px; max-height: 85vh;
+    overflow-y: auto; transform: translateY(20px); transition: transform 0.25s;
+  }
+  .edit-sheet-overlay.active .edit-sheet-card { transform: translateY(0); }
+  .edit-sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .edit-sheet-header h3 { margin: 0; font-size: 17px; font-weight: 700; }
+  .btn-sheet-close { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; line-height: 1; padding: 0 4px; }
+  .edit-sheet-body label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-size: 13px; color: var(--muted); font-family: var(--sans); }
+  .edit-sheet-body input, .edit-sheet-body select {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 15px; padding: 10px 12px; width: 100%;
+    font-family: var(--sans); outline: none; box-sizing: border-box;
+  }
+  .edit-sheet-body input:focus, .edit-sheet-body select:focus { border-color: #555; }
+  .edit-sheet-footer { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-sheet-cancel { flex: 1; padding: 12px; border-radius: 10px; font-size: 15px; border: none; cursor: pointer; background: var(--surface2); color: var(--muted); font-family: var(--sans); }
+  .btn-sheet-save   { flex: 1; padding: 12px; border-radius: 10px; font-size: 15px; border: none; cursor: pointer; background: var(--accent); color: #111; font-weight: 700; font-family: var(--sans); }
+  .btn-sheet-delete { padding: 12px 16px; border-radius: 10px; font-size: 15px; border: none; cursor: pointer; background: rgba(255,77,77,0.15); color: var(--red); font-family: var(--sans); }
+  /* edit / delete button in list rows */
+  .btn-row-edit   { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+  .btn-row-edit:hover { color: var(--text); }
+  .btn-row-delete { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 2px 8px; line-height: 1; }
+  .btn-row-delete:hover { color: var(--red); }
+
   /* ─── TEAMS TAB ──────────────────────────────────────────────────── */
   .teams-section { padding: 16px; }
   .teams-add-row { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
@@ -802,6 +835,22 @@
   </div>
 </div>
 
+<!-- Edit Sheet -->
+<div class="edit-sheet-overlay" id="editSheet" onclick="closeEditSheet(event)">
+  <div class="edit-sheet-card">
+    <div class="edit-sheet-header">
+      <h3 id="editSheetTitle">Bearbeiten</h3>
+      <button class="btn-sheet-close" onclick="closeEditSheet()">×</button>
+    </div>
+    <div class="edit-sheet-body" id="editSheetBody"></div>
+    <div class="edit-sheet-footer">
+      <button class="btn-sheet-delete" id="editSheetDelete" style="display:none" onclick="editSheetDelete()">Löschen</button>
+      <button class="btn-sheet-cancel" onclick="closeEditSheet()">Abbrechen</button>
+      <button class="btn-sheet-save" onclick="editSheetSave()">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <!-- Ticker: last updated (only visible in ticker mode) -->
 <div class="ticker-updated" id="tickerUpdated"></div>
@@ -1194,6 +1243,7 @@ function renderEvents() {
         <div class="event-tag">${tag}</div>
       </div>
       <div class="event-score">${e.snapshot}</div>
+      <button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>
       <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`;
     list.appendChild(item);
   });
@@ -1470,7 +1520,7 @@ function renderKaderList() {
       : `<label class="player-avatar-placeholder" title="Foto hinzufügen">
            <input type="file" accept="image/*" class="player-photo-file" onchange="updatePlayerPhoto(${p.id}, this)">📷
          </label>`;
-    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span><button class="btn-remove-player" onclick="removePlayer(${p.id})">×</button>`;
+    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span><button class="btn-row-edit" onclick="editPlayer(${p.id})" title="Bearbeiten">✎</button><button class="btn-remove-player btn-row-delete" onclick="removePlayer(${p.id})">×</button>`;
     list.appendChild(item);
   });
 }
@@ -1621,6 +1671,10 @@ function renderSpielplan() {
       const outcome = ourScore > theirScore ? 'win' : ourScore < theirScore ? 'loss' : 'draw';
       resultClass = outcome === 'win' ? 'has-result' : outcome === 'loss' ? 'is-loss' : 'is-draw';
       resultHTML = `<span class="spielplan-result ${outcome}">${m.result.home}:${m.result.away}</span>`;
+      actionsHTML = `<div class="spielplan-actions">
+        <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="editScheduleMatch(${m.id})">✎ Bearbeiten</button>
+        <button class="btn-delete-match" onclick="deleteScheduleMatch(${m.id})">Löschen</button>
+      </div>`;
     } else {
       if (activeMatchId === m.id) {
         resultHTML = '<span class="spielplan-result" style="color:var(--accent)">LIVE</span>';
@@ -1628,6 +1682,7 @@ function renderSpielplan() {
       actionsHTML = activeMatchId === m.id ? '' :
         `<div class="spielplan-actions">
           <button class="btn-start-match" onclick="startMatchFromSchedule(${m.id})">Spiel starten</button>
+          <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="editScheduleMatch(${m.id})">✎ Bearbeiten</button>
           <button class="btn-delete-match" onclick="deleteScheduleMatch(${m.id})">Löschen</button>
         </div>`;
     }
@@ -1676,6 +1731,184 @@ function confirmAction(type) {
 }
 function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('active'); }
 document.getElementById('confirmOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeConfirm(); });
+
+// ─── EDIT SHEET ───────────────────────────────────────────────────────────────
+let _editSheetSaveCb   = null;
+let _editSheetDeleteCb = null;
+
+function openEditSheet(title, bodyHtml, saveCb, deleteCb) {
+  document.getElementById('editSheetTitle').textContent = title;
+  document.getElementById('editSheetBody').innerHTML = bodyHtml;
+  _editSheetSaveCb   = saveCb   || null;
+  _editSheetDeleteCb = deleteCb || null;
+  const delBtn = document.getElementById('editSheetDelete');
+  delBtn.style.display = deleteCb ? '' : 'none';
+  document.getElementById('editSheet').classList.add('active');
+  // Auto-focus first input
+  setTimeout(() => {
+    const first = document.querySelector('#editSheetBody input, #editSheetBody select');
+    if (first) first.focus();
+  }, 100);
+}
+
+function closeEditSheet(e) {
+  if (e && e.target !== document.getElementById('editSheet')) return;
+  document.getElementById('editSheet').classList.remove('active');
+  _editSheetSaveCb = _editSheetDeleteCb = null;
+}
+
+function editSheetSave() {
+  if (_editSheetSaveCb) _editSheetSaveCb();
+}
+
+function editSheetDelete() {
+  if (_editSheetDeleteCb) _editSheetDeleteCb();
+}
+
+// ─── EDIT: TOR ────────────────────────────────────────────────────────────────
+function editEvent(id) {
+  const e = events.find(ev => ev.id === id);
+  if (!e) return;
+  openEditSheet('Tor bearbeiten', `
+    <label>Minute
+      <input id="es-min" type="number" min="0" max="120" value="${e.minute}">
+    </label>
+    <label>Torschütze
+      <input id="es-scorer" type="text" value="${esc(e.scorer || '')}">
+    </label>
+  `, () => {
+    const min = parseInt(document.getElementById('es-min').value);
+    const scorer = document.getElementById('es-scorer').value.trim();
+    if (!isNaN(min)) e.minute = min;
+    if (scorer) e.scorer = scorer;
+    renderEvents(); save();
+    document.getElementById('editSheet').classList.remove('active');
+  }, () => {
+    document.getElementById('editSheet').classList.remove('active');
+    deleteEvent(id);
+  });
+}
+
+// ─── EDIT: SPIELER ────────────────────────────────────────────────────────────
+function editPlayer(id) {
+  const p = squad.find(pl => pl.id === id);
+  if (!p) return;
+  openEditSheet('Spieler bearbeiten', `
+    <label>Name
+      <input id="es-pname" type="text" value="${esc(p.name || '')}">
+    </label>
+    <label>Trikotnummer
+      <input id="es-pnum" type="number" min="1" max="99" value="${p.num || ''}">
+    </label>
+    <label>Foto
+      <input type="file" accept="image/*" id="es-pphoto" style="padding:6px">
+    </label>
+  `, () => {
+    const name = document.getElementById('es-pname').value.trim();
+    const num  = document.getElementById('es-pnum').value.trim();
+    const file = document.getElementById('es-pphoto').files[0];
+    if (name) p.name = name;
+    p.num = num;
+    const doSave = () => { renderKaderList(); save(); document.getElementById('editSheet').classList.remove('active'); };
+    if (file) {
+      resizeLogo(file, base64 => { p.photo = base64; doSave(); });
+    } else {
+      doSave();
+    }
+  }, () => {
+    document.getElementById('editSheet').classList.remove('active');
+    removePlayer(id);
+  });
+}
+
+// ─── EDIT: SPIELPLAN-EINTRAG ──────────────────────────────────────────────────
+function editScheduleMatch(id) {
+  const m = schedule.find(sm => sm.id === id);
+  if (!m) return;
+  const resultFields = m.result ? `
+    <label>Ergebnis – Heim
+      <input id="es-rh" type="number" min="0" value="${m.result.home}">
+    </label>
+    <label>Ergebnis – Gast
+      <input id="es-ra" type="number" min="0" value="${m.result.away}">
+    </label>
+  ` : '';
+  openEditSheet('Spiel bearbeiten', `
+    <label>Datum
+      <input id="es-mdate" type="date" value="${m.date || ''}">
+    </label>
+    <label>Uhrzeit
+      <input id="es-mtime" type="time" value="${m.time || ''}">
+    </label>
+    <label>Spielort
+      <select id="es-mvenue">
+        <option value="home" ${m.isHome ? 'selected' : ''}>Heim</option>
+        <option value="away" ${!m.isHome ? 'selected' : ''}>Auswärts</option>
+      </select>
+    </label>
+    ${resultFields}
+  `, () => {
+    const date  = document.getElementById('es-mdate').value;
+    const time  = document.getElementById('es-mtime').value;
+    const venue = document.getElementById('es-mvenue').value;
+    if (date) m.date = date;
+    m.time   = time || null;
+    m.isHome = (venue === 'home');
+    if (m.result) {
+      const h = parseInt(document.getElementById('es-rh').value);
+      const a = parseInt(document.getElementById('es-ra').value);
+      if (!isNaN(h) && !isNaN(a)) {
+        m.result.home = h; m.result.away = a;
+        m.result.ourScore   = m.isHome ? h : a;
+        m.result.theirScore = m.isHome ? a : h;
+      }
+    }
+    schedule.sort((a,b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1; if (!b.date) return -1;
+      return a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'');
+    });
+    renderSpielplan(); save();
+    document.getElementById('editSheet').classList.remove('active');
+  }, () => {
+    document.getElementById('editSheet').classList.remove('active');
+    deleteScheduleMatch(id);
+  });
+}
+
+// ─── EDIT: TEAM ───────────────────────────────────────────────────────────────
+function editTeam(id) {
+  const t = teams.find(tm => tm.id === id);
+  if (!t) return;
+  const logoPreview = t.logo ? `<img src="${t.logo}" style="height:40px;margin-bottom:4px;object-fit:contain">` : '';
+  openEditSheet((t.isOurTeam ? 'Unser Team bearbeiten' : 'Team bearbeiten'), `
+    <label>Name
+      <input id="es-tname" type="text" value="${esc(t.name || '')}">
+    </label>
+    <label>Logo
+      ${logoPreview}
+      <input type="file" accept="image/*" id="es-tlogo" style="padding:6px">
+    </label>
+  `, () => {
+    const name = document.getElementById('es-tname').value.trim();
+    const file = document.getElementById('es-tlogo').files[0];
+    if (name) t.name = name;
+    const doSave = () => {
+      // Wenn es unser Team ist, OUR_TEAM-Konstante spiegeln
+      applyTeamColors();
+      renderTeamsList(); save();
+      document.getElementById('editSheet').classList.remove('active');
+    };
+    if (file) {
+      resizeLogo(file, base64 => { t.logo = base64; doSave(); });
+    } else {
+      doSave();
+    }
+  }, t.isOurTeam ? null : () => {
+    document.getElementById('editSheet').classList.remove('active');
+    deleteTeam(id);
+  });
+}
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 function esc(s) {
@@ -1788,9 +2021,10 @@ function renderTeamsList() {
       ${t.logo ? `<img class="team-item-logo" src="${t.logo}" alt="">` : `<div class="team-item-logo-placeholder"></div>`}
       <span class="team-item-name">${esc(t.name)}</span>${t.color ? `<span ${swatchStyle}></span>` : ''}
       ${t.isOurTeam ? `<span class="team-item-badge">Unser Team</span>` : ''}
+      <button class="btn-row-edit" onclick="editTeam(${t.id})" title="Bearbeiten">✎</button>
       ${t.isOurTeam
-        ? `<label class="btn-logo-upload" style="font-size:11px;padding:5px 8px" title="Logo ändern"><input type="file" accept="image/*" style="display:none" onchange="setOurTeamLogo(this.files[0])">📷</label>`
-        : `<button class="btn-team-delete" onclick="deleteTeam(${t.id})">×</button>`}
+        ? ''
+        : `<button class="btn-row-delete" onclick="deleteTeam(${t.id})">×</button>`}
     `;
     list.appendChild(item);
   });
