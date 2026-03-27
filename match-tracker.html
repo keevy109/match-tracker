@@ -2442,8 +2442,11 @@ function showGoalOverlay(event, data) {
   document.getElementById('goalOverlayScorer').textContent = scorer ? `${numPrefix}${scorer}` : (event.isOwnGoal ? 'Eigentor' : '');
   document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
 
-  // Reset animation
+  // Reset animation (force reflow so iOS restarts CSS animations)
   overlay.classList.remove('fading');
+  card.style.animation = 'none';
+  void card.offsetHeight;
+  card.style.animation = '';
   overlay.classList.add('active');
 
   clearTimeout(goalOverlayTimeout);
