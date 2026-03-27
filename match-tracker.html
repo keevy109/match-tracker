@@ -2614,9 +2614,22 @@ function generateQR(canvas, text, size) {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
+// ─── ACCESS GUARD: block direct access without ?ticker ───────────────────────
+const ADMIN_PIN = '1909';
+function checkAccess() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('ticker')) return true; // Ticker-Modus immer erlaubt
+  if (sessionStorage.getItem('mt_auth') === '1') return true;
+  const pin = prompt('Zugang gesperrt. PIN eingeben:');
+  if (pin === ADMIN_PIN) { sessionStorage.setItem('mt_auth', '1'); return true; }
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#888;font-family:sans-serif;font-size:18px">Zugang verweigert.</div>';
+  return false;
+}
+
 // ─── STARTUP: Check ticker mode or init Firebase ─────────────────────────────
 // Läuft NACH dem Firebase SDK → firebase ist jetzt definiert
 (function() {
+  if (!checkAccess()) return;
   const params = new URLSearchParams(window.location.search);
   const tickerId = params.get('ticker');
   if (tickerId) {
