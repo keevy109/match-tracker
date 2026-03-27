@@ -931,14 +931,7 @@ function switchTab(name) {
   updateSpielplanGegnerSelect();
   updateEndMatchBtn();
 
-  // Auto-start: Wenn heutiges Datum im Spielplan matched und kein Spiel aktiv
-  if (!activeMatchId) {
-    const today = new Date().toISOString().slice(0, 10);
-    const todayMatch = schedule.find(m => m.date === today && !m.result);
-    if (todayMatch) {
-      startMatchFromSchedule(todayMatch.id);
-    }
-  }
+  // Auto-start erfolgt nach Firebase-Load (Phase 2 im Startup-Block)
 })();
 
 // ─── PERSIST ──────────────────────────────────────────────────────────────────
@@ -956,6 +949,7 @@ function save(matchReady) {
       matchReady: matchReady !== undefined ? matchReady : (existing.matchReady || false),
     }));
     syncToFirebase();
+    saveGlobal();
   } catch(e) {}
 }
 
@@ -2023,6 +2017,45 @@ function syncToFirebase() {
   }, 300);
 }
 
+// ─── FIREBASE GLOBAL SYNC (squad / schedule / teams) ─────────────────────────
+let globalSyncTimeout = null;
+function saveGlobal() {
+  if (!firebaseReady) return;
+  clearTimeout(globalSyncTimeout);
+  globalSyncTimeout = setTimeout(() => {
+    try {
+      firebase.database().ref('app').set({ squad: squad || [], schedule: schedule || [], teams: teams || [] });
+    } catch(e) { console.warn('Firebase global sync failed:', e); }
+  }, 500);
+}
+
+function loadGlobalFromFirebase(cb) {
+  if (!firebaseReady) { cb && cb(); return; }
+  firebase.database().ref('app').once('value', snap => {
+    const d = snap.val();
+    if (d) {
+      const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+      if (d.squad    && toArr(d.squad).length)    squad    = toArr(d.squad);
+      if (d.schedule && toArr(d.schedule).length) schedule = toArr(d.schedule);
+      if (d.teams    && toArr(d.teams).length)    teams    = toArr(d.teams);
+      if (!teams.find(t => t.isOurTeam)) {
+        teams.unshift({ id: 1, name: OUR_TEAM, logo: '', isOurTeam: true });
+      }
+      // Re-render alles was von diesen Daten abhängt
+      renderKaderList();
+      renderSpielplan();
+      renderTeamsList();
+      updateSpielplanGegnerSelect();
+      // Lokales Backup aktualisieren
+      try {
+        const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
+        localStorage.setItem('matchtracker_v3', JSON.stringify({ ...existing, squad, schedule, teams }));
+      } catch(_) {}
+    }
+    cb && cb();
+  });
+}
+
 // ─── TICKER MODE ─────────────────────────────────────────────────────────────
 function initTickerMode(matchId) {
   document.body.classList.add('ticker-mode');
@@ -2290,6 +2323,16 @@ function generateQR(canvas, text, size) {
     initTickerMode(tickerId);
   } else {
     initFirebase();
+    // Phase 2: globale Daten (Kader/Spielplan/Teams) aus Firebase laden
+    // und localStorage-Stand ggf. überschreiben
+    loadGlobalFromFirebase(() => {
+      // Nach dem Laden: heute matchenden Spielplan-Eintrag prüfen
+      if (!activeMatchId) {
+        const today = new Date().toISOString().slice(0, 10);
+        const todayMatch = schedule.find(m => m.date === today && !m.result);
+        if (todayMatch) startMatchFromSchedule(todayMatch.id);
+      }
+    });
   }
 })();
 </script>
