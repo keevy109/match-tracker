@@ -1298,116 +1298,17 @@ function exportText() {
   });
 }
 
-function exportImage() {
-  const { home, away } = getMatchTeams();
-  const canvas = document.getElementById('exportCanvas');
-  const ctx = canvas.getContext('2d');
-  const w = 720, h = 480;
-  const sorted = [...events].sort((a,b) => a.id - b.id);
-  const lineH = 22;
-  const goalsH = sorted.length * lineH;
-  const totalH = Math.max(h, 340 + goalsH);
-  canvas.width = w;
-  canvas.height = totalH;
-
-  // Background
-  ctx.fillStyle = '#0f0f0f';
-  ctx.fillRect(0, 0, w, totalH);
-
-  // Accent line top
-  ctx.fillStyle = '#c8f542';
-  ctx.fillRect(0, 0, w, 3);
-
-  // Date
-  ctx.fillStyle = '#444';
-  ctx.font = '13px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}), w/2, 30);
-
-  // Team names
-  ctx.fillStyle = '#888';
-  ctx.font = '600 16px sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText(home, w/2 - 60, 70);
-  ctx.textAlign = 'left';
-  ctx.fillText(away, w/2 + 60, 70);
-
-  // Score
-  ctx.font = '500 72px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#c8f542';
-  ctx.fillText(String(homeScore), w/2 - 50, 150);
-  ctx.fillStyle = '#252525';
-  ctx.fillText(':', w/2, 150);
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillText(String(awayScore), w/2 + 50, 150);
-
-  // Divider
-  ctx.strokeStyle = '#2a2a2a';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(60, 180);
-  ctx.lineTo(w - 60, 180);
-  ctx.stroke();
-
-  // Goals header
-  ctx.fillStyle = '#555';
-  ctx.font = '12px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('TORE', w/2, 205);
-
-  // Goals list - column-aligned
-  const colScore = w/2 - 100; // score right-aligned here
-  const colMin   = w/2 - 40;  // minute right-aligned here
-  const colName  = w/2 - 20;  // name left-aligned here
-  let y = 230;
-  sorted.forEach(e => {
-    const name = (e.scorer && e.scorer !== '—') ? e.scorer : '';
-    ctx.fillStyle = e.isOwnGoal ? '#f5a623' : (e.team === 'home' ? '#c8f542' : '#ff4d4d');
-    ctx.font = '14px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(e.snapshot, colScore, y);
-    ctx.fillText(`${e.minute}'`, colMin, y);
-    ctx.textAlign = 'left';
-    if (name) ctx.fillText(name, colName, y);
-    y += lineH;
-  });
-
-  // Footer
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(0, totalH - 30, w, 30);
-  ctx.fillStyle = '#2a2a2a';
-  ctx.font = '10px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('MATCH TRACKER', w/2, totalH - 12);
-
-  canvas.toBlob(blob => {
-    if (!blob) { showToast('Fehler beim Erstellen'); return; }
-    const file = new File([blob], 'ergebnis.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file] }).catch(() => {});
-    } else {
-      // Fallback: download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'ergebnis.png';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Bild heruntergeladen');
-    }
-  }, 'image/png');
+function getCanvasColors() {
+  const style = getComputedStyle(document.documentElement);
+  return {
+    home: style.getPropertyValue('--home-color').trim() || '#c8f542',
+    away: style.getPropertyValue('--away-color').trim() || '#ff4d4d',
+    own:  style.getPropertyValue('--own').trim()        || '#f5a623',
+  };
 }
 
-function exportImageForMatch(matchId) {
-  const m = schedule.find(sm => sm.id === matchId);
-  if (!m || !m.result) return;
-
-  const homeName = m.isHome ? OUR_TEAM : m.opponent;
-  const awayName = m.isHome ? m.opponent : OUR_TEAM;
-  const hScore = m.result.home;
-  const aScore = m.result.away;
-  const sorted = [...(m.result.events || [])].sort((a,b) => a.id - b.id);
-
+function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr }) {
+  const colors = getCanvasColors();
   const canvas = document.getElementById('exportCanvas');
   const ctx = canvas.getContext('2d');
   const w = 720, h = 480;
@@ -1421,43 +1322,37 @@ function exportImageForMatch(matchId) {
   ctx.fillStyle = '#0f0f0f';
   ctx.fillRect(0, 0, w, totalH);
 
-  // Accent line top
-  ctx.fillStyle = '#c8f542';
+  // Accent line top (Heimfarbe)
+  ctx.fillStyle = colors.home;
   ctx.fillRect(0, 0, w, 3);
 
   // Date
-  ctx.fillStyle = '#444';
+  ctx.fillStyle = '#555';
   ctx.font = '13px monospace';
   ctx.textAlign = 'center';
-  let dateStr = '';
-  if (m.date) {
-    const d = new Date(m.date + 'T00:00:00');
-    dateStr = d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
-  } else {
-    dateStr = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
-  }
   ctx.fillText(dateStr, w/2, 30);
 
   // Team names
-  ctx.fillStyle = '#888';
   ctx.font = '600 16px sans-serif';
   ctx.textAlign = 'right';
+  ctx.fillStyle = colors.home;
   ctx.fillText(homeName, w/2 - 60, 70);
   ctx.textAlign = 'left';
+  ctx.fillStyle = colors.away;
   ctx.fillText(awayName, w/2 + 60, 70);
 
   // Score
   ctx.font = '500 72px monospace';
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#c8f542';
+  ctx.fillStyle = colors.home;
   ctx.fillText(String(hScore), w/2 - 50, 150);
-  ctx.fillStyle = '#252525';
+  ctx.fillStyle = '#333';
   ctx.fillText(':', w/2, 150);
-  ctx.fillStyle = '#ff4d4d';
+  ctx.fillStyle = colors.away;
   ctx.fillText(String(aScore), w/2 + 50, 150);
 
   // Divider
-  ctx.strokeStyle = '#2a2a2a';
+  ctx.strokeStyle = '#222';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(60, 180);
@@ -1465,7 +1360,7 @@ function exportImageForMatch(matchId) {
   ctx.stroke();
 
   // Goals header
-  ctx.fillStyle = '#555';
+  ctx.fillStyle = '#444';
   ctx.font = '12px monospace';
   ctx.textAlign = 'center';
   ctx.fillText('TORE', w/2, 205);
@@ -1476,8 +1371,8 @@ function exportImageForMatch(matchId) {
   const colName  = w/2 - 20;
   let y = 230;
   sorted.forEach(e => {
-    const name = (e.scorer && e.scorer !== '—') ? e.scorer : '';
-    ctx.fillStyle = e.isOwnGoal ? '#f5a623' : (e.team === 'home' ? '#c8f542' : '#ff4d4d');
+    const name = e.isOwnGoal ? 'Eigentor' : ((e.scorer && e.scorer !== '—') ? e.scorer : '');
+    ctx.fillStyle = e.isOwnGoal ? colors.own : (e.team === 'home' ? colors.home : colors.away);
     ctx.font = '14px monospace';
     ctx.textAlign = 'right';
     ctx.fillText(e.snapshot, colScore, y);
@@ -1488,13 +1383,17 @@ function exportImageForMatch(matchId) {
   });
 
   // Footer
-  ctx.fillStyle = '#1a1a1a';
+  ctx.fillStyle = '#161616';
   ctx.fillRect(0, totalH - 30, w, 30);
-  ctx.fillStyle = '#2a2a2a';
+  ctx.fillStyle = '#333';
   ctx.font = '10px monospace';
   ctx.textAlign = 'center';
   ctx.fillText('MATCH TRACKER', w/2, totalH - 12);
 
+  return canvas;
+}
+
+function shareCanvas(canvas) {
   canvas.toBlob(blob => {
     if (!blob) { showToast('Fehler beim Erstellen'); return; }
     const file = new File([blob], 'ergebnis.png', { type: 'image/png' });
@@ -1509,6 +1408,31 @@ function exportImageForMatch(matchId) {
       showToast('Bild heruntergeladen');
     }
   }, 'image/png');
+}
+
+function exportImage() {
+  const { home, away } = getMatchTeams();
+  const sorted = [...events].sort((a,b) => a.id - b.id);
+  const dateStr = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const canvas = renderMatchCanvas({ homeName: home, awayName: away, hScore: homeScore, aScore: awayScore, sorted, dateStr });
+  shareCanvas(canvas);
+}
+
+function exportImageForMatch(matchId) {
+  const m = schedule.find(sm => sm.id === matchId);
+  if (!m || !m.result) return;
+  const homeName = m.isHome ? OUR_TEAM : m.opponent;
+  const awayName = m.isHome ? m.opponent : OUR_TEAM;
+  const sorted = [...(m.result.events || [])].sort((a,b) => a.id - b.id);
+  let dateStr = '';
+  if (m.date) {
+    const d = new Date(m.date + 'T00:00:00');
+    dateStr = d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  } else {
+    dateStr = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  const canvas = renderMatchCanvas({ homeName, awayName, hScore: m.result.home, aScore: m.result.away, sorted, dateStr });
+  shareCanvas(canvas);
 }
 
 function showToast(msg) {
