@@ -1315,9 +1315,9 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
   const w = 1080;
   const pad = 64;
   const scoreBlockH = 340;
-  const goalLineH = 52;
-  const goalsBlockH = sorted.length > 0 ? (sorted.length * goalLineH + 80) : 0;
-  const footerH = 80;
+  const goalLineH = 48;
+  const goalsBlockH = sorted.length > 0 ? (sorted.length * goalLineH + 60) : 0;
+  const footerH = 40;
   const totalH = scoreBlockH + goalsBlockH + footerH;
 
   canvas.width = w;
@@ -1341,7 +1341,7 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
   ctx.fillRect(w - 8, 0, 8, scoreBlockH);
 
   // ── Date ──────────────────────────────────────────────────
-  ctx.fillStyle = '#555';
+  ctx.fillStyle = '#888';
   ctx.font = '600 28px monospace';
   ctx.textAlign = 'center';
   ctx.fillText(dateStr, w / 2, 60);
@@ -1374,54 +1374,42 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
     ctx.lineTo(w - pad, scoreBlockH);
     ctx.stroke();
 
-    // Goals header
-    ctx.fillStyle = '#333';
-    ctx.font = '600 22px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('T O R E', w / 2, scoreBlockH + 44);
-
     // ── Goal rows ──────────────────────────────────────────
-    let y = scoreBlockH + 80;
+    const colSnapshot = pad + 24;
+    const colMinute   = colSnapshot + 200;
+    const colName     = colMinute + 110;
+
+    let y = scoreBlockH + 44;
     sorted.forEach(e => {
       const name = e.isOwnGoal ? 'Eigentor' : ((e.scorer && e.scorer !== '—') ? e.scorer : '');
       const color = e.isOwnGoal ? colors.own : (e.team === 'home' ? colors.home : colors.away);
 
       // Subtle row bg
-      ctx.fillStyle = 'rgba(255,255,255,0.025)';
-      roundRect(ctx, pad, y - 32, w - pad * 2, 44, 8);
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      roundRect(ctx, pad, y - 30, w - pad * 2, 42, 8);
       ctx.fill();
 
+      // snapshot
       ctx.fillStyle = color;
       ctx.font = '600 26px monospace';
-
-      // snapshot left
       ctx.textAlign = 'left';
-      ctx.fillText(e.snapshot, pad + 24, y);
+      ctx.fillText(e.snapshot, colSnapshot, y);
 
-      // minute center-left
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#555';
-      ctx.font = '500 24px monospace';
-      ctx.fillText(`${e.minute}'`, w / 2, y);
+      // minute
+      ctx.fillStyle = '#999';
+      ctx.font = '500 26px monospace';
+      ctx.fillText(`${e.minute}'`, colMinute, y);
 
-      // name right
-      ctx.textAlign = 'right';
+      // name
       ctx.fillStyle = color;
       ctx.font = '600 26px monospace';
-      if (name) ctx.fillText(name, w - pad - 24, y);
+      if (name) ctx.fillText(name, colName, y);
 
       y += goalLineH;
     });
   }
 
   // ── Footer ────────────────────────────────────────────────
-  ctx.fillStyle = '#111';
-  ctx.fillRect(0, totalH - footerH, w, footerH);
-  ctx.fillStyle = '#2a2a2a';
-  ctx.font = '600 22px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('MATCH TRACKER', w / 2, totalH - footerH / 2 + 8);
-
   return canvas;
 }
 
