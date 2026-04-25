@@ -1398,6 +1398,119 @@ function exportImage() {
   }, 'image/png');
 }
 
+function exportImageForMatch(matchId) {
+  const m = schedule.find(sm => sm.id === matchId);
+  if (!m || !m.result) return;
+
+  const homeName = m.isHome ? OUR_TEAM : m.opponent;
+  const awayName = m.isHome ? m.opponent : OUR_TEAM;
+  const hScore = m.result.home;
+  const aScore = m.result.away;
+  const sorted = [...(m.result.events || [])].sort((a,b) => a.id - b.id);
+
+  const canvas = document.getElementById('exportCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = 720, h = 480;
+  const lineH = 22;
+  const goalsH = sorted.length * lineH;
+  const totalH = Math.max(h, 340 + goalsH);
+  canvas.width = w;
+  canvas.height = totalH;
+
+  // Background
+  ctx.fillStyle = '#0f0f0f';
+  ctx.fillRect(0, 0, w, totalH);
+
+  // Accent line top
+  ctx.fillStyle = '#c8f542';
+  ctx.fillRect(0, 0, w, 3);
+
+  // Date
+  ctx.fillStyle = '#444';
+  ctx.font = '13px monospace';
+  ctx.textAlign = 'center';
+  let dateStr = '';
+  if (m.date) {
+    const d = new Date(m.date + 'T00:00:00');
+    dateStr = d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  } else {
+    dateStr = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  ctx.fillText(dateStr, w/2, 30);
+
+  // Team names
+  ctx.fillStyle = '#888';
+  ctx.font = '600 16px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(homeName, w/2 - 60, 70);
+  ctx.textAlign = 'left';
+  ctx.fillText(awayName, w/2 + 60, 70);
+
+  // Score
+  ctx.font = '500 72px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#c8f542';
+  ctx.fillText(String(hScore), w/2 - 50, 150);
+  ctx.fillStyle = '#252525';
+  ctx.fillText(':', w/2, 150);
+  ctx.fillStyle = '#ff4d4d';
+  ctx.fillText(String(aScore), w/2 + 50, 150);
+
+  // Divider
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(60, 180);
+  ctx.lineTo(w - 60, 180);
+  ctx.stroke();
+
+  // Goals header
+  ctx.fillStyle = '#555';
+  ctx.font = '12px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('TORE', w/2, 205);
+
+  // Goals list
+  const colScore = w/2 - 100;
+  const colMin   = w/2 - 40;
+  const colName  = w/2 - 20;
+  let y = 230;
+  sorted.forEach(e => {
+    const name = (e.scorer && e.scorer !== '—') ? e.scorer : '';
+    ctx.fillStyle = e.isOwnGoal ? '#f5a623' : (e.team === 'home' ? '#c8f542' : '#ff4d4d');
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(e.snapshot, colScore, y);
+    ctx.fillText(`${e.minute}'`, colMin, y);
+    ctx.textAlign = 'left';
+    if (name) ctx.fillText(name, colName, y);
+    y += lineH;
+  });
+
+  // Footer
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, totalH - 30, w, 30);
+  ctx.fillStyle = '#2a2a2a';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('MATCH TRACKER', w/2, totalH - 12);
+
+  canvas.toBlob(blob => {
+    if (!blob) { showToast('Fehler beim Erstellen'); return; }
+    const file = new File([blob], 'ergebnis.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(() => {});
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'ergebnis.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Bild heruntergeladen');
+    }
+  }, 'image/png');
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -1717,6 +1830,7 @@ function renderSpielplan() {
       resultClass = outcome === 'win' ? 'has-result' : outcome === 'loss' ? 'is-loss' : 'is-draw';
       resultHTML = `<span class="spielplan-result ${outcome}">${m.result.home}:${m.result.away}</span>`;
       actionsHTML = `<div class="spielplan-actions">
+        <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="exportImageForMatch(${m.id})">📤 Bild</button>
         <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="editScheduleMatch(${m.id})">✎ Bearbeiten</button>
         <button class="btn-delete-match" onclick="deleteScheduleMatch(${m.id})">Löschen</button>
       </div>`;
