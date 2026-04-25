@@ -1311,86 +1311,132 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
   const colors = getCanvasColors();
   const canvas = document.getElementById('exportCanvas');
   const ctx = canvas.getContext('2d');
-  const w = 720, h = 480;
-  const lineH = 22;
-  const goalsH = sorted.length * lineH;
-  const totalH = Math.max(h, 340 + goalsH);
+
+  const w = 1080;
+  const pad = 64;
+  const scoreBlockH = 340;
+  const goalLineH = 52;
+  const goalsBlockH = sorted.length > 0 ? (sorted.length * goalLineH + 80) : 0;
+  const footerH = 80;
+  const totalH = scoreBlockH + goalsBlockH + footerH;
+
   canvas.width = w;
   canvas.height = totalH;
 
-  // Background
+  // ── Background ────────────────────────────────────────────
   ctx.fillStyle = '#0f0f0f';
   ctx.fillRect(0, 0, w, totalH);
 
-  // Accent line top (Heimfarbe)
+  // Subtle gradient overlay top
+  const grad = ctx.createLinearGradient(0, 0, 0, scoreBlockH);
+  grad.addColorStop(0, 'rgba(255,255,255,0.03)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, scoreBlockH);
+
+  // Color bars left (home) and right (away)
   ctx.fillStyle = colors.home;
-  ctx.fillRect(0, 0, w, 3);
+  ctx.fillRect(0, 0, 8, scoreBlockH);
+  ctx.fillStyle = colors.away;
+  ctx.fillRect(w - 8, 0, 8, scoreBlockH);
 
-  // Date
+  // ── Date ──────────────────────────────────────────────────
   ctx.fillStyle = '#555';
-  ctx.font = '13px monospace';
+  ctx.font = '600 28px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText(dateStr, w/2, 30);
+  ctx.fillText(dateStr, w / 2, 60);
 
-  // Team names
-  ctx.font = '600 16px sans-serif';
+  // ── Team names ────────────────────────────────────────────
+  ctx.font = 'bold 44px sans-serif';
   ctx.textAlign = 'right';
   ctx.fillStyle = colors.home;
-  ctx.fillText(homeName, w/2 - 60, 70);
+  ctx.fillText(homeName, w / 2 - 90, 155);
   ctx.textAlign = 'left';
   ctx.fillStyle = colors.away;
-  ctx.fillText(awayName, w/2 + 60, 70);
+  ctx.fillText(awayName, w / 2 + 90, 155);
 
-  // Score
-  ctx.font = '500 72px monospace';
+  // ── Score ─────────────────────────────────────────────────
+  ctx.font = 'bold 160px monospace';
   ctx.textAlign = 'center';
   ctx.fillStyle = colors.home;
-  ctx.fillText(String(hScore), w/2 - 50, 150);
-  ctx.fillStyle = '#333';
-  ctx.fillText(':', w/2, 150);
+  ctx.fillText(String(hScore), w / 2 - 120, 290);
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillText(':', w / 2, 280);
   ctx.fillStyle = colors.away;
-  ctx.fillText(String(aScore), w/2 + 50, 150);
+  ctx.fillText(String(aScore), w / 2 + 120, 290);
 
-  // Divider
-  ctx.strokeStyle = '#222';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(60, 180);
-  ctx.lineTo(w - 60, 180);
-  ctx.stroke();
+  // ── Divider ───────────────────────────────────────────────
+  if (sorted.length > 0) {
+    ctx.strokeStyle = '#1e1e1e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pad, scoreBlockH);
+    ctx.lineTo(w - pad, scoreBlockH);
+    ctx.stroke();
 
-  // Goals header
-  ctx.fillStyle = '#444';
-  ctx.font = '12px monospace';
+    // Goals header
+    ctx.fillStyle = '#333';
+    ctx.font = '600 22px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('T O R E', w / 2, scoreBlockH + 44);
+
+    // ── Goal rows ──────────────────────────────────────────
+    let y = scoreBlockH + 80;
+    sorted.forEach(e => {
+      const name = e.isOwnGoal ? 'Eigentor' : ((e.scorer && e.scorer !== '—') ? e.scorer : '');
+      const color = e.isOwnGoal ? colors.own : (e.team === 'home' ? colors.home : colors.away);
+
+      // Subtle row bg
+      ctx.fillStyle = 'rgba(255,255,255,0.025)';
+      roundRect(ctx, pad, y - 32, w - pad * 2, 44, 8);
+      ctx.fill();
+
+      ctx.fillStyle = color;
+      ctx.font = '600 26px monospace';
+
+      // snapshot left
+      ctx.textAlign = 'left';
+      ctx.fillText(e.snapshot, pad + 24, y);
+
+      // minute center-left
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#555';
+      ctx.font = '500 24px monospace';
+      ctx.fillText(`${e.minute}'`, w / 2, y);
+
+      // name right
+      ctx.textAlign = 'right';
+      ctx.fillStyle = color;
+      ctx.font = '600 26px monospace';
+      if (name) ctx.fillText(name, w - pad - 24, y);
+
+      y += goalLineH;
+    });
+  }
+
+  // ── Footer ────────────────────────────────────────────────
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, totalH - footerH, w, footerH);
+  ctx.fillStyle = '#2a2a2a';
+  ctx.font = '600 22px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('TORE', w/2, 205);
-
-  // Goals list
-  const colScore = w/2 - 100;
-  const colMin   = w/2 - 40;
-  const colName  = w/2 - 20;
-  let y = 230;
-  sorted.forEach(e => {
-    const name = e.isOwnGoal ? 'Eigentor' : ((e.scorer && e.scorer !== '—') ? e.scorer : '');
-    ctx.fillStyle = e.isOwnGoal ? colors.own : (e.team === 'home' ? colors.home : colors.away);
-    ctx.font = '14px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(e.snapshot, colScore, y);
-    ctx.fillText(`${e.minute}'`, colMin, y);
-    ctx.textAlign = 'left';
-    if (name) ctx.fillText(name, colName, y);
-    y += lineH;
-  });
-
-  // Footer
-  ctx.fillStyle = '#161616';
-  ctx.fillRect(0, totalH - 30, w, 30);
-  ctx.fillStyle = '#333';
-  ctx.font = '10px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('MATCH TRACKER', w/2, totalH - 12);
+  ctx.fillText('MATCH TRACKER', w / 2, totalH - footerH / 2 + 8);
 
   return canvas;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 function shareCanvas(canvas) {
