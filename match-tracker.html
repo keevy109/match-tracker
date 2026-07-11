@@ -413,6 +413,52 @@
   /* Hidden canvas for export */
   #exportCanvas { display: none; }
 
+  /* ─── SEKUNDÄRE EVENT-BUTTONS (Wechsel / Karte / Kommentar) ─── */
+  .event-btns-row { display: flex; gap: 8px; padding: 0 20px 14px; }
+  .btn-event-type {
+    flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 4px; cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; transition: background 0.1s, border-color 0.1s;
+  }
+  .btn-event-type:active { transform: scale(0.96); }
+  .btn-event-type .et-icon { font-size: 18px; }
+  .btn-event-type .et-label { font-size: 10px; font-family: var(--mono); color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .btn-event-type:hover { border-color: #555; }
+
+  /* Event-Typen in der Ereignisliste */
+  .event-item.wechsel { border-left-color: #4a9eff; background-image: linear-gradient(to right, rgba(74,158,255,0.18) -30%, var(--surface) 30%); }
+  .event-item.karte-gelb { border-left-color: #ffd700; background-image: linear-gradient(to right, rgba(255,215,0,0.18) -30%, var(--surface) 30%); }
+  .event-item.karte-rot { border-left-color: var(--red); background-image: linear-gradient(to right, rgba(255,77,77,0.18) -30%, var(--surface) 30%); }
+  .event-item.karte-gelb-rot { border-left-color: #ff8c00; background-image: linear-gradient(to right, rgba(255,140,0,0.18) -30%, var(--surface) 30%); }
+  .event-item.kommentar { border-left-color: #555; background-image: linear-gradient(to right, rgba(136,136,136,0.12) -30%, var(--surface) 30%); }
+
+  /* Karten-Typ-Buttons im Modal */
+  .card-type-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+  .btn-card-type {
+    flex: 1; padding: 12px 4px; border-radius: 10px; border: 2px solid var(--border);
+    cursor: pointer; font-family: var(--sans); font-size: 12px; font-weight: 700;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--surface); color: var(--muted); transition: border-color 0.15s;
+  }
+  .btn-card-type .card-swatch { width: 20px; height: 28px; border-radius: 3px; }
+  .btn-card-type.gelb.selected { border-color: #ffd700; color: #ffd700; }
+  .btn-card-type.rot.selected { border-color: var(--red); color: var(--red); }
+  .btn-card-type.gelb-rot.selected { border-color: #ff8c00; color: #ff8c00; }
+  .em-select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 15px; padding: 10px 12px;
+    font-family: var(--sans); outline: none; margin-bottom: 12px;
+    -webkit-appearance: none; cursor: pointer;
+  }
+  .em-select:focus { border-color: #555; }
+  .em-textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 15px; padding: 10px 12px;
+    font-family: var(--sans); resize: none; outline: none;
+  }
+  .em-textarea:focus { border-color: #555; }
+  .em-label { font-size: 11px; font-family: var(--mono); color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; display: block; }
+
   /* ─── EDIT SHEET ─────────────────────────────────────────────────── */
   .edit-sheet-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 280;
@@ -698,13 +744,26 @@
     </div>
   </div>
 
+  <!-- Sekundäre Ereignis-Buttons -->
+  <div class="event-btns-row">
+    <button class="btn-event-type" onclick="openEventModal('wechsel')">
+      <span class="et-icon">🔄</span><span class="et-label">Wechsel</span>
+    </button>
+    <button class="btn-event-type" onclick="openEventModal('karte')">
+      <span class="et-icon">🟨</span><span class="et-label">Karte</span>
+    </button>
+    <button class="btn-event-type" onclick="openEventModal('kommentar')">
+      <span class="et-icon">💬</span><span class="et-label">Text</span>
+    </button>
+  </div>
+
   <div class="events-section">
     <div class="events-header">
-      <span>Tore</span>
+      <span>Ticker</span>
       <button class="btn-clear" onclick="confirmAction('tore')">Alle löschen</button>
     </div>
     <div class="events-list" id="eventsList">
-      <div class="empty-state" id="emptyState">Noch keine Tore</div>
+      <div class="empty-state" id="emptyState">Noch keine Ereignisse</div>
     </div>
   </div>
 
@@ -901,6 +960,18 @@
 </div>
 
 <canvas id="exportCanvas"></canvas>
+
+<!-- Event-Modal (Wechsel / Karte / Kommentar) -->
+<div class="sheet-overlay" id="eventModalOverlay" onclick="closeEventModal()"></div>
+<div class="bottom-sheet" id="eventModalSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="eventModalTitle">Ereignis</div>
+  <div id="eventModalBody" style="padding: 0 20px 4px; overflow-y: auto; flex: 1;"></div>
+  <div class="sheet-footer">
+    <button class="btn-sheet-cancel" onclick="closeEventModal()">Abbrechen</button>
+    <button class="btn-sheet-save" id="eventModalSave" onclick="saveEventModal()">Speichern</button>
+  </div>
+</div>
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -1217,20 +1288,24 @@ function deleteEvent(id) {
   const idx = events.findIndex(e => e.id === id);
   if (idx === -1) return;
   const ev = events[idx];
-  if (ev.team==='home') homeScore = Math.max(0,homeScore-1);
-  else awayScore = Math.max(0,awayScore-1);
-  if (ev.scorerId && !ev.isOwnGoal) {
-    const sp = squad.find(s => s.id === ev.scorerId);
-    if (sp && (sp.goals || 0) > 0) sp.goals--;
+  const isGoal = !ev.typ || ev.typ === 'tor';
+  if (isGoal) {
+    if (ev.scorerId && !ev.isOwnGoal) {
+      const sp = squad.find(s => s.id === ev.scorerId);
+      if (sp && (sp.goals || 0) > 0) sp.goals--;
+    }
   }
-  events.splice(idx,1);
-  let h=0,a=0;
-  [...events].sort((x,y)=>x.id-y.id).forEach(ev => {
-    if (ev.team==='home') h++; else a++;
-    ev.snapshot = `${h}:${a}`;
-  });
-  homeScore=h; awayScore=a;
-  updateScore(true); renderEvents(); save();
+  events.splice(idx, 1);
+  if (isGoal) {
+    let h=0, a=0;
+    [...events].filter(e => !e.typ || e.typ === 'tor').sort((x,y)=>x.id-y.id).forEach(e => {
+      if (e.team==='home') h++; else a++;
+      e.snapshot = `${h}:${a}`;
+    });
+    homeScore=h; awayScore=a;
+    updateScore(true);
+  }
+  renderEvents(); save();
 }
 
 function updateScore(animate) {
@@ -1244,34 +1319,88 @@ function updateScore(animate) {
   }
 }
 
+// ─── EVENT-RENDERING HELPER ──────────────────────────────────────────────────
+function eventCssClass(e) {
+  const typ = e.typ || 'tor';
+  if (typ === 'tor') return e.isOwnGoal ? 'own' : e.team;
+  if (typ === 'wechsel') return 'wechsel';
+  if (typ === 'karte') {
+    if (e.kartenTyp === 'rot') return 'karte-rot';
+    if (e.kartenTyp === 'gelb-rot') return 'karte-gelb-rot';
+    return 'karte-gelb';
+  }
+  if (typ === 'kommentar') return 'kommentar';
+  return '';
+}
+
+function eventIcon(e) {
+  const typ = e.typ || 'tor';
+  if (typ === 'tor') return '⚽';
+  if (typ === 'wechsel') return '🔄';
+  if (typ === 'karte') {
+    if (e.kartenTyp === 'rot') return '🟥';
+    if (e.kartenTyp === 'gelb-rot') return '🟧';
+    return '🟨';
+  }
+  if (typ === 'kommentar') return '💬';
+  return '📌';
+}
+
+function eventMainText(e, homeName, awayName) {
+  const typ = e.typ || 'tor';
+  if (typ === 'tor') {
+    const numTag = `<span class="event-num">${e.scorerNum ? '#'+e.scorerNum : ''}</span>`;
+    return { main: `${numTag}${esc(e.scorer || '—')}`, sub: e.isOwnGoal ? 'Eigentor' : (e.team==='home' ? homeName : awayName) };
+  }
+  if (typ === 'wechsel') {
+    return { main: `${esc(e.reinName||'?')} ↔ ${esc(e.rausName||'?')}`, sub: 'Wechsel' };
+  }
+  if (typ === 'karte') {
+    const types = { gelb:'Gelbe Karte', rot:'Rote Karte', 'gelb-rot':'Gelb-Rot' };
+    const numTag = e.spielerNum ? `<span class="event-num">#${e.spielerNum}</span>` : '';
+    return { main: `${numTag}${esc(e.spielerName||'—')}`, sub: types[e.kartenTyp]||'Karte' };
+  }
+  if (typ === 'kommentar') {
+    return { main: esc(e.text||''), sub: '' };
+  }
+  return { main: '', sub: '' };
+}
+
+function buildEventItemHtml(e, homeName, awayName, isTrainer) {
+  const cls = eventCssClass(e);
+  const icon = eventIcon(e);
+  const { main, sub } = eventMainText(e, homeName, awayName);
+  const typ = e.typ || 'tor';
+  const scoreHtml = (typ === 'tor') ? `<div class="event-score">${e.snapshot||''}</div>` : '<div class="event-score"></div>';
+  const trainerBtns = isTrainer
+    ? `${typ==='tor' ? `<button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>` : ''}
+       <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`
+    : '';
+  return `<div class="event-min">${icon} ${e.minute||0}'</div>
+    <div class="event-info">
+      <div class="event-scorer">${main}</div>
+      ${sub ? `<div class="event-tag">${sub}</div>` : ''}
+    </div>
+    ${scoreHtml}
+    ${trainerBtns}`;
+}
+
 function renderEvents() {
   const list = document.getElementById('eventsList');
   if (!list) return;
   if (events.length === 0) {
-    list.innerHTML = '<div class="empty-state">Noch keine Tore</div>';
+    list.innerHTML = '<div class="empty-state">Noch keine Ereignisse</div>';
     return;
   }
-  list.innerHTML = '';
   const title = document.getElementById('matchTitle').value;
   const parts = title.split(/\s+vs\.?\s+/i);
   const homeName = parts[0]?.trim() || 'Heim';
   const awayName = parts[1]?.trim() || 'Gast';
-
+  list.innerHTML = '';
   [...events].sort((a,b) => a.id - b.id).forEach(e => {
-    const cls = e.isOwnGoal ? 'own' : e.team;
-    const tag = e.isOwnGoal ? 'Eigentor' : (e.team==='home' ? homeName : awayName);
-    const numTag = `<span class="event-num">${e.scorerNum ? '#'+e.scorerNum : ''}</span>`;
     const item = document.createElement('div');
-    item.className = `event-item ${cls}`;
-    item.innerHTML = `
-      <div class="event-min">${e.minute}'</div>
-      <div class="event-info">
-        <div class="event-scorer">${numTag}${esc(e.scorer)}</div>
-        <div class="event-tag">${tag}</div>
-      </div>
-      <div class="event-score">${e.snapshot}</div>
-      <button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>
-      <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`;
+    item.className = `event-item ${eventCssClass(e)}`;
+    item.innerHTML = buildEventItemHtml(e, homeName, awayName, true);
     list.appendChild(item);
   });
 }
@@ -1828,7 +1957,7 @@ function renderSpielplan() {
 function confirmAction(type) {
   let cfg;
   if (type === 'tore') {
-    cfg = { icon:'🗑️', title:'Alle Tore löschen?', msg:'Spielstand und alle Tor-Einträge werden gelöscht.',
+    cfg = { icon:'🗑️', title:'Alle Ereignisse löschen?', msg:'Spielstand und alle Ticker-Einträge (Tore, Wechsel, Karten, Kommentare) werden gelöscht.',
       cb: ()=>{ events=[]; homeScore=0; awayScore=0; updateScore(false); renderEvents(); save(); } };
   } else if (type === 'beenden') {
     cfg = { icon:'🏁', title:'Spiel beenden?', msg:'Das Ergebnis wird im Spielplan gespeichert.',
@@ -2329,6 +2458,102 @@ function updateScoreboardLogos() {
   if (la) { la.src = awayLogo || ''; la.style.display = awayLogo ? '' : 'none'; }
 }
 
+// ─── EVENT MODAL (Wechsel / Karte / Kommentar) ───────────────────────────────
+let _eventModalType = null;
+let _selectedKartenTyp = 'gelb';
+
+function buildPlayerOptions() {
+  if (!squad.length) return '<option value="">– kein Kader –</option>';
+  return '<option value="">– Spieler –</option>' +
+    [...squad].sort((a,b)=>(a.num||999)-(b.num||999))
+      .map(p=>`<option value="${p.id}">${p.num?'#'+p.num+' ':''}${esc(p.name)}</option>`)
+      .join('');
+}
+
+function openEventModal(typ) {
+  _eventModalType = typ;
+  _selectedKartenTyp = 'gelb';
+  const titles = { wechsel:'🔄 Wechsel', karte:'🟨 Karte', kommentar:'💬 Kommentar' };
+  document.getElementById('eventModalTitle').textContent = titles[typ] || 'Ereignis';
+
+  let body = '';
+  if (typ === 'wechsel') {
+    const opts = buildPlayerOptions();
+    body = `<span class="em-label">Einwechslung (rein)</span>
+      <select class="em-select" id="em-rein">${opts}</select>
+      <span class="em-label">Auswechslung (raus)</span>
+      <select class="em-select" id="em-raus">${opts}</select>`;
+  } else if (typ === 'karte') {
+    const opts = buildPlayerOptions();
+    body = `<div class="card-type-btns">
+      <button class="btn-card-type gelb selected" id="ctGelb" onclick="selectKartenTyp('gelb')">
+        <div class="card-swatch" style="background:#ffd700"></div>Gelb
+      </button>
+      <button class="btn-card-type rot" id="ctRot" onclick="selectKartenTyp('rot')">
+        <div class="card-swatch" style="background:#ff4d4d"></div>Rot
+      </button>
+      <button class="btn-card-type gelb-rot" id="ctGelbRot" onclick="selectKartenTyp('gelb-rot')">
+        <div class="card-swatch" style="background:linear-gradient(to right,#ffd700 50%,#ff4d4d 50%)"></div>G-R
+      </button>
+    </div>
+    <span class="em-label">Spieler</span>
+    <select class="em-select" id="em-spieler">${opts}</select>`;
+  } else if (typ === 'kommentar') {
+    body = `<textarea class="em-textarea" id="em-text" rows="4" placeholder="Kommentar…" maxlength="200"></textarea>`;
+  }
+
+  document.getElementById('eventModalBody').innerHTML = body;
+  document.getElementById('eventModalOverlay').classList.add('active');
+  document.getElementById('eventModalSheet').classList.add('active');
+  setTimeout(() => {
+    const first = document.querySelector('#eventModalBody select, #eventModalBody textarea');
+    if (first) first.focus();
+  }, 150);
+}
+
+function closeEventModal() {
+  document.getElementById('eventModalOverlay').classList.remove('active');
+  document.getElementById('eventModalSheet').classList.remove('active');
+  _eventModalType = null;
+}
+
+function selectKartenTyp(typ) {
+  _selectedKartenTyp = typ;
+  ['gelb','rot','gelb-rot'].forEach(t => {
+    const idMap = { gelb:'ctGelb', rot:'ctRot', 'gelb-rot':'ctGelbRot' };
+    document.getElementById(idMap[t])?.classList.toggle('selected', t === typ);
+  });
+}
+
+function saveEventModal() {
+  const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
+  let ev = null;
+
+  if (_eventModalType === 'wechsel') {
+    const reinId  = parseInt(document.getElementById('em-rein').value)  || null;
+    const rausId  = parseInt(document.getElementById('em-raus').value)  || null;
+    const reinP   = squad.find(p => p.id === reinId);
+    const rausP   = squad.find(p => p.id === rausId);
+    ev = { id: Date.now(), typ: 'wechsel', minute,
+           reinId, reinName: reinP?.name||'', rausId, rausName: rausP?.name||'' };
+
+  } else if (_eventModalType === 'karte') {
+    const spielerId = parseInt(document.getElementById('em-spieler').value) || null;
+    const sp = squad.find(p => p.id === spielerId);
+    ev = { id: Date.now(), typ: 'karte', minute,
+           kartenTyp: _selectedKartenTyp,
+           spielerId, spielerName: sp?.name||'', spielerNum: sp?.num||null };
+
+  } else if (_eventModalType === 'kommentar') {
+    const text = document.getElementById('em-text').value.trim();
+    if (!text) { closeEventModal(); return; }
+    ev = { id: Date.now(), typ: 'kommentar', minute, text };
+  }
+
+  if (ev) { events.unshift(ev); renderEvents(); save(); }
+  closeEventModal();
+}
+
 // ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────
 // Trage hier deine Firebase-Projekt-Config ein (siehe Anleitung)
 const FIREBASE_CONFIG = {
@@ -2612,22 +2837,15 @@ function updateTickerUI(data, lastScore) {
     : [];
 
   if (evts.length === 0) {
-    list.innerHTML = '<div class="empty-state">Noch keine Tore</div>';
+    list.innerHTML = '<div class="empty-state">Noch keine Ereignisse</div>';
   } else {
     list.innerHTML = '';
+    const homeName = data.homeTeam || 'Heim';
+    const awayName = data.awayTeam || 'Gast';
     [...evts].sort((a,b) => a.id - b.id).forEach(e => {
-      const cls = e.isOwnGoal ? 'own' : e.team;
-      const tag = e.isOwnGoal ? 'Eigentor' : (e.team === 'home' ? (data.homeTeam||'Heim') : (data.awayTeam||'Gast'));
-      const numTag = `<span class="event-num">${e.scorerNum ? '#'+e.scorerNum : ''}</span>`;
       const item = document.createElement('div');
-      item.className = 'event-item ' + cls;
-      item.innerHTML = `
-        <div class="event-min">${e.minute}'</div>
-        <div class="event-info">
-          <div class="event-scorer">${numTag}${esc(e.scorer)}</div>
-          <div class="event-tag">${tag}</div>
-        </div>
-        <div class="event-score">${e.snapshot}</div>`;
+      item.className = 'event-item ' + eventCssClass(e);
+      item.innerHTML = buildEventItemHtml(e, homeName, awayName, false);
       list.appendChild(item);
     });
   }
