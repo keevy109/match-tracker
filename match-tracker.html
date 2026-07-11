@@ -427,23 +427,7 @@
 
   /* Event-Typen in der Ereignisliste */
   .event-item.wechsel { border-left-color: #4a9eff; background-image: linear-gradient(to right, rgba(74,158,255,0.18) -30%, var(--surface) 30%); }
-  .event-item.karte-gelb { border-left-color: #ffd700; background-image: linear-gradient(to right, rgba(255,215,0,0.18) -30%, var(--surface) 30%); }
-  .event-item.karte-rot { border-left-color: var(--red); background-image: linear-gradient(to right, rgba(255,77,77,0.18) -30%, var(--surface) 30%); }
-  .event-item.karte-gelb-rot { border-left-color: #ff8c00; background-image: linear-gradient(to right, rgba(255,140,0,0.18) -30%, var(--surface) 30%); }
   .event-item.kommentar { border-left-color: #555; background-image: linear-gradient(to right, rgba(136,136,136,0.12) -30%, var(--surface) 30%); }
-
-  /* Karten-Typ-Buttons im Modal */
-  .card-type-btns { display: flex; gap: 8px; margin-bottom: 16px; }
-  .btn-card-type {
-    flex: 1; padding: 12px 4px; border-radius: 10px; border: 2px solid var(--border);
-    cursor: pointer; font-family: var(--sans); font-size: 12px; font-weight: 700;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: var(--surface); color: var(--muted); transition: border-color 0.15s;
-  }
-  .btn-card-type .card-swatch { width: 20px; height: 28px; border-radius: 3px; }
-  .btn-card-type.gelb.selected { border-color: #ffd700; color: #ffd700; }
-  .btn-card-type.rot.selected { border-color: var(--red); color: var(--red); }
-  .btn-card-type.gelb-rot.selected { border-color: #ff8c00; color: #ff8c00; }
   .em-select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 8px; color: var(--text); font-size: 15px; padding: 10px 12px;
@@ -749,10 +733,7 @@
     <button class="btn-event-type" onclick="openEventModal('wechsel')">
       <span class="et-icon">🔄</span><span class="et-label">Wechsel</span>
     </button>
-    <button class="btn-event-type" onclick="openEventModal('karte')">
-      <span class="et-icon">🟨</span><span class="et-label">Karte</span>
-    </button>
-    <button class="btn-event-type" onclick="openEventModal('kommentar')">
+<button class="btn-event-type" onclick="openEventModal('kommentar')">
       <span class="et-icon">💬</span><span class="et-label">Text</span>
     </button>
   </div>
@@ -1324,11 +1305,6 @@ function eventCssClass(e) {
   const typ = e.typ || 'tor';
   if (typ === 'tor') return e.isOwnGoal ? 'own' : e.team;
   if (typ === 'wechsel') return 'wechsel';
-  if (typ === 'karte') {
-    if (e.kartenTyp === 'rot') return 'karte-rot';
-    if (e.kartenTyp === 'gelb-rot') return 'karte-gelb-rot';
-    return 'karte-gelb';
-  }
   if (typ === 'kommentar') return 'kommentar';
   return '';
 }
@@ -1337,11 +1313,6 @@ function eventIcon(e) {
   const typ = e.typ || 'tor';
   if (typ === 'tor') return '⚽';
   if (typ === 'wechsel') return '🔄';
-  if (typ === 'karte') {
-    if (e.kartenTyp === 'rot') return '🟥';
-    if (e.kartenTyp === 'gelb-rot') return '🟧';
-    return '🟨';
-  }
   if (typ === 'kommentar') return '💬';
   return '📌';
 }
@@ -1354,11 +1325,6 @@ function eventMainText(e, homeName, awayName) {
   }
   if (typ === 'wechsel') {
     return { main: `${esc(e.reinName||'?')} ↔ ${esc(e.rausName||'?')}`, sub: 'Wechsel' };
-  }
-  if (typ === 'karte') {
-    const types = { gelb:'Gelbe Karte', rot:'Rote Karte', 'gelb-rot':'Gelb-Rot' };
-    const numTag = e.spielerNum ? `<span class="event-num">#${e.spielerNum}</span>` : '';
-    return { main: `${numTag}${esc(e.spielerName||'—')}`, sub: types[e.kartenTyp]||'Karte' };
   }
   if (typ === 'kommentar') {
     return { main: esc(e.text||''), sub: '' };
@@ -2460,7 +2426,6 @@ function updateScoreboardLogos() {
 
 // ─── EVENT MODAL (Wechsel / Karte / Kommentar) ───────────────────────────────
 let _eventModalType = null;
-let _selectedKartenTyp = 'gelb';
 
 function buildPlayerOptions() {
   if (!squad.length) return '<option value="">– kein Kader –</option>';
@@ -2473,7 +2438,7 @@ function buildPlayerOptions() {
 function openEventModal(typ) {
   _eventModalType = typ;
   _selectedKartenTyp = 'gelb';
-  const titles = { wechsel:'🔄 Wechsel', karte:'🟨 Karte', kommentar:'💬 Kommentar' };
+  const titles = { wechsel:'🔄 Wechsel', kommentar:'💬 Kommentar' };
   document.getElementById('eventModalTitle').textContent = titles[typ] || 'Ereignis';
 
   let body = '';
@@ -2483,21 +2448,6 @@ function openEventModal(typ) {
       <select class="em-select" id="em-rein">${opts}</select>
       <span class="em-label">Auswechslung (raus)</span>
       <select class="em-select" id="em-raus">${opts}</select>`;
-  } else if (typ === 'karte') {
-    const opts = buildPlayerOptions();
-    body = `<div class="card-type-btns">
-      <button class="btn-card-type gelb selected" id="ctGelb" onclick="selectKartenTyp('gelb')">
-        <div class="card-swatch" style="background:#ffd700"></div>Gelb
-      </button>
-      <button class="btn-card-type rot" id="ctRot" onclick="selectKartenTyp('rot')">
-        <div class="card-swatch" style="background:#ff4d4d"></div>Rot
-      </button>
-      <button class="btn-card-type gelb-rot" id="ctGelbRot" onclick="selectKartenTyp('gelb-rot')">
-        <div class="card-swatch" style="background:linear-gradient(to right,#ffd700 50%,#ff4d4d 50%)"></div>G-R
-      </button>
-    </div>
-    <span class="em-label">Spieler</span>
-    <select class="em-select" id="em-spieler">${opts}</select>`;
   } else if (typ === 'kommentar') {
     body = `<textarea class="em-textarea" id="em-text" rows="4" placeholder="Kommentar…" maxlength="200"></textarea>`;
   }
@@ -2517,13 +2467,6 @@ function closeEventModal() {
   _eventModalType = null;
 }
 
-function selectKartenTyp(typ) {
-  _selectedKartenTyp = typ;
-  ['gelb','rot','gelb-rot'].forEach(t => {
-    const idMap = { gelb:'ctGelb', rot:'ctRot', 'gelb-rot':'ctGelbRot' };
-    document.getElementById(idMap[t])?.classList.toggle('selected', t === typ);
-  });
-}
 
 function saveEventModal() {
   const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
@@ -2536,13 +2479,6 @@ function saveEventModal() {
     const rausP   = squad.find(p => p.id === rausId);
     ev = { id: Date.now(), typ: 'wechsel', minute,
            reinId, reinName: reinP?.name||'', rausId, rausName: rausP?.name||'' };
-
-  } else if (_eventModalType === 'karte') {
-    const spielerId = parseInt(document.getElementById('em-spieler').value) || null;
-    const sp = squad.find(p => p.id === spielerId);
-    ev = { id: Date.now(), typ: 'karte', minute,
-           kartenTyp: _selectedKartenTyp,
-           spielerId, spielerName: sp?.name||'', spielerNum: sp?.num||null };
 
   } else if (_eventModalType === 'kommentar') {
     const text = document.getElementById('em-text').value.trim();
