@@ -111,10 +111,12 @@ function showDetail(player) {
   const src = player.detailPhoto || player.photo || casparUrl;
 
   if (detail.classList.contains('kd-visible')) {
+    const bg = document.getElementById('kdBg');
     detail.classList.add('kd-switching');
-    crossfadeBg(src);
+    if (bg) bg.classList.add('kd-bg-fade');
     setTimeout(() => {
       applyPlayerContent(player);
+      if (bg) { bg.src = src; bg.classList.remove('kd-bg-fade'); }
       detail.classList.remove('kd-trainer', 'kd-switching');
       if (isMobile()) placeDetail();
     }, 500);
@@ -150,10 +152,12 @@ function showTrainerDetail(t) {
   const src = t.detailPhoto || t.photo || '';
 
   if (detail.classList.contains('kd-visible')) {
+    const bg = document.getElementById('kdBg');
     detail.classList.add('kd-switching');
-    crossfadeBg(src);
+    if (bg) bg.classList.add('kd-bg-fade');
     setTimeout(() => {
       applyTrainerContent(t);
+      if (bg) { bg.src = src; bg.classList.remove('kd-bg-fade'); }
       detail.classList.add('kd-trainer');
       detail.classList.remove('kd-switching');
       if (isMobile()) placeDetail();
