@@ -27,11 +27,16 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s;
   min-width: 0;
 }
 .kl-row:hover    { background: var(--surface); border-color: rgba(255,255,255,0.08); }
-.kl-row.kl-selected { border-color: var(--accent); background: rgba(255,131,65,0.07); }
+.kl-row:active   { transform: scale(0.985); }
+.kl-row.kl-selected {
+  border-color: var(--accent);
+  background: rgba(255,131,65,0.07);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
 
 .kl-date {
   font-family: var(--mono);
@@ -87,8 +92,12 @@
   border-radius: 16px;
   overflow: hidden;
   display: none;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
 }
 .kader-detail.kd-visible { display: block; }
+.kader-detail.kd-shown   { opacity: 1; transform: none; }
 
 @media (min-width: 700px) {
   .kader-detail { position: sticky; top: 100px; }
@@ -111,7 +120,9 @@
   position: absolute; inset: 0; z-index: 1;
   padding: 24px;
   width: 50%;
+  transition: opacity 0.12s ease;
 }
+.kader-detail.kd-switching .kd-inner { opacity: 0; }
 
 /* Bewertung + Name */
 .kd-head {

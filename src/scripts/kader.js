@@ -61,33 +61,37 @@ function renderKader() {
   });
 }
 
-function showDetail(player) {
-  const detail = document.getElementById('kaderDetail');
-  if (!detail) return;
-
-  // Foto-Hintergrund (Detail-Bild bevorzugt, sonst Portrait, sonst Fallback)
+function applyPlayerContent(player) {
   const bg = document.getElementById('kdBg');
-  if (bg) {
-    bg.src = player.detailPhoto || player.photo || casparUrl;
-  }
-
-  // Trikotnummer + Position als Label
+  if (bg) bg.src = player.detailPhoto || player.photo || casparUrl;
   const pos = player.position || posFromNum(player.num) || '–';
   set('kdRating', player.num ?? '–');
   set('kdGes',    posLabel(pos));
   set('kdPos',    '');
-
-  // Name
   set('kdLN', (player.name || '–').toUpperCase());
-
-  // Spieler-Stats aus Daten
   set('kdGoals',    player.goals    ?? 0);
   set('kdAssists',  player.assists  ?? 0);
   set('kdGames',    player.games    ?? 0);
   set('kdTraining', (player.training ?? 0) + ' %');
+}
 
-  detail.classList.add('kd-visible');
-  detail.classList.remove('kd-trainer');
+function showDetail(player) {
+  const detail = document.getElementById('kaderDetail');
+  if (!detail) return;
+
+  if (detail.classList.contains('kd-visible')) {
+    detail.classList.add('kd-switching');
+    setTimeout(() => {
+      applyPlayerContent(player);
+      detail.classList.remove('kd-trainer', 'kd-switching');
+    }, 120);
+  } else {
+    applyPlayerContent(player);
+    detail.classList.remove('kd-trainer');
+    detail.classList.add('kd-visible');
+    void detail.offsetHeight; // Reflow: zwingt display:block vor der Transition
+    detail.classList.add('kd-shown');
+  }
 }
 
 function set(id, val) {
@@ -99,18 +103,31 @@ function allRows() {
   return document.querySelectorAll('.kl-row');
 }
 
+function applyTrainerContent(t) {
+  const bg = document.getElementById('kdBg');
+  if (bg) bg.src = t.detailPhoto || t.photo || '';
+  set('kdRating', '');
+  set('kdGes',    t.role || 'Trainer');
+  set('kdLN',     (t.name || '–').toUpperCase());
+}
+
 function showTrainerDetail(t) {
   const detail = document.getElementById('kaderDetail');
   if (!detail) return;
 
-  const bg = document.getElementById('kdBg');
-  if (bg) bg.src = t.detailPhoto || t.photo || '';
-
-  set('kdRating', '');
-  set('kdGes',    t.role || 'Trainer');
-  set('kdLN',     (t.name || '–').toUpperCase());
-
-  detail.classList.add('kd-visible', 'kd-trainer');
+  if (detail.classList.contains('kd-visible')) {
+    detail.classList.add('kd-switching');
+    setTimeout(() => {
+      applyTrainerContent(t);
+      detail.classList.add('kd-trainer');
+      detail.classList.remove('kd-switching');
+    }, 120);
+  } else {
+    applyTrainerContent(t);
+    detail.classList.add('kd-visible', 'kd-trainer');
+    void detail.offsetHeight;
+    detail.classList.add('kd-shown');
+  }
 }
 
 function renderTrainer() {
