@@ -32,7 +32,7 @@ function apiPlugin() {
               fs.mkdirSync(dir, { recursive: true });
               fs.writeFileSync(path.join(dir, safe), buf);
               res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ url: `/uploads/${subpath}/${safe}` }));
+              res.end(JSON.stringify({ url: `uploads/${subpath}/${safe}` }));
             } catch (e) {
               res.statusCode = 400;
               res.end(JSON.stringify({ error: e.message }));

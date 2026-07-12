@@ -1,5 +1,5 @@
 export async function load(collection) {
-  const res = await fetch(`/data/${collection}.json`);
+  const res = await fetch(`${import.meta.env.BASE_URL}data/${collection}.json`);
   if (!res.ok) return [];
   try { return await res.json(); } catch { return []; }
 }

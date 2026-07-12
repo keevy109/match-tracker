@@ -12,6 +12,8 @@ import footerHtml    from '../sections/footer.frag?raw';
 import modalHtml        from '../sections/news-modal.frag?raw';
 import matchdayHtml    from '../sections/matchday-modal.frag?raw';
 
+import logoUrl from '/ssvlogo_white.png';
+
 import { init as initTheme }      from './theme.js';
 import { init as initBackground } from './background.js';
 import { init as initSplash }     from './splash.js';
@@ -25,18 +27,9 @@ initTheme();
 
 // HTML-Bausteine in #app einfügen
 const app = document.getElementById('app');
-app.innerHTML =
-  splashHtml +
-  navHtml +
-  heroHtml +
-  tickerHtml +
-  spielplanHtml +
-  kaderHtml +
-  aktuellesHtml +
-  kontaktHtml +
-  footerHtml +
-  modalHtml +
-  matchdayHtml;
+const rawHtml = splashHtml + navHtml + heroHtml + tickerHtml + spielplanHtml +
+  kaderHtml + aktuellesHtml + kontaktHtml + footerHtml + modalHtml + matchdayHtml;
+app.innerHTML = rawHtml.replaceAll('/ssvlogo_white.png', logoUrl);
 
 // Module initialisieren
 initBackground();

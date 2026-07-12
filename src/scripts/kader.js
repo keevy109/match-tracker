@@ -1,4 +1,5 @@
 import * as api from './api.js';
+import casparUrl from '/caspar.png';
 
 const POS_LABEL = { TW: 'Tor', AB: 'Abwehr', MF: 'Mittelfeld', ST: 'Stürmer' };
 
@@ -67,7 +68,7 @@ function showDetail(player) {
   // Foto-Hintergrund (Detail-Bild bevorzugt, sonst Portrait, sonst Fallback)
   const bg = document.getElementById('kdBg');
   if (bg) {
-    bg.src = player.detailPhoto || player.photo || '/caspar.png';
+    bg.src = player.detailPhoto || player.photo || casparUrl;
   }
 
   // Trikotnummer + Position als Label

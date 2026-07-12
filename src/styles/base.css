@@ -86,7 +86,7 @@ body::before, body::after {
 }
 body::before {
   z-index: -1;
-  background: url('/bkgr_main.png') center center / cover no-repeat;
+  background: url('/bkgr_main.png') right center / cover no-repeat;
   opacity: 1;
 }
 body::after {
