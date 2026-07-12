@@ -5,7 +5,7 @@
   gap: 16px;
   align-items: start;
 }
-@media (min-width: 700px) {
+@media (min-width: 900px) {
   .kader-layout { grid-template-columns: 1fr 1fr; }
 }
 
@@ -74,6 +74,7 @@
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid rgba(255,255,255,0.08);
+  gap: 10px;
 }
 .kader-staff-label {
   font-family: var(--mono); font-size: 9px; font-weight: 700;
@@ -99,8 +100,11 @@
 .kader-detail.kd-visible { display: block; }
 .kader-detail.kd-shown   { opacity: 1; transform: none; }
 
-@media (min-width: 700px) {
+@media (min-width: 900px) {
   .kader-detail { position: sticky; top: 100px; }
+}
+@media (max-width: 899px) {
+  .kader-detail { transform: translateY(8px); }
 }
 
 /* Foto als Größen-Treiber */

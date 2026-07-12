@@ -61,6 +61,21 @@ function renderKader() {
   });
 }
 
+function isMobile() { return window.innerWidth < 900; }
+
+function placeDetail() {
+  const detail   = document.getElementById('kaderDetail');
+  const layout   = document.querySelector('.kader-layout');
+  const selRow   = document.querySelector('.kl-row.kl-selected');
+  if (!detail || !layout) return;
+
+  if (isMobile() && selRow) {
+    selRow.after(detail);
+  } else if (!isMobile() && detail.parentNode !== layout) {
+    layout.appendChild(detail);
+  }
+}
+
 function applyPlayerContent(player) {
   const bg = document.getElementById('kdBg');
   if (bg) bg.src = player.detailPhoto || player.photo || casparUrl;
@@ -84,12 +99,14 @@ function showDetail(player) {
     setTimeout(() => {
       applyPlayerContent(player);
       detail.classList.remove('kd-trainer', 'kd-switching');
+      if (isMobile()) placeDetail();
     }, 120);
   } else {
     applyPlayerContent(player);
     detail.classList.remove('kd-trainer');
+    placeDetail();
     detail.classList.add('kd-visible');
-    void detail.offsetHeight; // Reflow: zwingt display:block vor der Transition
+    void detail.offsetHeight;
     detail.classList.add('kd-shown');
   }
 }
@@ -121,10 +138,12 @@ function showTrainerDetail(t) {
       applyTrainerContent(t);
       detail.classList.add('kd-trainer');
       detail.classList.remove('kd-switching');
+      if (isMobile()) placeDetail();
     }, 120);
   } else {
     applyTrainerContent(t);
     detail.classList.add('kd-visible', 'kd-trainer');
+    placeDetail();
     void detail.offsetHeight;
     detail.classList.add('kd-shown');
   }
@@ -177,4 +196,9 @@ export async function init() {
 
   renderKader();
   renderTrainer();
+
+  window.addEventListener('resize', () => {
+    const detail = document.getElementById('kaderDetail');
+    if (detail?.classList.contains('kd-visible')) placeDetail();
+  }, { passive: true });
 }
