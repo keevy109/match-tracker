@@ -112,6 +112,9 @@
   display: block;
   width: 100%;
   height: auto;
+  min-height: 500px;
+  object-fit: cover;
+  object-position: center top;
   transition: opacity 0.22s ease;
 }
 .kd-bg-img.kd-bg-fade { opacity: 0; }
