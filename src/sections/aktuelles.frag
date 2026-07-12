@@ -11,7 +11,7 @@
         data-gradient="radial-gradient(ellipse at 35% 65%, #1e5c14 0%, #0d3008 50%, #040f03 100%)"
         data-text="Sehr gute Spiele und auch in dieser (noch) neuen Konstellation eine beeindruckende Mannschaftsleistung.<br/><br/>Immer fair, großer Kampfgeist und jetzt schon ein ganz tolles Teamgefühl. <br/><br/>Im Langenfelder Städtevergleich sind wir vorne mit dabei:<br/>VfB und GSV deutlich geschlagen, Richrath kämpferisch auch knapp besiegt, nur gegen HSV und Reusrath war nichts zu holen.
 ">
-        <div class="news-image" style="background: url('/juniorcup.jpg') center/cover no-repeat;">
+        <div class="news-image" style="background: url('juniorcup.jpg') center/cover no-repeat;">
         </div>
         <div class="news-body">
           <div class="news-date">14. Jun 2025</div>
