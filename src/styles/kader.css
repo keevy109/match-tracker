@@ -10,7 +10,7 @@
 }
 
 /* ── Spieler-Liste (1-spaltig) ───────────────────────────────── */
-#kaderRows {
+#kaderRows, #trainerRows {
   display: flex;
   flex-direction: column;
   gap: 8px;
