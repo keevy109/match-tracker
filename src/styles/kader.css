@@ -115,9 +115,18 @@
   min-height: 500px;
   object-fit: cover;
   object-position: center top;
-  transition: opacity 0.5s ease;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.3s ease;
 }
-.kd-bg-img.kd-bg-fade { opacity: 0; }
+/* Vorheriges Bild: absolut hinter dem aktiven */
+.kd-bg-prev {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  z-index: 0;
+}
 
 /* Gradient-Overlay: links dunkel, rechts Foto sichtbar */
 .kd-bg-overlay {
@@ -126,7 +135,7 @@
 
 /* Inhalt über dem Hintergrund */
 .kd-inner {
-  position: absolute; inset: 0; z-index: 1;
+  position: absolute; inset: 0; z-index: 2;
   padding: 24px;
   width: 50%;
   transition: opacity 0.5s ease;

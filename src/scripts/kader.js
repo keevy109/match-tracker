@@ -84,10 +84,36 @@ function setBg(src) {
 function crossfadeBg(src) {
   const bg = document.getElementById('kdBg');
   if (!bg) return;
-  bg.classList.add('kd-bg-fade');
-  const done = () => { bg.src = src || ''; bg.classList.remove('kd-bg-fade'); };
-  if (!src) { done(); return; }
+
+  const container = bg.parentElement;
+
+  // Altes Bild auf Prev-Ebene (dahinter) sichern
+  let prev = document.getElementById('kdBgPrev');
+  if (!prev) {
+    prev = document.createElement('img');
+    prev.id = 'kdBgPrev';
+    prev.alt = '';
+    prev.className = 'kd-bg-prev';
+    container.insertBefore(prev, bg);
+  }
+  prev.src = bg.src;
+
+  // Neues Bild sofort auf 0 (ohne Transition)
+  bg.style.transition = 'none';
+  bg.style.opacity = '0';
+  void bg.offsetHeight; // Reflow
+
+  // CSS-Transition wieder aktiv
+  bg.style.transition = '';
+
+  if (!src) { bg.src = ''; bg.style.opacity = ''; return; }
+
   const img = new Image();
+  const done = () => {
+    bg.src = src;
+    void bg.offsetHeight; // Reflow damit Transition von 0→1 feuert
+    bg.style.opacity = '';
+  };
   img.onload = done;
   img.onerror = done;
   img.src = src;
@@ -111,12 +137,10 @@ function showDetail(player) {
   const src = player.detailPhoto || player.photo || casparUrl;
 
   if (detail.classList.contains('kd-visible')) {
-    const bg = document.getElementById('kdBg');
     detail.classList.add('kd-switching');
-    if (bg) bg.classList.add('kd-bg-fade');
+    crossfadeBg(src);
     setTimeout(() => {
       applyPlayerContent(player);
-      if (bg) { bg.src = src; bg.classList.remove('kd-bg-fade'); }
       detail.classList.remove('kd-trainer', 'kd-switching');
       if (isMobile()) placeDetail();
     }, 500);
@@ -152,12 +176,10 @@ function showTrainerDetail(t) {
   const src = t.detailPhoto || t.photo || '';
 
   if (detail.classList.contains('kd-visible')) {
-    const bg = document.getElementById('kdBg');
     detail.classList.add('kd-switching');
-    if (bg) bg.classList.add('kd-bg-fade');
+    crossfadeBg(src);
     setTimeout(() => {
       applyTrainerContent(t);
-      if (bg) { bg.src = src; bg.classList.remove('kd-bg-fade'); }
       detail.classList.add('kd-trainer');
       detail.classList.remove('kd-switching');
       if (isMobile()) placeDetail();

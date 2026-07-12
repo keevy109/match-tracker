@@ -95,7 +95,7 @@
     "minutes": 0,
     "training": 0,
     "photo": "uploads/kader/portraits/1783856689289_ko56df83nu.png",
-    "detailPhoto": "uploads/kader/detail/1783855810883_un9l4e4xwnj.png",
+    "detailPhoto": "uploads/kader/detail/1783881823496_n8fbrf5lued.png",
     "position": ""
   },
   {
@@ -116,12 +116,13 @@
     "name": "Pan",
     "num": 11,
     "goals": 10,
-    "assists": 0,
-    "games": 0,
-    "minutes": 0,
-    "training": 0,
+    "assists": 4,
+    "games": 3,
+    "minutes": 260,
+    "training": 75,
     "photo": "",
-    "detailPhoto": ""
+    "detailPhoto": "uploads/kader/detail/1783882151048_nroer6s0mq.png",
+    "position": "ST"
   },
   {
     "id": 11,
@@ -164,14 +165,14 @@
     "id": 14,
     "name": "Gregorius",
     "num": 14,
-    "goals": 0,
-    "assists": 0,
-    "games": 0,
-    "minutes": 0,
-    "training": 0,
+    "goals": 8,
+    "assists": 9,
+    "games": 4,
+    "minutes": 460,
+    "training": 98,
     "photo": "",
     "detailPhoto": "uploads/kader/detail/1783855173705_uywz5o8pbzc.png",
-    "position": ""
+    "position": "AB"
   },
   {
     "id": 15,
@@ -221,5 +222,31 @@
     "training": 0,
     "photo": "",
     "detailPhoto": ""
+  },
+  {
+    "id": 1783881870767,
+    "name": "Tom",
+    "num": 19,
+    "position": "AB",
+    "goals": 1,
+    "assists": 3,
+    "games": 2,
+    "minutes": 80,
+    "training": 80,
+    "photo": "",
+    "detailPhoto": "uploads/kader/detail/1783881870012_suub5z9chp8.png"
+  },
+  {
+    "id": 1783882001157,
+    "name": "Alessiano",
+    "num": 20,
+    "position": "ST",
+    "goals": 5,
+    "assists": 2,
+    "games": 3,
+    "minutes": 145,
+    "training": 90,
+    "photo": "",
+    "detailPhoto": "uploads/kader/detail/1783882277055_4658ze1gzkx.png"
   }
 ]
