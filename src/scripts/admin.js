@@ -726,25 +726,29 @@ function bindFormEvents() {
     if (venueField && homeField?.value === 'away' && club.venue) venueField.value = club.venue;
   });
 
-  function bindPhotoInput(inputId, previewId, onCropped) {
+  function bindPhotoInput(inputId, previewId, onDone, { crop = true } = {}) {
     document.getElementById(inputId).addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const name = file.name;
       const reader = new FileReader();
-      reader.onload = ev => openCrop(ev.target.result, url => {
-        onCropped(url, name);
-        const preview = document.getElementById(previewId);
-        if (preview) preview.innerHTML = `<img src="${url}" alt="">`;
-      });
+      reader.onload = ev => {
+        const apply = url => {
+          onDone(url, name);
+          const preview = document.getElementById(previewId);
+          if (preview) preview.innerHTML = `<img src="${url}" alt="">`;
+        };
+        if (crop) openCrop(ev.target.result, apply);
+        else apply(ev.target.result);
+      };
       reader.readAsDataURL(file);
     });
   }
 
   bindPhotoInput('fPlayerPhoto',  'fPlayerPhotoPreview',  (url, name) => { pendingPhoto = url; pendingPhotoName = name; });
-  bindPhotoInput('fPlayerDetail', 'fPlayerDetailPreview', (url, name) => { pendingDetailPhoto = url; pendingDetailPhotoName = name; });
+  bindPhotoInput('fPlayerDetail', 'fPlayerDetailPreview', (url, name) => { pendingDetailPhoto = url; pendingDetailPhotoName = name; }, { crop: false });
   bindPhotoInput('fTrainerPhoto', 'fTrainerPhotoPreview', (url, name) => { pendingTrainerPhoto = url; pendingTrainerPhotoName = name; });
-  bindPhotoInput('fTrainerDetail','fTrainerDetailPreview',(url, name) => { pendingTrainerDetail = url; pendingTrainerDetailName = name; });
+  bindPhotoInput('fTrainerDetail','fTrainerDetailPreview',(url, name) => { pendingTrainerDetail = url; pendingTrainerDetailName = name; }, { crop: false });
 
   document.getElementById('fClubBadge').addEventListener('change', e => {
     const file = e.target.files[0];
