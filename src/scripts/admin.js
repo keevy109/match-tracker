@@ -25,6 +25,7 @@ let pendingTrainerDetail      = null;
 let pendingTrainerDetailName  = null;
 
 async function uploadImage(subpath, dataUrl, originalName) {
+  if (!import.meta.env.DEV) return '';
   const ext      = (originalName.split('.').pop() || 'jpg').toLowerCase();
   const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
   const res = await fetch(`/api/upload/${subpath}`, {
