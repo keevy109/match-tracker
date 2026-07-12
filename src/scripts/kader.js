@@ -24,6 +24,59 @@ function statColor(v) {
 
 let squad   = [];
 let coaches = [];
+let sortField = 'num';
+let sortDir   = 1;
+
+const SORT_COLS = [
+  { field: 'num',      label: '#',      right: false },
+  { field: null,       label: '',       right: false },
+  { field: 'name',     label: 'Name',   right: false },
+  { field: 'goals',    label: 'Tore',   right: true  },
+  { field: 'assists',  label: 'Vorl.',  right: true  },
+  { field: 'games',    label: 'Spiele', right: true  },
+  { field: 'training', label: 'Train.', right: true  },
+];
+
+function sortedSquad() {
+  return squad.slice().sort((a, b) => {
+    if (sortField === 'name') {
+      const av = (a.name || '').toLowerCase();
+      const bv = (b.name || '').toLowerCase();
+      return sortDir * (av < bv ? -1 : av > bv ? 1 : 0);
+    }
+    return sortDir * ((a[sortField] ?? 0) - (b[sortField] ?? 0));
+  });
+}
+
+function renderSortHeader(container) {
+  let header = document.getElementById('kaderSortHeader');
+  if (!header) {
+    header = document.createElement('div');
+    header.id = 'kaderSortHeader';
+    header.className = 'kl-header';
+    container.insertAdjacentElement('beforebegin', header);
+  }
+  header.innerHTML = SORT_COLS.map(col => {
+    if (!col.field) return '<span></span>';
+    const active = sortField === col.field;
+    const arrow  = active ? (sortDir > 0 ? ' ↑' : ' ↓') : '';
+    const cls    = 'kl-sort-btn' + (active ? ' kl-sort-active' : '') + (col.right ? ' kl-sort-right' : ' kl-sort-num');
+    return `<button class="${cls}" data-sort="${col.field}">${col.label}${arrow}</button>`;
+  }).join('');
+
+  header.querySelectorAll('.kl-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.sort;
+      if (sortField === field) {
+        sortDir = -sortDir;
+      } else {
+        sortField = field;
+        sortDir = field === 'name' ? 1 : -1;
+      }
+      renderKader();
+    });
+  });
+}
 
 function renderKader() {
   const container = document.getElementById('kaderRows');
@@ -33,13 +86,17 @@ function renderKader() {
   if (badge) badge.textContent = squad.length ? squad.length + ' Spieler' : '–';
 
   if (!squad.length) {
+    const old = document.getElementById('kaderSortHeader');
+    if (old) old.remove();
     container.innerHTML = '<div class="kl-empty">Noch keine Spieler angelegt –<br><a href="admin.html">im Admin hinzufügen</a></div>';
     return;
   }
 
-  const sorted = squad.slice().sort((a, b) => (a.num || 999) - (b.num || 999));
+  renderSortHeader(container);
+
+  const sorted = sortedSquad();
   container.innerHTML = sorted.map(p => {
-    const pos = p.position || posFromNum(p.num);
+    const pos    = p.position || posFromNum(p.num);
     const avatar = p.photo
       ? `<div class="kl-avatar"><img src="${p.photo}" alt=""></div>`
       : '<div class="kl-avatar">👤</div>';
@@ -47,6 +104,10 @@ function renderKader() {
       <div class="kl-date"><strong>${p.num ?? '–'}</strong>${pos}</div>
       ${avatar}
       <div class="kl-name">${p.name}</div>
+      <div class="kl-stat" data-col="goals">${p.goals ?? 0}</div>
+      <div class="kl-stat" data-col="assists">${p.assists ?? 0}</div>
+      <div class="kl-stat" data-col="games">${p.games ?? 0}</div>
+      <div class="kl-stat" data-col="training">${p.training ?? 0}<span class="kl-pct">%</span></div>
     </div>`;
   }).join('');
 
@@ -54,7 +115,7 @@ function renderKader() {
     row.addEventListener('click', () => {
       container.querySelectorAll('.kl-row').forEach(r => r.classList.remove('kl-selected'));
       row.classList.add('kl-selected');
-      const pid = parseInt(row.dataset.pid);
+      const pid    = Number(row.dataset.pid);
       const player = squad.find(p => p.id === pid);
       if (player) showDetail(player);
     });
