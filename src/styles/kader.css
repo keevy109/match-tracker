@@ -115,7 +115,7 @@
   min-height: 500px;
   object-fit: cover;
   object-position: center top;
-  transition: opacity 0.22s ease;
+  transition: opacity 0.5s ease;
 }
 .kd-bg-img.kd-bg-fade { opacity: 0; }
 
@@ -129,7 +129,7 @@
   position: absolute; inset: 0; z-index: 1;
   padding: 24px;
   width: 50%;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.5s ease;
 }
 .kader-detail.kd-switching .kd-inner { opacity: 0; }
 

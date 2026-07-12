@@ -117,7 +117,7 @@ function showDetail(player) {
       applyPlayerContent(player);
       detail.classList.remove('kd-trainer', 'kd-switching');
       if (isMobile()) placeDetail();
-    }, 120);
+    }, 500);
   } else {
     setBg(src);
     applyPlayerContent(player);
@@ -157,7 +157,7 @@ function showTrainerDetail(t) {
       detail.classList.add('kd-trainer');
       detail.classList.remove('kd-switching');
       if (isMobile()) placeDetail();
-    }, 120);
+    }, 500);
   } else {
     setBg(src);
     applyTrainerContent(t);
