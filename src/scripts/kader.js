@@ -76,9 +76,24 @@ function placeDetail() {
   }
 }
 
-function applyPlayerContent(player) {
+function setBg(src) {
   const bg = document.getElementById('kdBg');
-  if (bg) bg.src = player.detailPhoto || player.photo || casparUrl;
+  if (bg) bg.src = src || '';
+}
+
+function crossfadeBg(src) {
+  const bg = document.getElementById('kdBg');
+  if (!bg) return;
+  bg.classList.add('kd-bg-fade');
+  const done = () => { bg.src = src || ''; bg.classList.remove('kd-bg-fade'); };
+  if (!src) { done(); return; }
+  const img = new Image();
+  img.onload = done;
+  img.onerror = done;
+  img.src = src;
+}
+
+function applyPlayerContent(player) {
   const pos = player.position || posFromNum(player.num) || '–';
   set('kdRating', player.num ?? '–');
   set('kdGes',    posLabel(pos));
@@ -93,15 +108,18 @@ function applyPlayerContent(player) {
 function showDetail(player) {
   const detail = document.getElementById('kaderDetail');
   if (!detail) return;
+  const src = player.detailPhoto || player.photo || casparUrl;
 
   if (detail.classList.contains('kd-visible')) {
     detail.classList.add('kd-switching');
+    crossfadeBg(src);
     setTimeout(() => {
       applyPlayerContent(player);
       detail.classList.remove('kd-trainer', 'kd-switching');
       if (isMobile()) placeDetail();
     }, 120);
   } else {
+    setBg(src);
     applyPlayerContent(player);
     detail.classList.remove('kd-trainer');
     placeDetail();
@@ -121,8 +139,6 @@ function allRows() {
 }
 
 function applyTrainerContent(t) {
-  const bg = document.getElementById('kdBg');
-  if (bg) bg.src = t.detailPhoto || t.photo || '';
   set('kdRating', '');
   set('kdGes',    t.role || 'Trainer');
   set('kdLN',     (t.name || '–').toUpperCase());
@@ -131,9 +147,11 @@ function applyTrainerContent(t) {
 function showTrainerDetail(t) {
   const detail = document.getElementById('kaderDetail');
   if (!detail) return;
+  const src = t.detailPhoto || t.photo || '';
 
   if (detail.classList.contains('kd-visible')) {
     detail.classList.add('kd-switching');
+    crossfadeBg(src);
     setTimeout(() => {
       applyTrainerContent(t);
       detail.classList.add('kd-trainer');
@@ -141,6 +159,7 @@ function showTrainerDetail(t) {
       if (isMobile()) placeDetail();
     }, 120);
   } else {
+    setBg(src);
     applyTrainerContent(t);
     detail.classList.add('kd-visible', 'kd-trainer');
     placeDetail();

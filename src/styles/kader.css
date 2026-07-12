@@ -112,7 +112,9 @@
   display: block;
   width: 100%;
   height: auto;
+  transition: opacity 0.22s ease;
 }
+.kd-bg-img.kd-bg-fade { opacity: 0; }
 
 /* Gradient-Overlay: links dunkel, rechts Foto sichtbar */
 .kd-bg-overlay {
