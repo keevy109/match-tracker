@@ -1,0 +1,57 @@
+/* ── Kontakt ───────────────────────────────────────────────────── */
+.kontakt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+@media (max-width: 600px) { .kontakt-grid { grid-template-columns: 1fr; } }
+.kontakt-block h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.kontakt-block p { font-size: 14px; color: var(--muted); line-height: 1.8; }
+.kontakt-block a { color: var(--accent); }
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 20px;
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 12px;
+  max-width: 1100px; margin: 0 auto;
+}
+.footer-copy { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.footer-links { display: flex; gap: 16px; }
+.footer-links a { font-family: var(--mono); font-size: 11px; color: var(--muted); text-decoration: none; }
+.footer-links a:hover { color: var(--text); }
+
+/* ── Splash ─────────────────────────────────────────────────── */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  overflow: hidden; background: #0d0805; cursor: pointer;
+}
+#splash-canvas { position: absolute; inset: 0; width: 100%; height: 100%; filter: blur(38px) saturate(1.5); transform: scale(1.06); }
+#splash-logo { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1; }
+.splash-logo-img {
+  width: min(380px, 72vw); height: auto; display: block;
+  filter: drop-shadow(0px 0px 40px rgba(0,0,0,0.5));
+  animation: logo-in 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes logo-in {
+  from { opacity: 0; transform: scale(0.60); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.logo-wrap { position: relative; display: inline-block; }
+.splash-logo-sweep {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 28%, rgba(210,120,0,0.00) 36%, rgba(230,150,0,0.55) 43%,
+    rgba(255,220,80,1.00) 50%, rgba(230,150,0,0.55) 57%, rgba(210,120,0,0.00) 64%, transparent 72%
+  );
+  background-repeat: no-repeat; background-size: 220% 100%; background-position: -70% 0;
+  -webkit-mask-image: url('/ssvlogo_white.png'); mask-image: url('/ssvlogo_white.png');
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  animation: logo-sweep 4.5s ease-in-out infinite;
+  animation-delay: 1.8s; animation-fill-mode: backwards;
+}
+@keyframes logo-sweep {
+  0%   { background-position: -70% 0; }
+  45%  { background-position: 170% 0; }
+  100% { background-position: 170% 0; }
+}
+#splash.splash-out { transition: opacity 0.55s ease; opacity: 0; pointer-events: none; }

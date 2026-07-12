@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSV Berghausen – Admin</title>
+<script>
+(function() {
+  var s = localStorage.getItem('theme');
+  if (s) document.documentElement.setAttribute('data-theme', s);
+})();
+</script>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────── -->
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <a class="admin-brand" href="index.html">
+      <img src="/ssvlogo_white.png" alt="SSV Berghausen">
+      <span class="admin-brand-name"><strong>SSV</strong> Admin</span>
+    </a>
+    <nav class="admin-tabs">
+      <button class="admin-tab active" data-tab="kader">Kader</button>
+      <button class="admin-tab" data-tab="spielplan">Spielplan</button>
+      <button class="admin-tab" data-tab="vereine">Vereine</button>
+    </nav>
+    <a class="admin-back" href="index.html">← Website</a>
+  </div>
+</header>
+
+<!-- ── Inhalt ─────────────────────────────────────────── -->
+<main class="admin-main">
+
+  <!-- KADER -->
+  <section class="admin-section active" data-section="kader">
+    <div class="section-header">
+      <span class="section-title">Kader · Saison 2026/27</span>
+      <button class="btn-add" onclick="openPlayerForm(null)">+ Spieler</button>
+    </div>
+    <div class="item-list" id="kaderList"></div>
+
+    <div class="section-subheader">
+      <span class="section-title" style="font-size:13px;opacity:0.7">Trainerteam</span>
+      <button class="btn-add" onclick="openTrainerForm(null)">+ Trainer</button>
+    </div>
+    <div class="item-list" id="trainerList"></div>
+  </section>
+
+  <!-- VEREINE -->
+  <section class="admin-section" data-section="vereine">
+    <div class="section-header">
+      <span class="section-title">Vereine · Gegner</span>
+      <button class="btn-add" onclick="openClubForm(null)">+ Verein</button>
+    </div>
+    <div class="item-list" id="vereineList"></div>
+  </section>
+
+  <!-- SPIELPLAN -->
+  <section class="admin-section" data-section="spielplan">
+    <div class="section-header">
+      <span class="section-title">Spielplan · Saison 2026/27</span>
+      <button class="btn-add" onclick="openMatchForm(null)">+ Spiel</button>
+    </div>
+    <div class="item-list" id="spielplanList"></div>
+  </section>
+
+</main>
+
+<!-- ── Formular-Panel ─────────────────────────────────── -->
+<div class="form-overlay" id="formOverlay"></div>
+<div class="form-panel" id="formPanel">
+  <!-- wird per JS befüllt -->
+</div>
+
+<!-- ── Crop-Modal ───────────────────────────────────────────────── -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-dialog">
+    <div class="crop-header">Ausschnitt wählen</div>
+    <div class="crop-wrap" id="cropWrap">
+      <img id="cropSourceImg" src="" alt="" draggable="false">
+      <div class="crop-box" id="cropBox">
+        <div class="crop-handle crop-tl"></div>
+        <div class="crop-handle crop-tr"></div>
+        <div class="crop-handle crop-bl"></div>
+        <div class="crop-handle crop-br"></div>
+      </div>
+    </div>
+    <div class="crop-footer">
+      <button class="btn-secondary" id="cropCancelBtn">Abbrechen</button>
+      <button class="btn-primary"   id="cropConfirmBtn">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/scripts/admin.js"></script>
+</body>
+</html>

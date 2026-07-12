@@ -1,0 +1,141 @@
+/* ── Tokens ────────────────────────────────────────────────────── */
+:root {
+  --bg:         #f3f5ed;
+  --surface:    #ffffff;
+  --surface2:   #eaeddf;
+  --text:       #181d10;
+  --muted:      #6a7160;
+  --accent:     #FF8341;
+  --accent-on:  #ffffff;
+  --bright:     #FF8341;
+  --bright-on:  #ffffff;
+  --border:     #d8dccf;
+  --dark-bg:    #0f0f0f;
+  --dark-surf:  #191919;
+  --dark-text:  #f0f0f0;
+  --dark-muted: #888;
+  --dark-brd:   #2e2e2e;
+  --red:        #e03030;
+  --radius:     10px;
+  --mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --serif: Georgia, 'Cambria', 'Times New Roman', serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:       #0a0e16;
+    --surface:  rgba(0, 0, 0, 0.44);
+    --surface2: rgba(0, 0, 0, 0.62);
+    --text:     #e4e8f0;
+    --muted:    #7a8898;
+    --accent:   #FF8341;
+    --accent-on:#ffffff;
+    --border:   rgba(40, 65, 100, 0.30);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:       #0a0e16;
+  --surface:  rgba(0, 0, 0, 0.44);
+  --surface2: rgba(0, 0, 0, 0.62);
+  --text:     #e4e8f0;
+  --muted:    #7a8898;
+  --accent:   #FF8341;
+  --accent-on:#ffffff;
+  --border:   rgba(40, 65, 100, 0.30);
+}
+:root[data-theme="light"] {
+  --bg:       #f3f5ed;
+  --surface:  #ffffff;
+  --surface2: #eaeddf;
+  --text:     #181d10;
+  --muted:    #6a7160;
+  --accent:   #FF8341;
+  --accent-on:#ffffff;
+  --border:   #d8dccf;
+}
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; background: #070a0f; color-scheme: dark; }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
+html.splash-open, html.splash-open body { overflow: hidden; }
+body {
+  background: transparent;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  transition: color 0.2s;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; display: block; }
+
+/* ── Background ─────────────────────────────────────────────────── */
+#bg-canvas { display: none; }
+body::before, body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+body::before {
+  z-index: -1;
+  background: url('/bkgr_main.png') center center / cover no-repeat;
+  opacity: 1;
+}
+body::after {
+  z-index: -2;
+  background: url('/bkgr_field.png') center center / cover no-repeat;
+  opacity: 0;
+}
+@media (prefers-color-scheme: light) {
+  body::before { opacity: 0; }
+  body::after  { opacity: 1; }
+}
+:root[data-theme="dark"]  body::before { opacity: 1; }
+:root[data-theme="dark"]  body::after  { opacity: 0; }
+:root[data-theme="light"] body::before { opacity: 0; }
+:root[data-theme="light"] body::after  { opacity: 1; }
+
+/* ── Layout helpers ────────────────────────────────────────────── */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.narrow    { max-width: 680px; }
+.section   { padding: 72px 0; border-top: 1px solid var(--border); }
+.section:first-of-type { border-top: none; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: var(--serif);
+  font-size: clamp(32px, 5.5vw, 52px);
+  line-height: 1.05;
+  text-wrap: balance;
+  margin-bottom: 32px;
+  color: var(--text);
+}
+.placeholder-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
+  background: rgba(255,180,0,0.15); color: #9a6800; border: 1px solid rgba(200,140,0,0.25);
+  vertical-align: middle; margin-left: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  .placeholder-badge {
+    background: rgba(255,180,0,0.1); color: #d4960a; border-color: rgba(200,140,0,0.2);
+  }
+}
+:root[data-theme="dark"] .placeholder-badge {
+  background: rgba(255,180,0,0.1); color: #d4960a; border-color: rgba(200,140,0,0.2);
+}

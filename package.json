@@ -1,0 +1,12 @@
+{
+  "name": "ssv-berghausen",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port 4321",
+    "build": "vite build",
+    "preview": "vite preview --port 4321"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}

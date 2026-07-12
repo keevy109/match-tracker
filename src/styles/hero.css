@@ -1,0 +1,103 @@
+/* ── Hero ──────────────────────────────────────────────────────── */
+.hero { padding: 80px 0 72px; border-bottom: 1px solid var(--border); }
+.hero-season {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 20px;
+}
+.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(56px, 13vw, 120px);
+  line-height: 0.92; text-wrap: balance;
+  margin-bottom: 24px; color: var(--text);
+}
+.hero-title em { font-style: normal; color: var(--accent); display: block; }
+.hero-desc {
+  font-size: 16px; color: var(--muted); line-height: 1.7;
+  max-width: 480px; margin-bottom: 32px;
+}
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: var(--accent-on);
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  padding: 12px 22px; border-radius: 8px; text-decoration: none;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; text-decoration: none; }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: none; border: 1px solid var(--border); color: var(--text);
+  font-family: var(--sans); font-size: 14px; font-weight: 500;
+  padding: 12px 22px; border-radius: 8px; text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-secondary:hover { border-color: var(--muted); background: var(--surface2); text-decoration: none; }
+.hero-stats {
+  display: flex; gap: 32px; flex-wrap: wrap; margin-top: 48px;
+  padding-top: 32px; border-top: 1px solid var(--border);
+}
+.hero-stat-val {
+  font-family: var(--mono); font-size: 32px; font-weight: 600;
+  color: var(--text); font-variant-numeric: tabular-nums; line-height: 1;
+}
+.hero-stat-label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted); margin-top: 4px;
+}
+
+/* ── Ticker Feature ────────────────────────────────────────────── */
+.ticker-feature { padding: 0; border-top: 1px solid var(--border); }
+.ticker-feature-inner {
+  max-width: 1100px; margin: 0 auto; padding: 64px 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+}
+@media (max-width: 700px) {
+  .ticker-feature-inner { grid-template-columns: 1fr; gap: 32px; }
+}
+.ticker-feature-text p { font-size: 15px; line-height: 1.7; margin-bottom: 24px; }
+
+.ticker-mockup {
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px; overflow: hidden; font-family: var(--sans);
+}
+.ticker-mockup-bar {
+  background: var(--dark-bg); padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--dark-brd);
+}
+.mock-dot { width: 8px; height: 8px; border-radius: 50%; }
+.ticker-mockup-body { padding: 20px 16px; }
+.mock-teams {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; margin-bottom: 16px;
+}
+.mock-score {
+  font-family: var(--mono); font-size: 40px; font-weight: 600;
+  color: var(--dark-text); letter-spacing: 0.05em;
+}
+.mock-team { font-size: 11px; color: var(--dark-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.mock-live-badge {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--red);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px;
+}
+.mock-live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--red);
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+.mock-event {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 8px; border-radius: 6px;
+  background: rgba(255,255,255,0.04); margin-bottom: 5px;
+  font-size: 13px; color: var(--dark-text);
+}
+.mock-event-min { font-family: var(--mono); font-size: 11px; color: var(--dark-muted); width: 28px; flex-shrink: 0; }
+.mock-no-live {
+  text-align: center; padding: 28px 0;
+  color: var(--dark-muted); font-family: var(--mono);
+  font-size: 12px; letter-spacing: 0.06em;
+}
