@@ -1,18 +1,15 @@
-export async function load(collection) {
-  const res = await fetch(`${import.meta.env.BASE_URL}data/${collection}.json`);
-  if (!res.ok) return [];
-  try { return await res.json(); } catch { return []; }
-}
+import { createDataStore } from './data-store.js';
 
-export async function save(collection, data) {
-  if (!import.meta.env.DEV) return; // im Build kein Schreibzugriff
-  const res = await fetch(`/api/${collection}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const msg = await res.text().catch(() => 'Unbekannter Fehler');
-    throw new Error(msg);
-  }
+const cloud = () => import('./firebase.js');
+const store = createDataStore({
+  baseUrl: import.meta.env.BASE_URL,
+  local: import.meta.env.DEV,
+  cloudUrl: 'https://match-tracker-891ac-default-rtdb.europe-west1.firebasedatabase.app',
+  getToken: async () => (await cloud()).getToken(),
+  request: (url, options) => fetch(url, { ...options, signal: AbortSignal.timeout(20000) }),
+});
+export const load = store.load;
+export const save = store.save;
+export async function uploadImage(subpath, dataUrl) {
+  return (await cloud()).uploadImage(subpath, dataUrl);
 }

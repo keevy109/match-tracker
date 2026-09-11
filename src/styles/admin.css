@@ -348,3 +348,16 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
   display: flex; gap: 10px; padding: 16px 20px;
   border-top: 1px solid rgba(255,255,255,0.07); justify-content: flex-end;
 }
+
+/* Authentication and save feedback */
+[hidden] { display: none !important; }
+.admin-access { width: 100%; max-width: 860px; margin: 0 auto; padding: 20px; }
+#adminStatus { line-height: 1.5; overflow-wrap: anywhere; }
+#adminStatus.is-error { color: #ff9b9b; }
+#adminLogin { max-width: 400px; margin: 32px auto; }
+#adminLogin h1 { font-size: 24px; margin-bottom: 12px; }
+#adminLogin p { line-height: 1.5; margin-bottom: 20px; }
+#adminLoginForm { display: grid; gap: 12px; margin-bottom: 16px; }
+#adminLogin input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: var(--surface); color: var(--text); font: inherit; }
+#adminSession { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+button:disabled { opacity: .5; cursor: wait; }
