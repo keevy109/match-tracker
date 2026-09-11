@@ -1672,20 +1672,11 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
       roundRect(ctx, pad, y - 30, w - pad * 2, 42, 8);
       ctx.fill();
 
-      if (e.typ === 'wechsel') {
-        ctx.fillStyle = color;
-        ctx.font = '600 26px monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText(`Wechsel ${e.minute}' ${e.rausName || '–'} <-> ${e.reinName || '–'}`, colSnapshot, y, w - pad - colSnapshot - 24);
-        y += goalLineH;
-        return;
-      }
-
       // snapshot
       ctx.fillStyle = color;
       ctx.font = '600 26px monospace';
       ctx.textAlign = 'left';
-      ctx.fillText(e.snapshot, colSnapshot, y);
+      ctx.fillText(e.typ === 'wechsel' ? 'Wechsel' : e.snapshot, colSnapshot, y);
 
       // minute
       ctx.fillStyle = '#999';
@@ -1695,7 +1686,24 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
       // name
       ctx.fillStyle = color;
       ctx.font = '600 26px monospace';
-      if (name) ctx.fillText(name, colName, y);
+      if (e.typ === 'wechsel') {
+        const parts = [
+          { text: e.rausName || '–', color: '#ff6262' },
+          { text: ' <-> ', color: '#999' },
+          { text: e.reinName || '–', color: '#55df8c' }
+        ];
+        const width = parts.reduce((sum, part) => sum + ctx.measureText(part.text).width, 0);
+        ctx.save();
+        ctx.translate(colName, y);
+        ctx.scale(Math.min(1, (w - pad - colName - 24) / Math.max(1, width)), 1);
+        let x = 0;
+        parts.forEach(part => {
+          ctx.fillStyle = part.color;
+          ctx.fillText(part.text, x, 0);
+          x += ctx.measureText(part.text).width;
+        });
+        ctx.restore();
+      } else if (name) ctx.fillText(name, colName, y);
 
       y += goalLineH;
     });
