@@ -1,7 +1,7 @@
 const {test}=require('node:test'); const assert=require('node:assert/strict');
 const fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
 const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../match-tracker.html'),'utf8');
-const source=html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
+const source=html.slice(html.indexOf('function isCommentPhoto('),html.indexOf('function buildPlayerOptions('))+html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
 function context() {
   const nodes = {}, timers = [];
   const c = vm.createContext({
@@ -42,4 +42,15 @@ test('substitution displays both players and comment is literal text',()=>{
 test('multiple events are displayed in sequence instead of replacing each other',()=>{
  const {c,nodes,timers}=context();c.enqueueTickerOverlay({id:1,typ:'kommentar',text:'Erster'},{});c.enqueueTickerOverlay({id:2,typ:'kommentar',text:'Zweiter'},{});
  assert.equal(nodes.goalOverlayScorer.textContent,'Erster');timers.shift()();timers.shift()();assert.equal(nodes.goalOverlayScorer.textContent,'Zweiter');
+});
+
+test('team comment shows the selected team and optional image, then clears the image',()=>{
+ const {c,nodes}=context();const classes=new Set();
+ c.document.getElementById('goalOverlayCard').classList={add: x=>classes.add(x),remove: (...xs)=>xs.forEach(x=>classes.delete(x)),toggle(){}};
+ const photo='data:image/webp;base64,aGVsbG8=';
+ c.showGoalOverlay({id:10,typ:'kommentar',team:'away',text:'Großchance!',photo},{homeTeam:'Heim',awayTeam:'Gast'});
+ assert.equal(nodes.goalOverlayTeam.textContent,'Gast');assert.equal(classes.has('away-glow'),true);
+ assert.equal(nodes.goalOverlayEventPhoto.src,photo);assert.equal(nodes.goalOverlayEventPhoto.style.display,'block');
+ c.showGoalOverlay({id:11,typ:'kommentar',team:'home',text:'Weiter!'},{homeTeam:'Heim',awayTeam:'Gast'});
+ assert.equal(nodes.goalOverlayTeam.textContent,'Heim');assert.equal(classes.has('away-glow'),false);assert.equal(nodes.goalOverlayEventPhoto.style.display,'none');
 });
