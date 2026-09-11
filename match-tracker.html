@@ -445,7 +445,7 @@
   .btn-event-type:hover { border-color: #555; }
 
   /* Event-Typen in der Ereignisliste */
-  .event-item.wechsel { border-left-color: #4a9eff; background-image: linear-gradient(to right, rgba(74,158,255,0.18) -30%, var(--surface) 30%); }
+  .event-item.wechsel:not(.home):not(.away) { border-left-color: #4a9eff; background-image: linear-gradient(to right, rgba(74,158,255,0.18) -30%, var(--surface) 30%); }
   .event-item.kommentar:not(.home):not(.away) { border-left-color: #555; background-image: linear-gradient(to right, rgba(136,136,136,0.12) -30%, var(--surface) 30%); }
   .em-select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
@@ -628,6 +628,13 @@
   }
   .event-comment-photo { display:block; max-width:100%; max-height:180px; object-fit:contain; border-radius:8px; margin-top:8px; }
   .goal-overlay-event-photo { max-width:100%; max-height:35vh; object-fit:contain; border-radius:10px; margin:12px auto; }
+  .substitution-players { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin:18px 0; }
+  .substitution-out { --sub-color:#ff6262; }
+  .substitution-in { --sub-color:#55df8c; }
+  .substitution-label { color:var(--sub-color); font-size:16px; font-weight:800; margin-bottom:12px; }
+  .substitution-avatar { width:min(96px,100%); aspect-ratio:1; border:3px solid var(--sub-color); border-radius:50%; overflow:hidden; margin:0 auto 10px; background:#222; display:grid; place-items:center; font-size:40px; }
+  .substitution-avatar img { width:100%; height:100%; object-fit:cover; }
+  .substitution-name { color:var(--sub-color); font-size:18px; font-weight:700; overflow-wrap:anywhere; }
   .goal-overlay-card.event-message { max-width: 480px; max-height: 85vh; overflow-y: auto; }
   .event-message .goal-overlay-scorer { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
   .event-message .goal-overlay-score, .event-message .goal-overlay-season { display: none; }
@@ -941,6 +948,18 @@
     <div class="goal-overlay-team" id="goalOverlayTeam"></div>
     <div class="goal-overlay-score" id="goalOverlayScore"></div>
     <div class="goal-overlay-scorer" id="goalOverlayScorer"></div>
+    <div id="substitutionPlayers" class="substitution-players" style="display:none">
+      <div class="substitution-player substitution-out">
+        <div class="substitution-label">↓ Raus</div>
+        <div class="substitution-avatar"><img id="subOutPhoto" alt="" style="display:none"><span id="subOutFallback">👤</span></div>
+        <div id="subOutName" class="substitution-name"></div>
+      </div>
+      <div class="substitution-player substitution-in">
+        <div class="substitution-label">↑ Rein</div>
+        <div class="substitution-avatar"><img id="subInPhoto" alt="" style="display:none"><span id="subInFallback">👤</span></div>
+        <div id="subInName" class="substitution-name"></div>
+      </div>
+    </div>
     <img id="goalOverlayEventPhoto" class="goal-overlay-event-photo" alt="Foto zur Meldung" style="display:none">
     <div class="goal-overlay-minute" id="goalOverlayMinute"></div>
     <div class="goal-overlay-season" id="goalOverlaySeason"></div>
@@ -1446,7 +1465,7 @@ function updateScore(animate) {
 function eventCssClass(e) {
   const typ = e.typ || 'tor';
   if (typ === 'tor') return e.isOwnGoal ? 'own' : e.team;
-  if (typ === 'wechsel') return 'wechsel';
+  if (typ === 'wechsel') return 'wechsel' + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
   if (typ === 'kommentar') return 'kommentar' + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
   return '';
 }
@@ -2609,6 +2628,7 @@ function buildPlayerOptions() {
 
 function openEventModal(typ) {
   if (new URLSearchParams(window.location.search).has('ticker')) return;
+  if (typ === 'wechsel' && !getOurTeamSide()) { showToast('Wechsel sind nur für unser Team möglich.'); return; }
   _eventModalType = typ;
   eventModalGeneration++;
   _selectedKartenTyp = 'gelb';
@@ -2664,8 +2684,12 @@ async function saveEventModal() {
     const rausId  = parseInt(document.getElementById('em-raus').value)  || null;
     const reinP   = squad.find(p => p.id === reinId);
     const rausP   = squad.find(p => p.id === rausId);
-    ev = { id: Date.now(), typ: 'wechsel', minute,
-           reinId, reinName: reinP?.name||'', rausId, rausName: rausP?.name||'' };
+    const team = getOurTeamSide();
+    if (!team) { showToast('Wechsel sind nur für unser Team möglich.'); return; }
+    if (!reinP || !rausP || reinId === rausId) { showToast('Bitte zwei unterschiedliche Spieler aus unserem Kader auswählen.'); return; }
+    ev = { id: Date.now(), typ: 'wechsel', minute, team,
+           reinId, reinName: reinP.name, reinPhoto: reinP.photo || '',
+           rausId, rausName: rausP.name, rausPhoto: rausP.photo || '' };
 
   } else if (_eventModalType === 'kommentar') {
     const text = document.getElementById('em-text').value.trim();
@@ -2881,6 +2905,9 @@ function showGoalOverlay(event, data, onDone = () => {}) {
 
   const kind = event.typ || 'tor';
   const isGoal = kind === 'tor';
+  const overlayTeam = kind === 'wechsel'
+    ? (event.team || (data.isHomeTeam === false ? 'away' : 'home'))
+    : event.team;
   card.classList.toggle('event-message', !isGoal);
   document.getElementById('goalOverlayTitle').textContent = isGoal ? 'Tor für' : kind === 'wechsel' ? 'Wechsel' : 'Text';
 
@@ -2888,7 +2915,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   card.classList.remove('away-glow', 'own-glow', 'has-photo');
   if (event.isOwnGoal) {
     card.classList.add('own-glow');
-  } else if (event.team === 'away') {
+  } else if (overlayTeam === 'away') {
     card.classList.add('away-glow');
   }
   // team === 'home': kein extra class, Standard verwendet --home-color
@@ -2896,13 +2923,13 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   // Mannschaftsname ermitteln
   let teamName = '';
   if (event.isOwnGoal) {
-    teamName = event.team === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
+    teamName = overlayTeam === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
   } else {
-    teamName = event.team === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
+    teamName = overlayTeam === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
   }
 
   const photo = isGoal ? event.scorerPhoto || '' : '';
-  const teamLogo = isGoal ? (event.team === 'home' ? (data.homeLogo || '') : (data.awayLogo || '')) : '';
+  const teamLogo = isGoal ? (overlayTeam === 'home' ? (data.homeLogo || '') : (data.awayLogo || '')) : '';
 
   // Spieler-Foto oder Team-Logo in gleicher Größe — ⚽ Emoji immer ausgeblendet
   const photoEl = document.getElementById('goalOverlayPlayerPhoto');
@@ -2943,11 +2970,31 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   }
 
   if (!isGoal) {
-    document.getElementById('goalOverlayTeam').textContent = kind === 'kommentar' && (event.team === 'home' || event.team === 'away') ? teamName : '';
+    document.getElementById('goalOverlayTeam').textContent = (kind === 'kommentar' || kind === 'wechsel') && (overlayTeam === 'home' || overlayTeam === 'away') ? teamName : '';
     document.getElementById('goalOverlayScore').textContent = '';
     document.getElementById('goalOverlayScorer').textContent = kind === 'wechsel'
       ? `↑ Rein: ${event.reinName || '–'}\n↓ Raus: ${event.rausName || '–'}`
       : event.text || '';
+  }
+  const players = document.getElementById('substitutionPlayers');
+  if (players) players.style.display = kind === 'wechsel' ? 'grid' : 'none';
+  document.getElementById('goalOverlayScorer').style.display = kind === 'wechsel' ? 'none' : '';
+  if (kind === 'wechsel') {
+    const rawSquad = data.squad || [];
+    const members = Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad);
+    for (const [prefix, field] of [['subOut', 'raus'], ['subIn', 'rein']]) {
+      const member = members.find(player => player && String(player.id) === String(event[field + 'Id']));
+      const name = event[field + 'Name'] || member?.name || '–';
+      const photo = event[field + 'Photo'] || member?.photo || '';
+      const img = document.getElementById(prefix + 'Photo');
+      const fallback = document.getElementById(prefix + 'Fallback');
+      document.getElementById(prefix + 'Name').textContent = name;
+      img.alt = name;
+      img.onerror = () => { img.style.display = 'none'; fallback.style.display = ''; };
+      fallback.style.display = photo ? 'none' : '';
+      img.style.display = photo ? 'block' : 'none';
+      img.src = photo;
+    }
   }
   const eventPhoto = document.getElementById('goalOverlayEventPhoto');
   if (eventPhoto) {

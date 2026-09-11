@@ -54,3 +54,17 @@ test('team comment shows the selected team and optional image, then clears the i
  c.showGoalOverlay({id:11,typ:'kommentar',team:'home',text:'Weiter!'},{homeTeam:'Heim',awayTeam:'Gast'});
  assert.equal(nodes.goalOverlayTeam.textContent,'Heim');assert.equal(classes.has('away-glow'),false);assert.equal(nodes.goalOverlayEventPhoto.style.display,'none');
 });
+
+for (const team of ['home','away']) test(`substitution uses ${team} color and both player photos`,()=>{
+ const {c,nodes}=context();const classes=new Set();
+ c.document.getElementById('goalOverlayCard').classList={add:x=>classes.add(x),remove:(...xs)=>xs.forEach(x=>classes.delete(x)),toggle(){}};
+ c.showGoalOverlay({id:1,typ:'wechsel',team,reinName:'Mika',rausName:'Till',reinPhoto:'in.png',rausPhoto:'out.png'}, {homeTeam:'Heim',awayTeam:'Gast'});
+ assert.equal(classes.has('away-glow'),team==='away');assert.equal(nodes.goalOverlayTeam.textContent,team==='home'?'Heim':'Gast');
+ assert.equal(nodes.subInName.textContent,'Mika');assert.equal(nodes.subOutName.textContent,'Till');assert.equal(nodes.subInPhoto.src,'in.png');assert.equal(nodes.subOutPhoto.src,'out.png');assert.equal(nodes.substitutionPlayers.style.display,'grid');
+ c.showGoalOverlay({typ:'kommentar',text:'Weiter!',team},{});assert.equal(nodes.substitutionPlayers.style.display,'none');assert.equal(nodes.goalOverlayScorer.style.display,'');
+});
+test('older substitutions obtain team side and photos from the match snapshot',()=>{
+ const {c,nodes}=context();c.showGoalOverlay({typ:'wechsel',reinId:1,rausId:2},{isHomeTeam:false,awayTeam:'Unser Team',squad:{a:{id:1,name:'Rein',photo:'one.png'},b:{id:2,name:'Raus'}}});
+ assert.equal(nodes.goalOverlayTeam.textContent,'Unser Team');assert.equal(nodes.subInPhoto.src,'one.png');assert.equal(nodes.subOutFallback.style.display,'');
+ nodes.subInPhoto.onerror();assert.equal(nodes.subInPhoto.style.display,'none');assert.equal(nodes.subInFallback.style.display,'');
+});

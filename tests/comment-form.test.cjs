@@ -25,3 +25,14 @@ test('image errors leave the form open without storing partial content',async()=
 test('invalid image formats and excessive file sizes are rejected before reading',async()=>{
  const {c}=setup();await assert.rejects(c.prepareCommentPhoto({type:'text/html',size:1}),/JPEG/);await assert.rejects(c.prepareCommentPhoto({type:'image/png',size:11000000}),/10 MB/);
 });
+
+test('substitutions retain our team side and selected player photos',async()=>{
+ const {c,fields}=setup();c.getOurTeamSide=()=> 'away';c.showToast=()=>{};c.squad=[{id:1,name:'Rein',photo:'one.png'},{id:2,name:'Raus',photo:'two.png'}];
+ fields['em-rein']={value:'1'};fields['em-raus']={value:'2'};vm.runInContext("_eventModalType='wechsel'",c);
+ await c.saveEventModal();assert.equal(c.events[0].team,'away');assert.equal(c.events[0].reinPhoto,'one.png');assert.equal(c.events[0].rausPhoto,'two.png');
+});
+test('substitutions reject unrelated matches, missing players and identical players',async()=>{
+ for(const [side,rein,raus] of [[null,'1','2'],['home','1','1'],['away','99','2']]){
+ const {c,fields}=setup();c.getOurTeamSide=()=>side;c.showToast=()=>{};c.squad=[{id:1,name:'A'},{id:2,name:'B'}];fields['em-rein']={value:rein};fields['em-raus']={value:raus};vm.runInContext("_eventModalType='wechsel'",c);await c.saveEventModal();assert.equal(c.events.length,0);
+ }
+});
