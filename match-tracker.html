@@ -1590,6 +1590,7 @@ function getCanvasColors() {
 }
 
 function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr }) {
+  sorted = sorted.filter(e => !e.typ || e.typ === 'tor' || e.typ === 'wechsel');
   const colors = getCanvasColors();
   const canvas = document.getElementById('exportCanvas');
   const ctx = canvas.getContext('2d');
@@ -1670,6 +1671,15 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
       ctx.fillStyle = 'rgba(255,255,255,0.03)';
       roundRect(ctx, pad, y - 30, w - pad * 2, 42, 8);
       ctx.fill();
+
+      if (e.typ === 'wechsel') {
+        ctx.fillStyle = color;
+        ctx.font = '600 26px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Wechsel ${e.minute}' ${e.rausName || '–'} <-> ${e.reinName || '–'}`, colSnapshot, y, w - pad - colSnapshot - 24);
+        y += goalLineH;
+        return;
+      }
 
       // snapshot
       ctx.fillStyle = color;
