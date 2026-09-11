@@ -626,6 +626,9 @@
   .goal-overlay-minute {
     font-family: var(--mono); font-size: 13px; color: var(--muted);
   }
+  .goal-overlay-card.event-message { max-height: 85vh; overflow-y: auto; }
+  .event-message .goal-overlay-scorer { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+  .event-message .goal-overlay-score, .event-message .goal-overlay-team, .event-message .goal-overlay-season { display: none; }
   .goal-overlay-season {
     font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 4px; font-style: italic;
   }
@@ -921,7 +924,7 @@
     <img class="goal-overlay-player-photo" id="goalOverlayPlayerPhoto" src="" alt="" style="display:none">
     <div class="goal-overlay-emoji" id="goalOverlayEmoji">⚽</div>
     <img class="goal-overlay-logo" id="goalOverlayLogo" src="" alt="" style="display:none;">
-    <div class="goal-overlay-tor">Tor für</div>
+    <div class="goal-overlay-tor" id="goalOverlayTitle">Tor für</div>
     <div class="goal-overlay-team" id="goalOverlayTeam"></div>
     <div class="goal-overlay-score" id="goalOverlayScore"></div>
     <div class="goal-overlay-scorer" id="goalOverlayScorer"></div>
@@ -2739,6 +2742,7 @@ function initTickerMode(matchId) {
   firebase.initializeApp(FIREBASE_CONFIG);
 
   let lastScore = null;
+  const detectNewEvents = createTickerEventDetector();
   let tickerData = null;
   let tickerDataReceivedAt = null;
 
@@ -2772,15 +2776,48 @@ function initTickerMode(matchId) {
     tickerData = data;
     tickerDataReceivedAt = Date.now();
     updateTickerUI(data, lastScore);
+    for (const event of detectNewEvents(data.events)) enqueueTickerOverlay(event, data);
     lastScore = { h: data.homeScore, a: data.awayScore };
   });
 }
 
+function createTickerEventDetector() {
+  let seen = null;
+  return raw => {
+    const entries = (Array.isArray(raw) ? raw : Object.values(raw || {})).filter(event => event && event.id != null);
+    const key = event => String(event.id);
+    if (seen === null) { seen = new Set(entries.map(key)); return []; }
+    const fresh = entries.filter(event => !seen.has(key(event))).sort((a, b) => a.id - b.id);
+    entries.forEach(event => seen.add(key(event)));
+    return fresh;
+  };
+}
+const tickerOverlayQueue = [];
+let tickerOverlayActive = false;
+function enqueueTickerOverlay(event, data) {
+  tickerOverlayQueue.push({ event, data });
+  playNextTickerOverlay();
+}
+function playNextTickerOverlay() {
+  if (tickerOverlayActive || !tickerOverlayQueue.length) return;
+  tickerOverlayActive = true;
+  const { event, data } = tickerOverlayQueue.shift();
+  showGoalOverlay(event, data, () => {
+    tickerOverlayActive = false;
+    playNextTickerOverlay();
+  });
+}
+
 let goalOverlayTimeout = null;
-function showGoalOverlay(event, data) {
+function showGoalOverlay(event, data, onDone = () => {}) {
   const overlay = document.getElementById('goalOverlay');
   const card    = document.getElementById('goalOverlayCard');
-  if (!overlay || !card) return;
+  if (!overlay || !card) { onDone(); return; }
+
+  const kind = event.typ || 'tor';
+  const isGoal = kind === 'tor';
+  card.classList.toggle('event-message', !isGoal);
+  document.getElementById('goalOverlayTitle').textContent = isGoal ? 'Tor für' : kind === 'wechsel' ? 'Wechsel' : 'Text';
 
   // Glow-Farbe je nach Team (home-glow = default, away-glow, own-glow)
   card.classList.remove('away-glow', 'own-glow', 'has-photo');
@@ -2799,14 +2836,14 @@ function showGoalOverlay(event, data) {
     teamName = event.team === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
   }
 
-  const photo = event.scorerPhoto || '';
-  const teamLogo = event.team === 'home' ? (data.homeLogo || '') : (data.awayLogo || '');
+  const photo = isGoal ? event.scorerPhoto || '' : '';
+  const teamLogo = isGoal ? (event.team === 'home' ? (data.homeLogo || '') : (data.awayLogo || '')) : '';
 
   // Spieler-Foto oder Team-Logo in gleicher Größe — ⚽ Emoji immer ausgeblendet
   const photoEl = document.getElementById('goalOverlayPlayerPhoto');
   const emojiEl = document.getElementById('goalOverlayEmoji');
   const logoEl  = document.getElementById('goalOverlayLogo');
-  if (emojiEl) emojiEl.style.display = 'none';
+  if (emojiEl) { emojiEl.style.display = isGoal ? 'none' : ''; emojiEl.textContent = kind === 'wechsel' ? '🔄' : '💬'; }
 
   if (photo) {
     // Spielerfoto: Kreis mit Glow-Border, ragt über Karte
@@ -2830,8 +2867,9 @@ function showGoalOverlay(event, data) {
   document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
   const seasonEl = document.getElementById('goalOverlaySeason');
   if (seasonEl) {
-    if (event.scorerId && !event.isOwnGoal) {
-      const sp = (data.squad || squad || []).find(s => s.id === event.scorerId);
+    if (isGoal && event.scorerId && !event.isOwnGoal) {
+      const rawSquad = data.squad || squad || [];
+      const sp = (Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad)).find(s => s.id === event.scorerId);
       const g = sp ? (sp.goals || 0) : 0;
       seasonEl.textContent = g === 1 ? 'Erstes Saisontor' : g > 1 ? g + '. Saisontor' : '';
     } else {
@@ -2839,13 +2877,20 @@ function showGoalOverlay(event, data) {
     }
   }
 
+  if (!isGoal) {
+    document.getElementById('goalOverlayTeam').textContent = '';
+    document.getElementById('goalOverlayScore').textContent = '';
+    document.getElementById('goalOverlayScorer').textContent = kind === 'wechsel'
+      ? `↑ Rein: ${event.reinName || '–'}\n↓ Raus: ${event.rausName || '–'}`
+      : event.text || '';
+  }
   overlay.classList.remove('fading');
   overlay.classList.add('active');
 
   clearTimeout(goalOverlayTimeout);
   goalOverlayTimeout = setTimeout(() => {
     overlay.classList.add('fading');
-    setTimeout(() => overlay.classList.remove('active', 'fading'), 650);
+    setTimeout(() => { overlay.classList.remove('active', 'fading'); onDone(); }, 650);
   }, 6000);
 }
 
@@ -2889,13 +2934,7 @@ function updateTickerUI(data, lastScore) {
     void scoreH.offsetWidth;
     scoreH.classList.add('bump'); scoreA.classList.add('bump');
 
-    // Neuestes Tor finden und Overlay anzeigen
-    const raw2 = data.events;
-    const evtsAll = raw2 ? (Array.isArray(raw2) ? raw2 : Object.values(raw2)) : [];
-    if (evtsAll.length > 0) {
-      const newest = evtsAll.reduce((a, b) => (b.id > a.id ? b : a), evtsAll[0]);
-      showGoalOverlay(newest, data);
-    }
+
   }
 
   // Events — Firebase gibt Arrays als Objekt zurück: {0:{…}, 1:{…}}
