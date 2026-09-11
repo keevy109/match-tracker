@@ -13,7 +13,12 @@ auf GitHub Pages setzt Firebase-Daten nicht zurück.
 
 Die Daten liegen jeweils als `{ "schema": 1, "items": "<JSON-Array>" }` vor.
 Der JSON-String erhält leere Listen, null-Werte und die ursprüngliche Reihenfolge.
-Bilder werden in den vorhandenen Storage-Bucket unter `website/` hochgeladen.
+Neue Bilder werden im Browser auf maximal 128 KiB pro Data-URL verkleinert
+und zusammen mit dem jeweiligen Datensatz in Realtime Database gespeichert.
+Damit wird kein Cloud-Storage-Bucket benötigt; die Lösung funktioniert auch im
+Spark-Tarif innerhalb dessen Datenbankkontingenten. Die gesamte Sammlung ist
+auf 9,5 Millionen Zeichen begrenzt. Bilder erhöhen das Datenvolumen beim Laden
+der Sammlung. Bestehende Storage-URLs bleiben unverändert.
 Bereits vorhandene relative Bildpfade funktionieren weiterhin auf GitHub Pages.
 
 Der lokale Entwicklungsserver verwendet weiterhin `public/data` und lokale
@@ -27,7 +32,7 @@ Pfaden `app` und `matches` ist von dieser Änderung nicht betroffen.
    Authorized domains** `keevy109.github.io` eintragen, sofern noch nicht vorhanden.
 2. Unter **Authentication → Users** die UID des Admin-Kontos kopieren. Kein
    Passwort oder Service-Account-Schlüssel gehört in den Quellcode.
-3. In beiden Beispiel-Regeldateien `REPLACE_WITH_ADMIN_UID` durch diese UID
+3. In `database.rules.example.json` `REPLACE_WITH_ADMIN_UID` durch diese UID
    ersetzen. Die UID ist kein Passwort.
 4. Die vorhandenen Datenbankregeln sichern und den `website`-Abschnitt aus
    `database.rules.example.json` in die vorhandenen Regeln integrieren.
@@ -36,10 +41,7 @@ Pfaden `app` und `matches` ist von dieser Änderung nicht betroffen.
    Ein bereits global gewährtes `.write: true` auf einem übergeordneten Pfad
    würde die neue Beschränkung aushebeln; solche Freigaben müssen zuerst auf die
    jeweils tatsächlich benötigten alten Pfade begrenzt werden.
-5. Ebenso den `match /website/...`-Abschnitt aus `storage.rules.example` in die
-   vorhandenen Storage-Regeln integrieren. Bereits vorhandene breite Freigaben
-   prüfen. Der konfigurierte Bucket muss verfügbar sein; ohne Storage können
-   Texte/Zahlen gespeichert werden, neue Bild-Uploads zeigen einen Fehler.
+5. Für Bilder sind keine zusätzlichen Storage-Regeln nötig.
 6. Regeln in Firebase prüfen und veröffentlichen. In den Regeln darf ein
    nicht angemeldeter oder anderer Nutzer nicht schreiben; der Admin darf die
    vier genannten Sammlungen und die zugehörigen Bilder schreiben.
