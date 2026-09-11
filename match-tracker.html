@@ -689,7 +689,7 @@
 
 <header>
   <div class="match-meta">
-    <input type="text" id="matchTitle" placeholder="Heimteam vs. Gegner" maxlength="40" oninput="save()" />
+    <input type="text" id="matchTitle" placeholder="Heimteam vs. Gegner" maxlength="40" oninput="updateGoalButtons(); updateScoreLabels(); save()" />
   </div>
   <div class="header-right">
     <div class="match-date" id="matchDate"></div>
@@ -1088,7 +1088,20 @@ function elapsedSeconds() {
   return timerOffset + Math.floor((Date.now() - timerBase) / 1000);
 }
 
-const OUR_TEAM = 'SSV Berghausen';
+const DEFAULT_OUR_TEAM = 'SSV Berghausen';
+function getOurTeamName() {
+  return teams.find(team => team.isOurTeam)?.name || DEFAULT_OUR_TEAM;
+}
+function getOurTeamSide() {
+  const normalize = name => String(name || '').trim().normalize('NFC').toLocaleLowerCase('de');
+  const ownName = normalize(getOurTeamName());
+  const { home, away } = getMatchTeams();
+  const atHome = normalize(home) === ownName;
+  const awayMatch = normalize(away) === ownName;
+  // Ambiguous or unrelated fixtures must never expose our squad.
+  if (atHome === awayMatch) return null;
+  return atHome ? 'home' : 'away';
+}
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
 function switchTab(name) {
@@ -1126,7 +1139,7 @@ function switchTab(name) {
       awayColor     = d.awayColor     || '';
       applyTeamColors();
       if (!teams.find(t => t.isOurTeam)) {
-        teams.unshift({ id: 1, name: OUR_TEAM, logo: '', isOurTeam: true });
+        teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
       }
       timerOffset   = d.timerOffset   || 0;
       timerBase     = d.timerBase     || null;
@@ -1142,7 +1155,7 @@ function switchTab(name) {
         closeSetup();
       }
     } else {
-      teams = [{ id: 1, name: OUR_TEAM, logo: '', isOurTeam: true }];
+      teams = [{ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true }];
       openSetup(false);
     }
   } catch(e) {
@@ -1251,53 +1264,42 @@ window.addEventListener('pagehide', () => { save(); });
 
 // ─── GOAL BUTTONS ─────────────────────────────────────────────────────────────
 function updateGoalButtons() {
-  const title = document.getElementById('matchTitle').value;
-  const parts = title.split(/\s+vs\.?\s+/i);
-  const homeName = parts[0]?.trim() || 'Heim';
-  const awayName = parts[1]?.trim() || 'Gast';
-
+  const { home, away } = getMatchTeams();
+  const ownSide = getOurTeamSide();
+  if (ownSide) isHomeTeam = ownSide === 'home';
   const btnOurs = document.getElementById('btnGoalOurs');
   const btnTheirs = document.getElementById('btnGoalTheirs');
-
-  const container = btnOurs.parentElement;
-
-  if (isHomeTeam) {
-    // Heim: unser Button links (grün), Gegner rechts (rot)
-    btnOurs.querySelector('.btn-main').textContent = homeName;
-    btnOurs.querySelector('.btn-label').textContent = 'Tor';
-    btnOurs.className = 'btn-goal btn-home';
-    btnTheirs.querySelector('.btn-main').textContent = awayName;
-    btnTheirs.querySelector('.btn-label').textContent = 'Gegentor';
-    btnTheirs.className = 'btn-goal btn-away';
-    container.insertBefore(btnOurs, btnTheirs);
-  } else {
-    // Auswärts: Gegner links (grün/home), unser Button rechts (rot/away)
-    btnTheirs.querySelector('.btn-main').textContent = homeName;
-    btnTheirs.querySelector('.btn-label').textContent = 'Gegentor';
-    btnTheirs.className = 'btn-goal btn-home';
-    btnOurs.querySelector('.btn-main').textContent = OUR_TEAM;
-    btnOurs.querySelector('.btn-label').textContent = 'Tor';
-    btnOurs.className = 'btn-goal btn-away';
-    container.insertBefore(btnTheirs, btnOurs);
+  const ourButtonSide = ownSide || 'home';
+  const otherButtonSide = ourButtonSide === 'home' ? 'away' : 'home';
+  for (const [button, side] of [[btnOurs, ourButtonSide], [btnTheirs, otherButtonSide]]) {
+    button.dataset.goalSide = side;
+    button.querySelector('.btn-main').textContent = side === 'home' ? home : away;
+    button.querySelector('.btn-label').textContent = !ownSide || side === ownSide ? 'Tor' : 'Gegentor';
+    button.className = 'btn-goal btn-' + side;
   }
+  const container = btnOurs.parentElement;
+  if (ourButtonSide === 'home') container.insertBefore(btnOurs, btnTheirs);
+  else container.insertBefore(btnTheirs, btnOurs);
 }
 
 function handleOurGoal() {
-  // Our team scores → open picker (with Eigentor option)
-  const team = isHomeTeam ? 'home' : 'away';
-  openPickerForGoal(team, false);
+  openPickerForGoal(document.getElementById('btnGoalOurs').dataset.goalSide, false);
 }
 
 function handleTheirGoal() {
-  // Opponent scores → direct entry, no name
-  const team = isHomeTeam ? 'away' : 'home';
-  addGoal(team, false, null);
+  openPickerForGoal(document.getElementById('btnGoalTheirs').dataset.goalSide, false);
 }
 
 // ─── PICKER + GOALS ───────────────────────────────────────────────────────────
 let pendingGoal = null;
 
 function openPickerForGoal(team, isOwnGoal) {
+  if (team !== 'home' && team !== 'away') return;
+  if (team !== getOurTeamSide()) {
+    closePicker();
+    addGoal(team, isOwnGoal, null);
+    return;
+  }
   pendingGoal = { team, isOwnGoal };
   document.getElementById('sheetSearch').value = '';
   renderPickerPlayers();
@@ -1366,6 +1368,10 @@ function renderPickerPlayers() {
 }
 
 function addGoal(team, isOwnGoal, player) {
+  if (team !== 'home' && team !== 'away') return;
+  player = !isOwnGoal && team === getOurTeamSide()
+    ? squad.find(member => member.id === player?.id) || null
+    : null;
   const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
   if (team==='home') homeScore++; else awayScore++;
   events.unshift({
@@ -1668,8 +1674,8 @@ function exportImage() {
 function exportImageForMatch(matchId) {
   const m = schedule.find(sm => sm.id === matchId);
   if (!m || !m.result) return;
-  const homeName = m.isHome ? OUR_TEAM : m.opponent;
-  const awayName = m.isHome ? m.opponent : OUR_TEAM;
+  const homeName = m.isHome ? getOurTeamName() : m.opponent;
+  const awayName = m.isHome ? m.opponent : getOurTeamName();
   const sorted = [...(m.result.events || [])].sort((a,b) => a.id - b.id);
   let dateStr = '';
   if (m.date) {
@@ -1760,8 +1766,8 @@ function finishSetup() {
   const opponent = document.getElementById('opponentInput').value.trim();
   isHomeTeam = setupVenue === 'home';
 
-  const homeTeam = isHomeTeam ? OUR_TEAM : opponent;
-  const awayTeam = isHomeTeam ? opponent : OUR_TEAM;
+  const homeTeam = isHomeTeam ? getOurTeamName() : opponent;
+  const awayTeam = isHomeTeam ? opponent : getOurTeamName();
   document.getElementById('matchTitle').value = `${homeTeam} vs. ${awayTeam}`;
 
   resolveLogos(homeTeam, awayTeam);
@@ -1915,11 +1921,11 @@ function startMatchFromSchedule(id) {
   homeScore = 0; awayScore = 0; events = [];
   resetTimer();
 
-  isHomeTeam = match.isHome;
+  isHomeTeam = match.isHome ?? match.home ?? true;
   activeMatchId = match.id;
 
-  const homeTeam = match.isHome ? OUR_TEAM : match.opponent;
-  const awayTeam = match.isHome ? match.opponent : OUR_TEAM;
+  const homeTeam = isHomeTeam ? getOurTeamName() : match.opponent;
+  const awayTeam = isHomeTeam ? match.opponent : getOurTeamName();
   document.getElementById('matchTitle').value = `${homeTeam} vs. ${awayTeam}`;
 
   resolveLogos(homeTeam, awayTeam);
@@ -1987,8 +1993,8 @@ function renderSpielplan() {
   }
   list.innerHTML = '';
   schedule.forEach(m => {
-    const homeName = m.isHome ? OUR_TEAM : m.opponent;
-    const awayName = m.isHome ? m.opponent : OUR_TEAM;
+    const homeName = m.isHome ? getOurTeamName() : m.opponent;
+    const awayName = m.isHome ? m.opponent : getOurTeamName();
     const item = document.createElement('div');
 
     let resultClass = '';
@@ -2227,7 +2233,14 @@ function editTeam(id) {
   `, () => {
     const name = document.getElementById('es-tname').value.trim();
     const file = document.getElementById('es-tlogo').files[0];
+    const previousName = t.name;
     if (name) t.name = name;
+    const currentTeams = getMatchTeams();
+    if (currentTeams.home === previousName || currentTeams.away === previousName) {
+      document.getElementById('matchTitle').value = `${currentTeams.home === previousName ? t.name : currentTeams.home} vs. ${currentTeams.away === previousName ? t.name : currentTeams.away}`;
+      updateScoreLabels();
+      updateGoalButtons();
+    }
     const doSave = () => {
       // Farben des laufenden Spiels aktualisieren falls dieses Team spielt
       const title = document.getElementById('matchTitle').value;
@@ -2688,13 +2701,14 @@ function loadGlobalFromFirebase(cb) {
       if (d.schedule && toArr(d.schedule).length) schedule = toArr(d.schedule);
       if (d.teams    && toArr(d.teams).length)    teams    = toArr(d.teams);
       if (!teams.find(t => t.isOurTeam)) {
-        teams.unshift({ id: 1, name: OUR_TEAM, logo: '', isOurTeam: true });
+        teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
       }
       // Re-render alles was von diesen Daten abhängt
       renderKaderList();
       renderSpielplan();
       renderTeamsList();
       updateSpielplanGegnerSelect();
+      updateGoalButtons();
       // Lokales Backup aktualisieren
       try {
         const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
