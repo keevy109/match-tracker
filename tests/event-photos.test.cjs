@@ -1,0 +1,10 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');const path=require('node:path');
+const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../match-tracker.html'),'utf8');
+const c=vm.createContext({esc:s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'),isCommentPhoto:()=>false});
+vm.runInContext(html.slice(html.indexOf('function eventCssClass('),html.indexOf('function renderEvents()')),c);
+const context={ownSide:'away',squad:{a:{id:1,name:'Anna',photo:'anna.png'},b:{id:2,name:'Ben',photo:'ben.png'}}};
+test('own goal scorer appears with snapshot photo in either list',()=>{for(const trainer of [true,false]){const result=c.buildEventItemHtml({id:1,team:'away',scorer:'Anna',scorerId:1,scorerPhoto:'snapshot.png'},'Gast','Wir',trainer,context);assert.match(result,/src="snapshot.png"/);}});
+test('older events use photos from the roster',()=>{assert.match(c.buildEventItemHtml({id:1,team:'away',scorer:'Anna',scorerId:1},'Gast','Wir',false,context),/src="anna.png"/);});
+test('opponent goals never receive our roster photos',()=>{assert.doesNotMatch(c.buildEventItemHtml({id:1,team:'home',scorerId:1,scorerPhoto:'wrong.png'},'Gast','Wir',false,context),/event-player-photo/);});
+test('substitutions show outgoing red and incoming green portraits',()=>{const result=c.buildEventItemHtml({id:1,typ:'wechsel',rausId:2,rausName:'Ben',reinId:1,reinName:'Anna'},'Gast','Wir',false,context);assert.match(result,/event-player-out/);assert.match(result,/src="ben.png"/);assert.match(result,/event-player-in/);assert.match(result,/src="anna.png"/);});
+test('missing photos use a placeholder and image attributes are escaped',()=>{assert.match(c.buildEventItemHtml({id:1,team:'away',scorer:'Unbekannt'},'Gast','Wir',false,context),/event-player-placeholder/);assert.match(c.eventPlayerPortrait({scorerPhoto:'a"b.png',scorer:'A'},'scorer',[]),/a&quot;b.png/);});

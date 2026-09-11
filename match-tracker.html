@@ -183,6 +183,15 @@
   .event-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .event-item.kommentar .event-scorer { display: block; white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; }
   .event-scorer { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: baseline; gap: 6px; }
+  .event-player-photo, .event-player-placeholder { width:36px; height:36px; flex:0 0 36px; border-radius:50%; object-fit:cover; background:var(--surface2); }
+  .event-player-placeholder { display:grid; place-items:center; font-size:20px; }
+  .event-goal-player, .event-substitution-player { display:flex; align-items:center; gap:8px; min-width:0; }
+  .event-goal-player > span:last-child, .event-substitution-player > span:last-child { white-space:normal; overflow-wrap:anywhere; min-width:0; }
+  .event-item.wechsel .event-scorer { display:flex; flex-direction:column; align-items:stretch; white-space:normal; gap:8px; }
+  .event-player-out { color:#ff6262; }
+  .event-player-in { color:#55df8c; }
+  .event-player-out .event-player-photo, .event-player-out .event-player-placeholder { border:2px solid #ff6262; }
+  .event-player-in .event-player-photo, .event-player-in .event-player-placeholder { border:2px solid #55df8c; }
   .event-num { font-family: var(--mono); font-size: 11px; color: var(--muted); display: inline-block; width: 3.2ch; text-align: right; flex-shrink: 0; }
   .event-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
   .event-score { font-family: var(--mono); font-size: 13px; color: #fff; white-space: nowrap; }
@@ -1494,11 +1503,28 @@ function eventMainText(e, homeName, awayName) {
   return { main: '', sub: '' };
 }
 
-function buildEventItemHtml(e, homeName, awayName, isTrainer) {
+function eventPlayerPortrait(event, prefix, members) {
+  const player = members.find(member => member && event[prefix + 'Id'] != null && String(member.id) === String(event[prefix + 'Id']));
+  const photo = event[prefix + 'Photo'] || player?.photo || '';
+  const name = event[prefix === 'scorer' ? 'scorer' : prefix + 'Name'] || player?.name || 'Spieler';
+  return photo ? `<img class="event-player-photo" src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`
+    : '<span class="event-player-placeholder" aria-hidden="true">👤</span>';
+}
+
+function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
   const cls = eventCssClass(e);
   const icon = eventIcon(e);
-  const { main, sub } = eventMainText(e, homeName, awayName);
+  let { main, sub } = eventMainText(e, homeName, awayName);
   const typ = e.typ || 'tor';
+  const rawSquad = context.squad || [];
+  const members = Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad);
+  const ourEvent = context.ownSide && (e.team || (typ === 'wechsel' ? context.ownSide : null)) === context.ownSide;
+  if (typ === 'tor' && ourEvent && !e.isOwnGoal) {
+    main = `<span class="event-goal-player">${eventPlayerPortrait(e, 'scorer', members)}<span>${main}</span></span>`;
+  } else if (typ === 'wechsel' && ourEvent) {
+    main = `<span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>
+      <span class="event-substitution-player event-player-in">${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>`;
+  }
   const scoreHtml = (typ === 'tor') ? `<div class="event-score">${e.snapshot||''}</div>` : '<div class="event-score"></div>';
   const trainerBtns = isTrainer
     ? `${typ==='tor' ? `<button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>` : ''}
@@ -1529,7 +1555,7 @@ function renderEvents() {
   [...events].sort((a,b) => a.id - b.id).forEach(e => {
     const item = document.createElement('div');
     item.className = `event-item ${eventCssClass(e)}`;
-    item.innerHTML = buildEventItemHtml(e, homeName, awayName, true);
+    item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide() });
     list.appendChild(item);
   });
 }
@@ -3074,7 +3100,7 @@ function updateTickerUI(data, lastScore) {
     [...evts].sort((a,b) => a.id - b.id).forEach(e => {
       const item = document.createElement('div');
       item.className = 'event-item ' + eventCssClass(e);
-      item.innerHTML = buildEventItemHtml(e, homeName, awayName, false);
+      item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: data.squad, ownSide: data.isHomeTeam === false ? 'away' : 'home' });
       list.appendChild(item);
     });
   }
