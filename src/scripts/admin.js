@@ -25,7 +25,7 @@ let pendingTrainerDetail      = null;
 let pendingTrainerDetailName  = null;
 
 async function uploadImage(subpath, dataUrl, originalName) {
-  if (!import.meta.env.DEV) return api.uploadImage(subpath, dataUrl);
+  if (!import.meta.env.DEV) return '';
   const ext      = (originalName.split('.').pop() || 'jpg').toLowerCase();
   const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
   const res = await fetch(`/api/upload/${subpath}`, {
@@ -39,13 +39,12 @@ async function uploadImage(subpath, dataUrl, originalName) {
 }
 
 // ── Persistence ───────────────────────────────────────────────────
-const confirmed = {};
 async function loadAll() {
-  const names = ['kader', 'spielplan', 'vereine', 'trainer'];
-  const values = await Promise.all(names.map(name => api.load(name, { strict: true })));
-  [kader, spielplan, vereine, trainer] = values;
-  names.forEach((name, index) => { confirmed[name] = structuredClone(values[index]); });
-  if (import.meta.env.DEV) await migrateFromLocalStorage();
+  try { kader     = await api.load('kader'); }    catch { kader = []; }
+  try { spielplan = await api.load('spielplan'); } catch { spielplan = []; }
+  try { vereine   = await api.load('vereine'); }  catch { vereine = []; }
+  try { trainer   = await api.load('trainer'); }  catch { trainer = []; }
+  await migrateFromLocalStorage();
 }
 
 async function migrateFromLocalStorage() {
@@ -103,26 +102,21 @@ async function migrateFromLocalStorage() {
   }
 }
 
-async function persist(collection, items) {
-  await api.save(collection, items);
-  confirmed[collection] = structuredClone(items);
-  setStatus('Änderungen gespeichert.');
-}
 async function saveKader() {
-  try { await persist('kader', kader); }
-  catch (error) { kader = structuredClone(confirmed.kader); throw error; }
+  try { await api.save('kader', kader); }
+  catch (e) { alert('Fehler beim Speichern (Kader): ' + e.message); throw e; }
 }
 async function saveSpielplan() {
-  try { await persist('spielplan', spielplan); }
-  catch (error) { spielplan = structuredClone(confirmed.spielplan); throw error; }
+  try { await api.save('spielplan', spielplan); }
+  catch (e) { alert('Fehler beim Speichern (Spielplan): ' + e.message); throw e; }
 }
 async function saveVereine() {
-  try { await persist('vereine', vereine); }
-  catch (error) { vereine = structuredClone(confirmed.vereine); throw error; }
+  try { await api.save('vereine', vereine); }
+  catch (e) { alert('Fehler beim Speichern (Vereine): ' + e.message); throw e; }
 }
 async function saveTrainer() {
-  try { await persist('trainer', trainer); }
-  catch (error) { trainer = structuredClone(confirmed.trainer); throw error; }
+  try { await api.save('trainer', trainer); }
+  catch (e) { alert('Fehler beim Speichern (Trainer): ' + e.message); throw e; }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -283,7 +277,8 @@ async function savePlayerForm() {
     if (pendingPhoto)       photo       = await uploadImage('kader/portraits', pendingPhoto,       pendingPhotoName       || 'portrait.jpg');
     if (pendingDetailPhoto) detailPhoto = await uploadImage('kader/detail',    pendingDetailPhoto, pendingDetailPhotoName || 'detail.jpg');
   } catch (e) {
-    throw new Error('Upload fehlgeschlagen: ' + e.message);
+    alert('Upload fehlgeschlagen: ' + e.message);
+    return;
   }
 
   if (editingId) {
@@ -364,7 +359,7 @@ async function saveTrainerForm() {
   try {
     if (pendingTrainerPhoto)  photo       = await uploadImage('trainer/portraits', pendingTrainerPhoto,  pendingTrainerPhotoName  || 'portrait.jpg');
     if (pendingTrainerDetail) detailPhoto = await uploadImage('trainer/detail',    pendingTrainerDetail, pendingTrainerDetailName || 'detail.jpg');
-  } catch (e) { throw new Error('Upload fehlgeschlagen: ' + e.message); }
+  } catch (e) { alert('Upload fehlgeschlagen: ' + e.message); return; }
 
   if (editingId) {
     if (existing) Object.assign(existing, { name, role, photo, detailPhoto });
@@ -702,11 +697,15 @@ function buildBasePanel() {
 }
 
 async function saveForm() {
-  if (editMode === 'player') await savePlayerForm();
-  else if (editMode === 'match') await saveMatchForm();
-  else if (editMode === 'result') await saveResultForm();
-  else if (editMode === 'club') await saveClubForm();
-  else if (editMode === 'trainer') await saveTrainerForm();
+  try {
+    if (editMode === 'player')  await savePlayerForm();
+    else if (editMode === 'match')   await saveMatchForm();
+    else if (editMode === 'result')  await saveResultForm();
+    else if (editMode === 'club')    await saveClubForm();
+    else if (editMode === 'trainer') await saveTrainerForm();
+  } catch (e) {
+    console.error('Speichern fehlgeschlagen:', e);
+  }
 }
 
 async function deleteFromForm() {
@@ -824,9 +823,7 @@ async function saveClubForm() {
   const color1 = document.getElementById('fClubColor1').value;
   const color2 = document.getElementById('fClubColor2').value;
   const existingBadge = editingId ? (vereine.find(x => x.id === editingId)?.badge || '') : '';
-  const badge = pendingBadge && !import.meta.env.DEV
-    ? await api.uploadImage('vereine/badges', pendingBadge)
-    : pendingBadge || existingBadge;
+  const badge  = pendingBadge || existingBadge;
 
   if (editingId) {
     const v = vereine.find(x => x.id === editingId);
@@ -960,6 +957,7 @@ function initCropEvents() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────
 async function boot() {
+  await loadAll();
 
   document.querySelector('.form-panel').innerHTML = buildBasePanel();
   bindFormEvents();
@@ -985,105 +983,4 @@ async function boot() {
   renderTrainer();
 }
 
-let busy = false;
-let cloudAuth;
-let authGeneration = 0;
-function setStatus(message, error = false) {
-  const status = document.getElementById('adminStatus');
-  status.textContent = message;
-  status.classList.toggle('is-error', error);
-}
-async function action(fn, args) {
-  if (busy) return;
-  busy = true;
-  const buttons = [...document.querySelectorAll('.admin-main button, .form-panel button')];
-  const previous = buttons.map(button => button.disabled);
-  buttons.forEach(button => { button.disabled = true; });
-  try {
-    setStatus('Änderungen werden gespeichert …');
-    await fn(...args);
-  } catch (error) {
-    const message = error.message || 'Speichern fehlgeschlagen. Bitte erneut versuchen.';
-    setStatus(message, true);
-    alert(message);
-  } finally {
-    buttons.forEach((button, index) => { button.disabled = previous[index]; });
-    busy = false;
-    if (document.getElementById('adminStatus').textContent === 'Änderungen werden gespeichert …') setStatus('Keine Änderungen gespeichert.');
-  }
-}
-function wrapActions() {
-  for (const name of ['saveForm', 'savePlayerForm', 'saveMatchForm', 'saveResultForm',
-    'saveClubForm', 'saveTrainerForm', 'deleteFromForm', 'deletePlayer',
-    'deleteMatch', 'deleteClub', 'deleteTrainer', 'setNextMatch']) {
-    const original = window[name];
-    window[name] = (...args) => action(original, args);
-  }
-}
-async function start() {
-  const main = document.querySelector('.admin-main');
-  const loginPanel = document.getElementById('adminLogin');
-  const session = document.getElementById('adminSession');
-  const retry = document.getElementById('adminRetry');
-  async function loadEditor(user) {
-    const generation = ++authGeneration;
-    main.hidden = true;
-    closePanel();
-    loginPanel.hidden = import.meta.env.DEV || !!user;
-    session.hidden = import.meta.env.DEV || !user;
-    retry.hidden = true;
-    document.getElementById('adminIdentity').textContent = user?.email || '';
-    if (!import.meta.env.DEV && !user) {
-      setStatus('Bitte anmelden, um die Website zu bearbeiten.');
-      return;
-    }
-    try {
-      setStatus('Daten werden geladen …');
-      await loadAll();
-      if (generation !== authGeneration) return;
-      renderKader(); renderSpielplan(); renderVereine(); renderTrainer();
-      main.hidden = false;
-      setStatus(import.meta.env.DEV ? 'Lokale Bearbeitung – Änderungen werden in den Projektdateien gespeichert.' : 'Angemeldet. Änderungen werden für alle Besucher gespeichert.');
-    } catch (error) {
-      if (generation !== authGeneration) return;
-      setStatus(error.message, true);
-      retry.hidden = false;
-    }
-  }
-  // Build and bind the editor once; data is loaded only after authentication.
-  await boot();
-  wrapActions();
-  if (import.meta.env.DEV) {
-    retry.onclick = () => loadEditor(null);
-    await loadEditor(null);
-    return;
-  }
-  try {
-    cloudAuth = await import('./firebase.js');
-    let currentUser;
-    retry.onclick = () => loadEditor(currentUser);
-    cloudAuth.watchUser(user => { currentUser = user; loadEditor(user); });
-    document.getElementById('adminLogout').onclick = async () => {
-      if (busy) return;
-      try { await cloudAuth.logout(); } catch { setStatus('Abmelden fehlgeschlagen. Bitte erneut versuchen.', true); }
-    };
-    async function signIn(fn) {
-      const buttons = [...loginPanel.querySelectorAll('button')];
-      buttons.forEach(button => { button.disabled = true; });
-      try { await fn(); }
-      catch { setStatus('Anmeldung fehlgeschlagen. Bitte Zugangsdaten und aktivierte Anmeldemethode prüfen.', true); }
-      finally {
-        document.getElementById('adminPassword').value = '';
-        buttons.forEach(button => { button.disabled = false; });
-      }
-    }
-    document.getElementById('adminLoginForm').onsubmit = event => {
-      event.preventDefault();
-      signIn(() => cloudAuth.login(document.getElementById('adminEmail').value.trim(), document.getElementById('adminPassword').value));
-    };
-    document.getElementById('adminGoogle').onclick = () => signIn(() => cloudAuth.loginGoogle());
-  } catch {
-    setStatus('Die Anmeldung konnte nicht gestartet werden. Bitte die Seite neu laden.', true);
-  }
-}
-document.addEventListener('DOMContentLoaded', start);
+document.addEventListener('DOMContentLoaded', boot);

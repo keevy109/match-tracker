@@ -4,16 +4,9 @@
   "scripts": {
     "dev": "vite --port 4321",
     "build": "vite build",
-    "preview": "vite preview --port 4321",
-    "test": "node --test tests/*.test.mjs"
+    "preview": "vite preview --port 4321"
   },
   "devDependencies": {
     "vite": "^5.4.0"
-  },
-  "dependencies": {
-    "firebase": "^12.19.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }
