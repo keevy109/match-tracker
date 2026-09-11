@@ -801,9 +801,20 @@
 <!-- ═══ TAB: SPIELPLAN ═══ -->
 <section class="tab-content" id="tabSpielplan">
   <div class="spielplan-section">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
-      <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#666">Spielplan</span>
-      <a href="admin.html" style="font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:#FF8341;text-decoration:none;border:1px solid rgba(255,131,65,0.3);padding:6px 12px;border-radius:6px">✏️ Im Admin bearbeiten</a>
+    <div class="spielplan-add">
+      <div class="spielplan-add-title">Spiel anlegen</div>
+      <form class="spielplan-form" onsubmit="event.preventDefault(); addScheduleMatch()">
+        <label for="spGegner">Gegner</label>
+        <input id="spGegner" list="spGegnerOptions" placeholder="Gegner auswählen oder eingeben" maxlength="80" required oninput="validateSpForm()">
+        <datalist id="spGegnerOptions"></datalist>
+        <label for="spVenue">Spielort</label>
+        <select id="spVenue"><option value="home">Heimspiel</option><option value="away">Auswärtsspiel</option></select>
+        <div class="spielplan-form-row">
+          <label style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0" for="spDate">Datum<input id="spDate" type="date"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0" for="spTime">Uhrzeit<input id="spTime" type="time"></label>
+        </div>
+        <button class="btn-add-match" id="btnAddMatch" type="submit" disabled>Spiel hinzufügen</button>
+      </form>
     </div>
     <div class="spielplan-list" id="spielplanList">
       <div class="spielplan-empty">Noch keine Spiele geplant</div>
@@ -1862,29 +1873,22 @@ function updatePlayerPhoto(id, input) {
 
 // ─── SPIELPLAN ────────────────────────────────────────────────────────────────
 function validateSpForm() {
-  const sel = document.getElementById('spGegnerSelect');
-  const txt = document.getElementById('spGegner');
-  let hasOpponent = false;
-  if (sel && sel.style.display !== 'none') {
-    hasOpponent = !!sel.value;
-  } else {
-    hasOpponent = !!(txt?.value.trim());
-  }
-  document.getElementById('btnAddMatch').disabled = !hasOpponent;
+  const input = document.getElementById('spGegner');
+  const button = document.getElementById('btnAddMatch');
+  if (button) button.disabled = !input?.value.trim();
 }
 
 function addScheduleMatch() {
-  const sel = document.getElementById('spGegnerSelect');
+  if (new URLSearchParams(window.location.search).has('ticker')) return;
   const txt = document.getElementById('spGegner');
-  let opponent = '', opponentId = null;
-  if (sel && sel.style.display !== 'none' && sel.value) {
-    const opt = sel.options[sel.selectedIndex];
-    opponent = opt.text;
-    opponentId = parseInt(sel.value);
-  } else {
-    opponent = txt?.value.trim() || '';
-  }
+  const opponent = txt?.value.trim() || '';
   if (!opponent) { showToast('Gegner fehlt'); return; }
+  const normalize = name => name.trim().toLocaleLowerCase('de');
+  if (normalize(opponent) === normalize(getOurTeamName())) {
+    showToast('Bitte eine gegnerische Mannschaft auswählen.');
+    return;
+  }
+  const opponentId = teams.find(team => !team.isOurTeam && normalize(team.name) === normalize(opponent))?.id ?? null;
   const venue = document.getElementById('spVenue').value;
   const date = document.getElementById('spDate').value || null;
   const time = document.getElementById('spTime').value || null;
@@ -1907,7 +1911,6 @@ function addScheduleMatch() {
     return a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'');
   });
 
-  if (sel) sel.value = '';
   if (txt) txt.value = '';
   document.getElementById('spDate').value = '';
   document.getElementById('spTime').value = '';
@@ -2532,19 +2535,11 @@ function extractDominantColor(base64, callback) {
 }
 
 function updateSpielplanGegnerSelect() {
-  const sel = document.getElementById('spGegnerSelect');
-  const txt = document.getElementById('spGegner');
-  if (!sel || !txt) return;
-  const opponents = teams.filter(t => !t.isOurTeam);
-  if (opponents.length === 0) {
-    sel.style.display = 'none';
-    txt.style.display = '';
-  } else {
-    sel.style.display = '';
-    txt.style.display = 'none';
-    sel.innerHTML = '<option value="">-- Gegner wählen --</option>' +
-      opponents.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
-  }
+  const options = document.getElementById('spGegnerOptions');
+  if (!options) return;
+  options.innerHTML = teams.filter(team => !team.isOurTeam)
+    .map(team => `<option value="${esc(team.name)}"></option>`).join('');
+  validateSpForm();
 }
 
 function resolveLogos(homeTeamName, awayTeamName) {
