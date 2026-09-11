@@ -520,6 +520,7 @@
   body.ticker-mode header,
   body.ticker-mode .tab-bar,
   body.ticker-mode .goal-section,
+  body.ticker-mode .event-btns-row,
   body.ticker-mode .timer-row,
   body.ticker-mode .minute-row,
   body.ticker-mode .export-row,
@@ -2567,6 +2568,7 @@ function buildPlayerOptions() {
 }
 
 function openEventModal(typ) {
+  if (new URLSearchParams(window.location.search).has('ticker')) return;
   _eventModalType = typ;
   _selectedKartenTyp = 'gelb';
   const titles = { wechsel:'🔄 Wechsel', kommentar:'💬 Kommentar' };
@@ -2600,6 +2602,7 @@ function closeEventModal() {
 
 
 function saveEventModal() {
+  if (new URLSearchParams(window.location.search).has('ticker')) return;
   const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
   let ev = null;
 
