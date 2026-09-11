@@ -61,13 +61,11 @@ export function createDataStore({ baseUrl, local, request, cloudUrl, getToken })
         });
       } else {
         if (!versions.get(collection)) throw new Error('Daten vor dem Speichern neu laden.');
-        const serialized = JSON.stringify(items);
-        if (serialized.length > 9500000) throw new Error('Dieser Datenbereich enthält zu viele Bilder. Bitte nicht mehr benötigte Bilder entfernen.');
         response = await request(await url(collection, true), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'If-Match': versions.get(collection), 'X-Firebase-ETag': 'true' },
           // JSON string preserves empty lists, null fields and array order in RTDB.
-          body: JSON.stringify({ schema: 1, items: serialized }),
+          body: JSON.stringify({ schema: 1, items: JSON.stringify(items) }),
         });
       }
       if (response.status === 412) throw new Error('Zwischenzeitlich wurden diese Daten geändert. Bitte die Seite neu laden und die Änderung erneut eingeben.');

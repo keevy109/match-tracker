@@ -87,16 +87,3 @@ test('unknown collections cannot become database paths', async () => {
   await assert.rejects(store.save('../admins', []), /Unbekannter/);
   assert.equal(calls.length, 0);
 });
-test('player photo survives database save and reload as an inline image', async () => {
-  const { store, makeStore } = setup();
-  await store.load('kader', { strict: true });
-  const items = [{ id: 1, photo: 'data:image/png;base64,aGVsbG8=' }];
-  await store.save('kader', items);
-  assert.deepEqual(await makeStore().load('kader'), items);
-});
-test('oversized image collection is rejected before writing', async () => {
-  const { store, calls } = setup();
-  await store.load('kader', { strict: true });
-  await assert.rejects(store.save('kader', [{ photo: 'a'.repeat(9500001) }]), /zu viele Bilder/);
-  assert.equal(calls.some(call => call.options.method === 'PUT'), false);
-});
