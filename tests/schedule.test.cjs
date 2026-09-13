@@ -8,9 +8,10 @@ test('new opponent can be entered without adding a team or using admin',()=>{con
 test('empty and own-team opponents do not create matches',()=>{for(const name of ['  ','Unser FC']){const {c}=setup(name);c.addScheduleMatch();assert.equal(c.schedule.length,0);}});
 test('home games and undated matches are supported',()=>{const {c,fields}=setup('Gegner');fields.spVenue.value='home';fields.spDate.value='';fields.spTime.value='';c.addScheduleMatch();assert.equal(c.schedule[0].isHome,true);assert.equal(c.schedule[0].date,null);});
 test('public ticker cannot add schedule entries',()=>{const {c}=setup('Gegner');c.window.location.search='?ticker=123';c.addScheduleMatch();assert.equal(c.schedule.length,0);});
-test('a newly added fixture can immediately be started from the tracker',()=>{
+test('a newly added fixture can immediately be started from the tracker',async()=>{
 const {c,fields}=setup('Gegner FC');fields.matchTitle={value:''};
 for(const name of ['resetTimer','resolveLogos','updateScoreLabels','updateGoalButtons','updateScore','renderEvents','updateEndMatchBtn','switchTab']) c[name]=()=>{};
-vm.runInContext(html.slice(html.indexOf('function startMatchFromSchedule('),html.indexOf('function endCurrentMatch(')),c);
-c.addScheduleMatch();c.startMatchFromSchedule(c.schedule[0].id);assert.equal(c.activeMatchId,c.schedule[0].id);assert.equal(fields.matchTitle.value,'Gegner FC vs. Unser FC');assert.equal(c.isHomeTeam,false);
+c.localStorage={setItem(){}};c.storageReady=true;c.matchTransition=false;c.matchConflict=false;c.activeMatchId=null;c.firebaseReady=true;c.navigator={onLine:true};c.matchRevisions={};c.firebase={database:()=>({ref:()=>({})})};c.readStoredValue=async()=>({val:()=>null});c.storageStatus=()=>{};fields.matchDate={textContent:''};
+vm.runInContext(html.slice(html.indexOf('async function startMatchFromSchedule('),html.indexOf('function endCurrentMatch(')),c);
+c.addScheduleMatch();await c.startMatchFromSchedule(c.schedule[0].id);assert.equal(c.activeMatchId,c.schedule[0].id);assert.equal(fields.matchTitle.value,'Gegner FC vs. Unser FC');assert.equal(c.isHomeTeam,false);
 });

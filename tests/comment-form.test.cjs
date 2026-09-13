@@ -3,7 +3,7 @@ const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../m
 const source=html.slice(html.indexOf('let _eventModalType ='),html.indexOf('// ─── FIREBASE CONFIG'));
 function setup(){
  const fields={'em-text':{value:'Großchance!',focus(){}},'em-team':{value:'away',focus(){}},'em-photo':{files:[]},'em-status':{textContent:''}};
- const c=vm.createContext({URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
+ const c=vm.createContext({activeMatchId:1,showToast(){},URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
  vm.runInContext(source,c);vm.runInContext("_eventModalType='kommentar'",c);return {c,fields};
 }
 test('text requires an explicit team and is saved with it',async()=>{
