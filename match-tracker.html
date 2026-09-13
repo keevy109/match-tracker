@@ -2224,6 +2224,7 @@ function renderSpielplan() {
     }
 
     const meta = [];
+    if (m.type) meta.push(esc(m.type));
     if (m.date) {
       const d = new Date(m.date + 'T00:00:00');
       meta.push(d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}));
@@ -2926,6 +2927,7 @@ function retryPendingMatches() {
     const key = localStorage.key(i);
     if (key.startsWith('mt_pending_')) {
       const job = JSON.parse(localStorage.getItem(key));
+      if ((job.resetId || null) !== localStorage.getItem('mt_reset_id')) continue;
       matchWriteQueue = matchWriteQueue.then(() => writeMatchJob(job)).catch(() => storageStatus('Übertragung noch nicht möglich. Sicherung bleibt auf diesem Gerät.', true));
     }
   }
@@ -2940,7 +2942,7 @@ function syncToFirebase(finished = false) {
   if (matchRevisions[id] === undefined) {
     try { matchRevisions[id] = JSON.parse(localStorage.getItem('mt_revision_' + id) || 'null'); } catch(e) { matchRevisions[id] = null; }
   }
-  const job = { id, data, revision, expected: matchRevisions[id] || null };
+  const job = { id, data, revision, expected: matchRevisions[id] || null, resetId:localStorage.getItem('mt_reset_id') };
   let locallySaved = false;
   try {
     const {squad: roster, ...compact} = data;
@@ -3024,10 +3026,19 @@ async function loadGlobalFromFirebase(cb) {
     const snap = await readStoredValue(firebase.database().ref('app'));
     const d = snap.val();
     if (d) {
+      if (d.matchResetId && localStorage.getItem('mt_reset_id') !== d.matchResetId) {
+        localStorage.setItem('mt_before_reset_' + d.matchResetId, localStorage.getItem('matchtracker_v3') || '{}');
+        activeMatchId = null; events = []; homeScore = 0; awayScore = 0;
+        timerBase = null; timerOffset = 0; stopTimerLoop(); schedule = [];
+        const previous = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
+        localStorage.setItem('matchtracker_v3', JSON.stringify({...previous, activeMatchId:null, events:[], homeScore:0, awayScore:0, timerBase:null, timerOffset:0, schedule:[], matchReady:false}));
+        localStorage.setItem('mt_reset_id', d.matchResetId);
+        updateScore(false); renderEvents(); updateEndMatchBtn(); updateTimerDisplay();
+      }
       const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
       if (d.squad    && toArr(d.squad).length)    squad    = toArr(d.squad);
       if (d.schedule) {
-        const merged = new Map(schedule.map(m => [String(m.id), m]));
+        const merged = new Map((d.matchResetId ? [] : schedule).map(m => [String(m.id), m]));
         toArr(d.schedule).forEach(m => { const local = merged.get(String(m.id)); merged.set(String(m.id), {...local, ...m, ...(local?.result && !m.result ? {result:local.result} : {})}); });
         schedule = [...merged.values()];
       }
@@ -3431,6 +3442,7 @@ function checkAccess() {
           if (key.startsWith('mt_pending_')) pending.push(JSON.parse(localStorage.getItem(key)));
         }
         for (const job of pending) {
+          if ((job.resetId || null) !== localStorage.getItem('mt_reset_id')) continue;
           // A successful commit may have happened just before the page closed.
           if (all[job.id]?.revision === job.revision) { matchRevisions[job.id] = job.revision; localStorage.setItem('mt_revision_' + job.id, JSON.stringify(job.revision)); localStorage.removeItem('mt_pending_' + job.id); continue; }
           matchRevisions[job.id] = job.expected;

@@ -1,12 +1,13 @@
 [
   {
-    "id": 1783849991546,
-    "opponent": "FC Monheim",
-    "date": "2026-07-18",
-    "time": "11:00",
+    "id": 1789197706545,
+    "date": "2026-09-12",
+    "time": "10:00",
     "home": false,
-    "venue": "",
-    "result": null,
-    "status": "future"
+    "opponent": "TG Burg",
+    "type": "Testspiel",
+    "result": "2:5",
+    "status": "past",
+    "venue": ""
   }
 ]
