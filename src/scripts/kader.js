@@ -23,7 +23,7 @@ function statColor(v) {
 
 let squad   = [];
 let coaches = [];
-let sortField = 'num';
+let sortField = 'name';
 let sortDir   = 1;
 
 const SORT_COLS = [
@@ -40,7 +40,7 @@ function sortedSquad() {
     if (sortField === 'name') {
       const av = (a.name || '').toLowerCase();
       const bv = (b.name || '').toLowerCase();
-      return sortDir * (av < bv ? -1 : av > bv ? 1 : 0);
+      return sortDir * av.localeCompare(bv, 'de', {sensitivity:'base'});
     }
     return sortDir * ((a[sortField] ?? 0) - (b[sortField] ?? 0));
   });

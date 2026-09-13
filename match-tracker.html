@@ -1537,7 +1537,7 @@ function renderPickerPlayers() {
 
   const list = squad
     .filter(p => p.name.toLowerCase().includes(q) || String(p.num||'').includes(q))
-    .sort((a,b) => (a.num||999)-(b.num||999));
+    .sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}));
   list.forEach(p => {
     const btn = document.createElement('button');
     btn.className = 'player-btn';
@@ -1958,7 +1958,7 @@ function addSetupPlayer() {
   const name = ni.value.trim();
   if (!name) { ni.focus(); return; }
   squad.push({ id: Date.now(), num: parseInt(ni2.value) || null, name });
-  squad.sort((a,b) => (a.num||999) - (b.num||999));
+  squad.sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}));
   ni.value = ''; ni2.value = ''; ni.focus();
   renderSetupSquadPreview();
   save();
@@ -1967,7 +1967,7 @@ function addSetupPlayer() {
 function renderSetupSquadPreview() {
   const container = document.getElementById('setupSquadPreview');
   container.innerHTML = '';
-  squad.forEach(p => {
+  [...squad].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'})).forEach(p => {
     const item = document.createElement('div');
     item.className = 'kader-player-item';
     item.innerHTML = `<span class="kader-player-num">${p.num ? '#'+p.num : '—'}</span><span class="kader-player-name">${esc(p.name)}</span><button class="btn-remove-player" onclick="removeSetupPlayer(${p.id})">×</button>`;
@@ -2032,7 +2032,7 @@ function addPlayer() {
   const ni2= document.getElementById('newPlayerNum');
   const name = ni.value.trim(); if (!name) { ni.focus(); return; }
   squad.push({ id: Date.now(), num: parseInt(ni2.value)||null, name, photo: pendingPlayerPhoto || '', goals: 0 });
-  squad.sort((a,b)=>(a.num||999)-(b.num||999));
+  squad.sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}));
   ni.value=''; ni2.value=''; ni.focus();
   pendingPlayerPhoto = '';
   const btn = document.getElementById('btnNewPlayerPhoto');
@@ -2062,7 +2062,7 @@ function editParticipants(id) {
   const match = schedule.find(m => String(m.id) === String(id));
   if (!match) return;
   const selected = new Set((match.participantIds || []).map(String));
-  openEditSheet('Wer hat mitgespielt?', `<p>Alle Spieler auswählen, die tatsächlich eingesetzt wurden.</p>${squad.map(p => `<label style="display:flex;flex-direction:row;align-items:center;gap:10px"><input type="checkbox" style="width:20px;height:20px;padding:0;flex-shrink:0" class="participant-check" value="${p.id}" ${selected.has(String(p.id)) ? 'checked' : ''}>${esc(p.name)}</label>`).join('')}<p id="participantStatus" role="status"></p>`, async () => {
+  openEditSheet('Wer hat mitgespielt?', `<p>Alle Spieler auswählen, die tatsächlich eingesetzt wurden.</p>${[...squad].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'})).map(p => `<label style="display:flex;flex-direction:row;align-items:center;gap:10px"><input type="checkbox" style="width:20px;height:20px;padding:0;flex-shrink:0" class="participant-check" value="${p.id}" ${selected.has(String(p.id)) ? 'checked' : ''}>${esc(p.name)}</label>`).join('')}<p id="participantStatus" role="status"></p>`, async () => {
     const playerIds = Array.from(document.querySelectorAll('.participant-check:checked'), el => Number(el.value));
     const status = document.getElementById('participantStatus');
     status.textContent = 'Einsätze werden gespeichert …';
@@ -2082,7 +2082,7 @@ function renderKaderList() {
   if (!list) return;
   if (!squad.length) { list.innerHTML='<div class="kader-empty">Noch keine Spieler hinterlegt</div>'; return; }
   list.innerHTML='';
-  squad.forEach(p => {
+  [...squad].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'})).forEach(p => {
     const item = document.createElement('div');
     item.className='kader-player-item';
     const photoHtml = p.photo
@@ -2843,7 +2843,7 @@ async function prepareCommentPhoto(file) {
 function buildPlayerOptions() {
   if (!squad.length) return '<option value="">– kein Kader –</option>';
   return '<option value="">– Spieler –</option>' +
-    [...squad].sort((a,b)=>(a.num||999)-(b.num||999))
+    [...squad].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}))
       .map(p=>`<option value="${p.id}">${p.num?'#'+p.num+' ':''}${esc(p.name)}</option>`)
       .join('');
 }

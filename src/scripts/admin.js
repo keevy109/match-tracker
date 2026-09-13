@@ -153,7 +153,7 @@ function switchTab(name) {
 // ── Kader-Rendering ───────────────────────────────────────────────
 function renderKader() {
   const el = document.getElementById('kaderList');
-  const sorted = kader.slice().sort((a, b) => (a.num || 999) - (b.num || 999));
+  const sorted = kader.slice().sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}));
   if (!sorted.length) {
     el.innerHTML = '<div class="empty-state">Noch keine Spieler angelegt.<br>Klicke auf „Spieler hinzufügen".</div>';
     return;
