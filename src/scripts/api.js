@@ -8,8 +8,8 @@ async function remote(path) {
 export async function load(collection) {
   if (collection === 'kader') {
     try {
-      const [roster, matches, participants] = await Promise.all([remote('app/squad'), remote('matches'), remote('matchParticipants')]);
-      if (roster) return globalThis.MatchTrackerStats.calculate(roster, matches, participants || {});
+      const [roster, matches, participants, training] = await Promise.all([remote('app/squad'), remote('matches'), remote('matchParticipants'), remote('trainingSessions')]);
+      if (roster) return globalThis.MatchTrackerStats.calculate(roster, matches, participants || {}, training || {});
     } catch (error) { console.warn('Kader: gespeicherte lokale Version wird verwendet.', error); }
   }
   const res = await fetch(`${import.meta.env.BASE_URL}data/${collection}.json`);

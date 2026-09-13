@@ -78,9 +78,10 @@
 
   /* TAB BAR */
   .tab-bar {
-    display: flex; gap: 0; padding: 12px 20px 0; border-bottom: 1px solid var(--border);
+    display: flex; gap: 0; overflow-x:auto; padding: 12px 20px 0; border-bottom: 1px solid var(--border);
   }
   .tab-btn {
+    flex-shrink:0;
     background: none; border: none; color: #444;
     font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
     text-transform: uppercase; padding: 8px 16px 10px; cursor: pointer;
@@ -725,6 +726,7 @@
   <button class="tab-btn" onclick="switchTab('kader')">Kader</button>
   <button class="tab-btn" onclick="switchTab('spielplan')">Spielplan</button>
   <button class="tab-btn" onclick="switchTab('teams')">Teams</button>
+  <button class="tab-btn" onclick="switchTab('training')">Training</button>
 </nav>
 
 <!-- ═══ TAB: SPIEL ═══ -->
@@ -844,6 +846,19 @@
   </div>
 </section>
 
+<section class="tab-content" id="tabTraining">
+  <div class="spielplan-section">
+    <div class="spielplan-add">
+      <div class="spielplan-add-title">Training erfassen</div>
+      <p style="color:var(--muted);font-size:13px">Mittwoch / Freitag · Tatsächliche Anwesenheit eintragen. Andere Tage sind ebenfalls möglich.</p>
+      <form class="spielplan-form" onsubmit="event.preventDefault();editTraining()">
+        <label for="trainingDate">Datum</label><input id="trainingDate" type="date" required>
+        <button class="btn-add-match" type="submit">Anwesenheit auswählen</button>
+      </form>
+    </div>
+    <div class="spielplan-list" id="trainingList"></div>
+  </div>
+</section>
 <!-- ═══ TAB: TEAMS ═══ -->
 <section class="tab-content" id="tabTeams">
   <div class="teams-section">
@@ -1009,6 +1024,7 @@
 </div>
 
 <script src="./player-stats.js"></script>
+<script src="./training.js"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
 (function() {
@@ -1165,6 +1181,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
   const tab = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
   if (tab) tab.classList.add('active');
+  if (name === 'training') renderTraining();
   if (name === 'kader') setTimeout(() => document.getElementById('newPlayerName')?.focus(), 100);
 }
 
@@ -1253,7 +1270,7 @@ async function downloadMatchBackup() {
     } catch(e) { showToast('Lokale Historie konnte nicht gelesen werden.'); }
   }
   if (firebaseReady && navigator.onLine) {
-    try { data.serverHistory = (await readStoredValue(firebase.database().ref('matchHistory'))).val(); } catch(e) { showToast('Server nicht erreichbar. Lokale Sicherung wird heruntergeladen.'); }
+    try { data.serverHistory = (await readStoredValue(firebase.database().ref('matchHistory'))).val(); data.trainingHistory = (await readStoredValue(firebase.database().ref('trainingHistory'))).val(); data.trainingSessions = (await readStoredValue(firebase.database().ref('trainingSessions'))).val(); } catch(e) { showToast('Server nicht erreichbar. Lokale Sicherung wird heruntergeladen.'); }
   }
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
   const a = document.createElement('a'); a.href = url; a.download = 'matchtracker-sicherung-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
@@ -2038,7 +2055,7 @@ function recalculatePlayerStats() {
     participants[m.id] = {playerIds:m.participantIds || []};
   });
   if (activeMatchId) records[activeMatchId] = {isHomeTeam, events};
-  squad = MatchTrackerStats.calculate(squad, records, participants);
+  squad = MatchTrackerStats.calculate(squad, records, participants, trainingSessions);
 }
 
 function editParticipants(id) {
@@ -2074,7 +2091,7 @@ function renderKaderList() {
            <input type="file" accept="image/*" class="player-photo-file" onchange="updatePlayerPhoto(${p.id}, this)">📷
          </label>`;
     const goalsTag = (p.goals||0) > 0 ? `<span class="kader-player-goals">${p.goals} ⚽</span>` : '';
-    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span>${goalsTag}<button class="btn-row-edit" onclick="editPlayer(${p.id})" title="Bearbeiten">✎</button><button class="btn-remove-player btn-row-delete" onclick="removePlayer(${p.id})">×</button>`;
+    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span>${goalsTag}<span class="kader-player-goals" title="${p.trainingAttended || 0} von ${p.trainingTotal || 0} Einheiten">${p.training || 0}% Training</span><button class="btn-row-edit" onclick="editPlayer(${p.id})" title="Bearbeiten">✎</button><button class="btn-remove-player btn-row-delete" onclick="removePlayer(${p.id})">×</button>`;
     list.appendChild(item);
   });
 }
@@ -3499,6 +3516,7 @@ function checkAccess() {
         });
         const appearances = (await readStoredValue(firebase.database().ref('matchParticipants'))).val() || {};
         schedule.forEach(m => { if (appearances[m.id]) m.participantIds = Object.values(appearances[m.id].playerIds || []); });
+        await loadTraining();
         recalculatePlayerStats(); renderKaderList();
         renderSpielplan();
         storageReady = true;

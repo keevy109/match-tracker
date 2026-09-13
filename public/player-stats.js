@@ -1,5 +1,5 @@
 (function(root) {
-  function calculate(roster, matches, participants = {}) {
+  function calculate(roster, matches, participants = {}, training = {}) {
     const list = Object.values(roster || {}).filter(Boolean).map(p => { const {assists, ...rest} = p; return {...rest, goals:0, games:0}; });
     const byId = new Map(list.map(p => [String(p.id), p]));
     Object.entries(matches || {}).forEach(([id, match]) => {
@@ -12,6 +12,19 @@
       });
       const ids = participants[id]?.playerIds || match.participantIds || [];
       new Set(Object.values(ids).map(String)).forEach(id => { const player = byId.get(id); if (player) player.games++; });
+    });
+    list.forEach(player => {
+      let attended = 0, total = 0;
+      Object.values(training || {}).forEach(session => {
+        if (!session || session.cancelled) return;
+        const eligible = Object.values(session.eligiblePlayerIds || list.map(p=>p.id)).map(String);
+        if (!eligible.includes(String(player.id))) return;
+        total++;
+        if (Object.values(session.playerIds || []).map(String).includes(String(player.id))) attended++;
+      });
+      player.training = total ? Math.round(attended / total * 100) : 0;
+      player.trainingAttended = attended;
+      player.trainingTotal = total;
     });
     return list;
   }

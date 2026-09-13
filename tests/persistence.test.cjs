@@ -28,7 +28,7 @@ test('retrying an acknowledged old job does not delete a newer pending change',a
 test('finished server record rejects later writes even with matching revision',async()=>{const x=setup({'matches/1':{revision:'final',awayScore:5,matchFinished:true}});x.run("matchRevisions[1]='final'");x.c.awayScore=0;x.c.syncToFirebase();await x.flush();assert.equal(x.db['matches/1'].awayScore,5);assert(x.run('matchConflict'));});
 
 async function boot(x) {
- x.c.checkAccess=()=>true;x.c.initFirebase=()=>true;
+ x.c.loadTraining=async()=>{};x.c.checkAccess=()=>true;x.c.initFirebase=()=>true;
  x.c.loadGlobalFromFirebase=cb=>{x.boot=cb();};
  vm.runInContext(html.slice(html.lastIndexOf('(function() {'),html.lastIndexOf('</script>')),x.c);
  await x.boot;

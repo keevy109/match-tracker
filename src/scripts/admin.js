@@ -561,7 +561,7 @@ function buildBasePanel() {
       </div>
       <div class="form-field">
         <label class="form-label">Trainingsbeteiligung (%)</label>
-        <input class="form-input" id="fPlayerTraining" type="number" placeholder="0" min="0" max="100">
+        <input class="form-input" id="fPlayerTraining" readonly type="number" placeholder="0" min="0" max="100">
       </div>
       <div class="form-row">
         <div class="form-field">
