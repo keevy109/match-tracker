@@ -4,8 +4,8 @@ import path from 'path';
 
 const DATA_DIR   = path.resolve('./public/data');
 const UPLOAD_DIR = path.resolve('./public/uploads');
-const ALLOWED        = new Set(['kader', 'spielplan', 'vereine', 'trainer']);
-const UPLOAD_ALLOWED = new Set(['kader/portraits', 'kader/detail', 'trainer/portraits', 'trainer/detail']);
+const ALLOWED        = new Set(['kader', 'spielplan', 'vereine', 'trainer', 'news']);
+const UPLOAD_ALLOWED = new Set(['kader/portraits', 'kader/detail', 'trainer/portraits', 'trainer/detail', 'news']);
 
 function apiPlugin() {
   return {

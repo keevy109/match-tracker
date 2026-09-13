@@ -1,3 +1,4 @@
+import {sanitizeNews,safeImage} from './news-content.js';
 export function init() {
   const modal = document.getElementById('newsModal');
   if (!modal) return;
@@ -5,11 +6,11 @@ export function init() {
   function openNews(card) {
     document.getElementById('nmDate').textContent  = card.dataset.date  || '';
     document.getElementById('nmTitle').textContent = card.dataset.title || '';
-    document.getElementById('nmText').innerHTML    = card.dataset.text  || '';
+    document.getElementById('nmText').innerHTML    = sanitizeNews(card.dataset.text || '');
     const hasImg = !!card.dataset.image;
     document.getElementById('nmIcon').textContent  = hasImg ? '' : (card.dataset.icon || '');
     document.getElementById('nmImage').style.background = hasImg
-      ? `url('${card.dataset.image}') center/cover no-repeat`
+      ? `url(${JSON.stringify(safeImage(card.dataset.image))}) center/cover no-repeat`
       : (card.dataset.gradient || 'var(--surface2)');
     modal.setAttribute('aria-hidden', 'false');
     modal.classList.add('nm-open');
@@ -25,7 +26,10 @@ export function init() {
   document.getElementById('newsModalOverlay').addEventListener('click', closeNews);
   document.getElementById('newsModalClose').addEventListener('click', closeNews);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNews(); });
-  document.querySelectorAll('.news-card').forEach(card => {
-    card.addEventListener('click', () => openNews(card));
+  document.getElementById('aktuelles')?.addEventListener('click', event => {
+    const card=event.target.closest('.news-card');if(card)openNews(card);
+  });
+  document.getElementById('aktuelles')?.addEventListener('keydown', event => {
+    if(event.key==='Enter'||event.key===' '){const card=event.target.closest('.news-card');if(card){event.preventDefault();openNews(card);}}
   });
 }

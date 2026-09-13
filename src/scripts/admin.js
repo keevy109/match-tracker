@@ -1,6 +1,7 @@
 import '../styles/base.css';
 import '../styles/admin.css';
 import * as api from './api.js';
+import {init as initNewsAdmin} from './news-admin.js';
 
 // ── Storage Keys (nur noch für Migration) ─────────────────────────
 const KEY_KADER    = 'ssv_kader';
@@ -952,15 +953,16 @@ function initCropEvents() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────
 async function boot() {
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  const newsReady = initNewsAdmin();
   await loadAll();
 
   document.querySelector('.form-panel').innerHTML = buildBasePanel();
   bindFormEvents();
   initCropEvents();
 
-  document.querySelectorAll('.admin-tab').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
 
   Object.assign(window, {
     openPlayerForm, deletePlayer, savePlayerForm,
@@ -976,6 +978,7 @@ async function boot() {
   renderSpielplan();
   renderVereine();
   renderTrainer();
+  await newsReady;
 }
 
 document.addEventListener('DOMContentLoaded', boot);

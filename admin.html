@@ -24,6 +24,7 @@
       <button class="admin-tab active" data-tab="kader">Kader</button>
       <button class="admin-tab" data-tab="spielplan">Spielplan</button>
       <button class="admin-tab" data-tab="vereine">Vereine</button>
+      <button class="admin-tab" data-tab="news">Aktuelles</button>
     </nav>
     <a class="admin-back" href="index.html">← Website</a>
   </div>
@@ -64,6 +65,31 @@
     </div>
     <div class="item-list" id="spielplanList"></div>
   </section>
+
+<section class="admin-section" data-section="news">
+  <div class="section-header"><span class="section-title">Aktuelles</span><button class="btn-add" id="newNews">+ Beitrag</button></div>
+  <p>Hier bearbeitest du Beiträge lokal. Veröffentlicht werden sie mit dem nächsten GitHub-Push.</p>
+  <div class="item-list" id="newsAdminList"></div>
+  <div id="newsEditorPanel" class="news-editor-panel" hidden>
+    <div class="form-row"><label class="form-field">Titel<input class="form-input" id="newsTitle" maxlength="160" required></label><label class="form-field">Datum<input class="form-input" id="newsDate" type="date" required></label></div>
+    <label class="form-field">Kurztext für die Übersicht<textarea class="form-input" id="newsExcerpt" rows="3" maxlength="500"></textarea></label>
+    <label class="form-field">Titelbild<input id="newsImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+    <img id="newsImagePreview" alt="Titelbild-Vorschau" hidden><button class="btn-secondary" id="newsRemoveImage" type="button">Bild entfernen</button>
+    <label class="news-publish"><input id="newsPublished" type="checkbox" checked> Auf der Website anzeigen (sonst Entwurf)</label>
+    <label id="newsBodyLabel">Beitragstext</label>
+    <div id="newsToolbar" class="news-toolbar" role="toolbar" aria-label="Text formatieren">
+      <button type="button" data-command="bold" aria-label="Fett"><b>Fett</b></button><button type="button" data-command="italic" aria-label="Kursiv"><i>Kursiv</i></button><button type="button" data-command="underline">Unterstrichen</button>
+      <button type="button" data-command="formatBlock" data-value="h2">Überschrift</button><button type="button" data-command="formatBlock" data-value="p">Absatz</button>
+      <button type="button" data-command="insertUnorderedList">Aufzählung</button><button type="button" data-command="insertOrderedList">Nummerierung</button>
+      <button type="button" data-command="createLink">Link</button><button type="button" data-command="unlink">Link entfernen</button><button type="button" data-command="removeFormat">Formatierung löschen</button>
+      <button type="button" data-command="undo">Rückgängig</button><button type="button" data-command="redo">Wiederholen</button>
+    </div>
+    <div id="newsBody" class="news-richtext" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="newsBodyLabel" spellcheck="true"></div>
+    <div class="news-editor-actions"><button class="btn-secondary" id="newsShowPreview" type="button">Vorschau</button><button class="btn-primary" id="newsSave" type="button">Lokal speichern</button></div>
+    <p id="newsSaveStatus" role="status" aria-live="polite"></p>
+    <article id="newsPreview" hidden><img id="newsPreviewImage" alt="Titelbild" hidden><div id="newsPreviewDate"></div><h2 id="newsPreviewTitle"></h2><div id="newsPreviewBody" class="news-richtext"></div></article>
+  </div>
+</section>
 
 </main>
 
