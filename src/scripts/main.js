@@ -14,6 +14,7 @@ import matchdayHtml    from '../sections/matchday-modal.frag?raw';
 
 import logoUrl from '/ssvlogo_white.png';
 
+import { init as initHero } from './hero.js';
 import { init as initTheme }      from './theme.js';
 import { init as initBackground } from './background.js';
 import { init as initSplash }     from './splash.js';
@@ -36,5 +37,6 @@ initBackground();
 initSplash();
 initNewsModal();
 initKader();
+initHero();
 initSpielplan();
 initMatchday();

@@ -16,23 +16,23 @@
     </div>
     <div class="hero-stats">
       <div>
-        <div class="hero-stat-val">4</div>
+        <div class="hero-stat-val" data-match-stat="played">–</div>
         <div class="hero-stat-label">Spiele gespielt</div>
       </div>
       <div>
-        <div class="hero-stat-val">13</div>
+        <div class="hero-stat-val" data-match-stat="scored">–</div>
         <div class="hero-stat-label">Tore geschossen</div>
       </div>
       <div>
-        <div class="hero-stat-val">5</div>
+        <div class="hero-stat-val" data-match-stat="conceded">–</div>
         <div class="hero-stat-label">Tore bekommen</div>
       </div>
       <div>
-        <div class="hero-stat-val">3</div>
+        <div class="hero-stat-val" data-match-stat="wins">–</div>
         <div class="hero-stat-label">Siege gefeiert</div>
       </div>
       <div>
-        <div class="hero-stat-val">1</div>
+        <div class="hero-stat-val" data-match-stat="losses">–</div>
         <div class="hero-stat-label">Spiel verloren</div>
       </div>
     </div>

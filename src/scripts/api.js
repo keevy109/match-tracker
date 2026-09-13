@@ -25,3 +25,5 @@ export async function save(collection, data) {
   const res = await fetch(`/api/${collection}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
   if (!res.ok) throw new Error(await res.text().catch(() => 'Unbekannter Fehler'));
 }
+
+export async function loadMatchRecords() { return remote('matches'); }
