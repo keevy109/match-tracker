@@ -35,7 +35,6 @@
           <!-- Spieler-Stats -->
           <div class="kd-phys">
             <div class="kd-stat"><span class="kd-pv" id="kdGoals">–</span><span class="kd-pl">TORE</span></div>
-            <div class="kd-stat"><span class="kd-pv" id="kdAssists">–</span><span class="kd-pl">VORLAGEN</span></div>
             <div class="kd-stat"><span class="kd-pv" id="kdGames">–</span><span class="kd-pl">SPIELE</span></div>
             <div class="kd-stat"><span class="kd-pv" id="kdTraining">–</span><span class="kd-pl">TRAINING</span></div>
           </div>

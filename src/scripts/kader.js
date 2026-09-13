@@ -1,5 +1,4 @@
 import * as api from './api.js';
-import casparUrl from '/caspar.png';
 
 const POS_LABEL = { TW: 'Tor', AB: 'Abwehr', MF: 'Mittelfeld', ST: 'Stürmer' };
 
@@ -32,7 +31,6 @@ const SORT_COLS = [
   { field: null,       label: '',       right: false },
   { field: 'name',     label: 'Name',   right: false },
   { field: 'goals',    label: 'Tore',   right: true  },
-  { field: 'assists',  label: 'Vorl.',  right: true  },
   { field: 'games',    label: 'Spiele', right: true  },
   { field: 'training', label: 'Train.', right: true  },
 ];
@@ -105,7 +103,6 @@ function renderKader() {
       ${avatar}
       <div class="kl-name">${p.name}</div>
       <div class="kl-stat" data-col="goals">${p.goals ?? 0}</div>
-      <div class="kl-stat" data-col="assists">${p.assists ?? 0}</div>
       <div class="kl-stat" data-col="games">${p.games ?? 0}</div>
       <div class="kl-stat" data-col="training">${p.training ?? 0}<span class="kl-pct">%</span></div>
     </div>`;
@@ -187,7 +184,6 @@ function applyPlayerContent(player) {
   set('kdPos',    '');
   set('kdLN', (player.name || '–').toUpperCase());
   set('kdGoals',    player.goals    ?? 0);
-  set('kdAssists',  player.assists  ?? 0);
   set('kdGames',    player.games    ?? 0);
   set('kdTraining', (player.training ?? 0) + ' %');
 }
@@ -195,7 +191,7 @@ function applyPlayerContent(player) {
 function showDetail(player) {
   const detail = document.getElementById('kaderDetail');
   if (!detail) return;
-  const src = player.detailPhoto || player.photo || casparUrl;
+  const src = player.detailPhoto || player.photo || '';
 
   if (detail.classList.contains('kd-visible')) {
     detail.classList.add('kd-switching');

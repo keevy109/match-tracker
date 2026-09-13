@@ -20,7 +20,7 @@
 .kl-header,
 #kaderRows .kl-row {
   display: grid;
-  grid-template-columns: 40px 36px 1fr 32px 32px 38px 46px;
+  grid-template-columns: 40px 36px 1fr 32px 38px 46px;
   gap: 6px;
   align-items: center;
 }
@@ -111,14 +111,13 @@
   margin-left: 1px;
 }
 
-/* Auf sehr schmalen Screens Vorlagen ausblenden */
+/* Kompakte Spalten auf schmalen Bildschirmen */
 @media (max-width: 420px) {
   .kl-header,
   #kaderRows .kl-row {
     grid-template-columns: 36px 32px 1fr 30px 36px 42px;
   }
-  .kl-sort-btn[data-sort="assists"],
-  .kl-stat[data-col="assists"] { display: none; }
+
 }
 
 .kl-empty {

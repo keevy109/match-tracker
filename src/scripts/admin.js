@@ -234,7 +234,6 @@ function openPlayerForm(id) {
   document.getElementById('fPlayerNum').value      = p?.num ?? '';
   document.getElementById('fPlayerPos').value      = p?.position || '';
   document.getElementById('fPlayerGoals').value    = p?.goals ?? 0;
-  document.getElementById('fPlayerAssists').value  = p?.assists ?? 0;
   document.getElementById('fPlayerGames').value    = p?.games ?? 0;
   document.getElementById('fPlayerMinutes').value  = p?.minutes ?? 0;
   document.getElementById('fPlayerTraining').value = p?.training ?? 0;
@@ -264,7 +263,6 @@ async function savePlayerForm() {
   const num      = parseInt(document.getElementById('fPlayerNum').value) || null;
   const position = document.getElementById('fPlayerPos').value || '';
   const goals    = parseInt(document.getElementById('fPlayerGoals').value) || 0;
-  const assists  = parseInt(document.getElementById('fPlayerAssists').value) || 0;
   const games    = parseInt(document.getElementById('fPlayerGames').value) || 0;
   const minutes  = parseInt(document.getElementById('fPlayerMinutes').value) || 0;
   const training = parseInt(document.getElementById('fPlayerTraining').value) || 0;
@@ -282,9 +280,9 @@ async function savePlayerForm() {
   }
 
   if (editingId) {
-    if (existing) Object.assign(existing, { name, num, position, goals, assists, games, minutes, training, photo, detailPhoto });
+    if (existing) Object.assign(existing, { name, num, position, goals, games, minutes, training, photo, detailPhoto });
   } else {
-    kader.push({ id: nextId(), name, num, position, goals, assists, games, minutes, training, photo, detailPhoto });
+    kader.push({ id: nextId(), name, num, position, goals, games, minutes, training, photo, detailPhoto });
   }
   await saveKader();
   renderKader();
@@ -547,17 +545,14 @@ function buildBasePanel() {
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Tore</label>
-          <input class="form-input" id="fPlayerGoals" type="number" placeholder="0" min="0">
+          <input class="form-input" id="fPlayerGoals" readonly type="number" placeholder="0" min="0">
         </div>
-        <div class="form-field">
-          <label class="form-label">Vorlagen</label>
-          <input class="form-input" id="fPlayerAssists" type="number" placeholder="0" min="0">
-        </div>
+
       </div>
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Spiele</label>
-          <input class="form-input" id="fPlayerGames" type="number" placeholder="0" min="0">
+          <input class="form-input" id="fPlayerGames" readonly type="number" placeholder="0" min="0">
         </div>
         <div class="form-field">
           <label class="form-label">Spielminuten</label>

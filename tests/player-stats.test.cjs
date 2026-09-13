@@ -1,0 +1,6 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');
+require('../public/player-stats.js');const {calculate}=globalThis.MatchTrackerStats;
+const roster=[{id:1,name:'Max',photo:'max.png',goals:99,assists:7},{id:2,name:'Grigorios',goals:99}];
+test('goals are rebuilt from our normal goals only; repeated calculation is idempotent',()=>{const matches={a:{isHomeTeam:false,events:[{team:'away',scorerId:1},{team:'home',scorerId:1},{team:'away',scorerId:2},{team:'away',scorerId:2},{team:'away',scorerId:1,isOwnGoal:true},{typ:'kommentar',team:'away',scorerId:1}]}};const result=calculate(roster,matches);assert.deepEqual(result.map(p=>p.goals),[1,2]);assert.deepEqual(calculate(result,matches),result);assert.equal(result[0].photo,'max.png');assert(!('assists' in result[0]));});
+test('appearances count each selected player once per match including scoreless players',()=>{const result=calculate(roster,{a:{events:[]},b:{events:[]}},{a:{playerIds:[1,1,2]},b:{playerIds:[2]}});assert.deepEqual(result.map(p=>p.games),[1,2]);assert.deepEqual(result.map(p=>p.goals),[0,0]);});
+test('removing a game or selection removes its stats without changing roster identity',()=>{const result=calculate(roster,{},{});assert.deepEqual(result.map(p=>p.goals),[0,0]);assert.deepEqual(result.map(p=>p.games),[0,0]);assert.deepEqual(result.map(p=>p.id),[1,2]);});

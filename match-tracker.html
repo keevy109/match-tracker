@@ -1008,6 +1008,7 @@
   </div>
 </div>
 
+<script src="./player-stats.js"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
 (function() {
@@ -1348,6 +1349,7 @@ function applyMatchSnapshot(id, data) {
 function save(matchReady) {
   if (!storageReady || matchTransition || new URLSearchParams(window.location.search).has('ticker')) return;
   localStorageFailed = false;
+  recalculatePlayerStats();
   try {
     const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
     localStorage.setItem('matchtracker_v3', JSON.stringify({
@@ -2028,7 +2030,37 @@ function removePlayer(id) {
   renderKaderList(); save();
 }
 
+function recalculatePlayerStats() {
+  const records = {};
+  const participants = {};
+  schedule.forEach(m => {
+    if (m.result) records[m.id] = {isHomeTeam:m.isHome ?? m.home ?? true, events:m.result.events || []};
+    participants[m.id] = {playerIds:m.participantIds || []};
+  });
+  if (activeMatchId) records[activeMatchId] = {isHomeTeam, events};
+  squad = MatchTrackerStats.calculate(squad, records, participants);
+}
+
+function editParticipants(id) {
+  const match = schedule.find(m => String(m.id) === String(id));
+  if (!match) return;
+  const selected = new Set((match.participantIds || []).map(String));
+  openEditSheet('Wer hat mitgespielt?', `<p>Alle Spieler auswählen, die tatsächlich eingesetzt wurden.</p>${squad.map(p => `<label style="display:flex;flex-direction:row;align-items:center;gap:10px"><input type="checkbox" style="width:20px;height:20px;padding:0;flex-shrink:0" class="participant-check" value="${p.id}" ${selected.has(String(p.id)) ? 'checked' : ''}>${esc(p.name)}</label>`).join('')}<p id="participantStatus" role="status"></p>`, async () => {
+    const playerIds = Array.from(document.querySelectorAll('.participant-check:checked'), el => Number(el.value));
+    const status = document.getElementById('participantStatus');
+    status.textContent = 'Einsätze werden gespeichert …';
+    try {
+      await withStorageTimeout(firebase.database().ref('matchParticipants/' + id).set({playerIds, complete:true, updatedAt:Date.now()}));
+      match.participantIds = playerIds;
+      recalculatePlayerStats(); renderKaderList(); save();
+      document.getElementById('editSheet').classList.remove('active');
+      showToast('Einsätze gespeichert.');
+    } catch(e) { status.textContent = 'Nicht gespeichert. Bitte Verbindung prüfen und erneut versuchen.'; }
+  });
+}
+
 function renderKaderList() {
+  recalculatePlayerStats();
   const list = document.getElementById('kaderList');
   if (!list) return;
   if (!squad.length) { list.innerHTML='<div class="kader-empty">Noch keine Spieler hinterlegt</div>'; return; }
@@ -2223,6 +2255,7 @@ function renderSpielplan() {
         </div>`;
     }
 
+    actionsHTML += `<div class="spielplan-actions"><button class="btn-row-edit" onclick="editParticipants(${m.id})">Einsätze auswählen</button><span>${(m.participantIds || []).length} Spieler</span></div>`;
     const meta = [];
     if (m.type) meta.push(esc(m.type));
     if (m.date) {
@@ -2338,7 +2371,7 @@ function editPlayer(id) {
       <input id="es-pnum" type="number" min="1" max="99" value="${p.num || ''}">
     </label>
     <label>Saisontore
-      <input id="es-pgoals" type="number" min="0" value="${p.goals || 0}">
+      <input id="es-pgoals" readonly type="number" min="0" value="${p.goals || 0}">
     </label>
     <label>Foto
       <input type="file" accept="image/*" id="es-pphoto" style="padding:6px">
@@ -2350,7 +2383,7 @@ function editPlayer(id) {
     const file = document.getElementById('es-pphoto').files[0];
     if (name) p.name = name;
     p.num = num;
-    p.goals = Math.max(0, goals);
+    // Goals are calculated from recorded match events.
     const doSave = () => { renderKaderList(); save(); document.getElementById('editSheet').classList.remove('active'); };
     if (file) {
       resizeLogo(file, base64 => { p.photo = base64; doSave(); });
@@ -3464,6 +3497,9 @@ function checkAccess() {
           if (!m) { m = data.fixture || {id:Number(id), opponent:data.isHomeTeam === false ? data.homeTeam : data.awayTeam, isHome:data.isHomeTeam !== false}; schedule.push(m); }
           m.result = {home:data.homeScore || 0, away:data.awayScore || 0, ourScore:data.isHomeTeam === false ? data.awayScore : data.homeScore, theirScore:data.isHomeTeam === false ? data.homeScore : data.awayScore, events:Object.values(data.events || {})};
         });
+        const appearances = (await readStoredValue(firebase.database().ref('matchParticipants'))).val() || {};
+        schedule.forEach(m => { if (appearances[m.id]) m.participantIds = Object.values(appearances[m.id].playerIds || []); });
+        recalculatePlayerStats(); renderKaderList();
         renderSpielplan();
         storageReady = true;
         document.getElementById('storageLoading').style.display = 'none';
