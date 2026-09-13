@@ -3,6 +3,22 @@
     <div class="eyebrow">Neuigkeiten</div>
     <h2 class="section-title">Aktuelles</h2>
     <div class="news-grid">
+        <div class="news-card"
+            data-date="12. September 2026"
+            data-title="Testspiel bei TG Burg"
+            data-icon="⚽"
+            data-image="juniorcup.jpg"
+            data-gradient="radial-gradient(ellipse at 60% 45%, #102040 0%, #071525 60%, #020810 100%)"
+            data-text="&lt;p&gt;Das Training findet wie gewohnt dienstags und donnerstags statt. Bitte pünktlich erscheinen – wir starten gemeinsam.&lt;/p&gt;&lt;p&gt;Bei Auswärtsspielen: Treffpunkt ist immer 30 Minuten vor Abpfiff am Sportplatz. Bitte in orangenem Trikot anreisen.&lt;/p&gt;&lt;p&gt;Bei Fragen meldet euch beim Trainer.&lt;/p&gt;">
+            <div class="news-image" style="background: radial-gradient(ellipse at 60% 45%, #102040 0%, #071525 60%, #020810 100%)">
+              <span class="news-image-icon">📋</span>
+            </div>
+        <div class="news-body">
+          <div class="news-date">20. Mai 2025</div>
+          <div class="news-title">Trainingszeiten und Treffpunkt für auswärts</div>
+          <div class="news-excerpt">Platzhalter-Nachricht. Infos zu Abfahrt, Spielkleidung und Treffpunkt.</div>
+        </div>
+      </div>
       <div class="news-card"
         data-date="14. Jun 2025"
         data-title="3 Siege, 2 Niederlagen – so lief der 2. Sparkassen-Junior-Cup"
@@ -32,21 +48,6 @@
           <div class="news-date">01. Jun 2025</div>
           <div class="news-title">Saisonstart – Ziele und erster Spielplan</div>
           <div class="news-excerpt">Platzhalter-Nachricht. Alle Termine der Saison 2025/26 sind jetzt eingetragen.</div>
-        </div>
-      </div>
-      <div class="news-card"
-        data-date="20. Mai 2025"
-        data-title="Trainingszeiten und Treffpunkt für auswärts"
-        data-icon="📋"
-        data-gradient="radial-gradient(ellipse at 60% 45%, #102040 0%, #071525 60%, #020810 100%)"
-        data-text="&lt;p&gt;Das Training findet wie gewohnt dienstags und donnerstags statt. Bitte pünktlich erscheinen – wir starten gemeinsam.&lt;/p&gt;&lt;p&gt;Bei Auswärtsspielen: Treffpunkt ist immer 30 Minuten vor Abpfiff am Sportplatz. Bitte in orangenem Trikot anreisen.&lt;/p&gt;&lt;p&gt;Bei Fragen meldet euch beim Trainer.&lt;/p&gt;">
-        <div class="news-image" style="background: radial-gradient(ellipse at 60% 45%, #102040 0%, #071525 60%, #020810 100%)">
-          <span class="news-image-icon">📋</span>
-        </div>
-        <div class="news-body">
-          <div class="news-date">20. Mai 2025</div>
-          <div class="news-title">Trainingszeiten und Treffpunkt für auswärts</div>
-          <div class="news-excerpt">Platzhalter-Nachricht. Infos zu Abfahrt, Spielkleidung und Treffpunkt.</div>
         </div>
       </div>
     </div>
