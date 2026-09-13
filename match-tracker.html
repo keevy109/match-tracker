@@ -1173,6 +1173,7 @@ let matchTransition = false;
 let matchRevisions = {};
 let matchWriteQueue = Promise.resolve();
 let matchConflict = false;
+const conflictedMatches = new Set();
 let globalLoaded = false;
 let localStorageFailed = false;
 
@@ -2111,7 +2112,8 @@ function deleteScheduleMatch(id) {
 }
 
 async function startMatchFromSchedule(id) {
-  if (!storageReady || matchTransition || matchConflict) return;
+  if (!storageReady || matchTransition) return;
+  if (conflictedMatches.has(String(id))) { showToast('Für dieses Spiel gibt es einen Speicherkonflikt. Andere Spiele können gestartet werden.'); return; }
   const match = schedule.find(m => m.id === id);
   if (!match) return;
   if (String(activeMatchId) === String(id)) { switchTab('spiel'); return; }
@@ -2165,12 +2167,16 @@ function endCurrentMatch() {
   };
 
   // Capture final score AND events before detaching the match.
-  syncToFirebase(true);
+  if (!syncToFirebase(true)) {
+    showToast('Das Ergebnis konnte nicht auf dem Gerät gesichert werden. Bitte Sicherung herunterladen; das Spiel bleibt geöffnet.');
+    return;
+  }
   activeMatchId = null;
   updateEndMatchBtn();
   renderSpielplan();
   save();
-  showToast('Spiel beendet. Speicherstatus oben beachten.');
+  switchTab('spielplan');
+  showToast('Ergebnis auf diesem Gerät gesichert. Du kannst jetzt das nächste Spiel starten.');
 }
 
 function updateEndMatchBtn() {
@@ -2915,7 +2921,7 @@ function initFirebase() {
 }
 
 function retryPendingMatches() {
-  if (!storageReady || matchConflict) return;
+  if (!storageReady) return;
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key.startsWith('mt_pending_')) {
@@ -2935,9 +2941,11 @@ function syncToFirebase(finished = false) {
     try { matchRevisions[id] = JSON.parse(localStorage.getItem('mt_revision_' + id) || 'null'); } catch(e) { matchRevisions[id] = null; }
   }
   const job = { id, data, revision, expected: matchRevisions[id] || null };
+  let locallySaved = false;
   try {
     const {squad: roster, ...compact} = data;
     localStorage.setItem('mt_pending_' + id, JSON.stringify({...job, data:compact}));
+    locallySaved = true;
     archiveMatch(id, data);
   } catch(e) { localStorageFailed = true; storageStatus('Lokale Sicherung fehlgeschlagen! Bitte Sicherung herunterladen.', true); }
   if (!localStorageFailed) storageStatus('Auf diesem Gerät gespeichert – Übertragung ausstehend …');
@@ -2945,11 +2953,12 @@ function syncToFirebase(finished = false) {
   matchWriteQueue = matchWriteQueue.then(() => writeMatchJob(job)).catch(e => {
     storageStatus('Übertragung fehlgeschlagen. Lokale Sicherung behalten und erneut versuchen.', true);
   });
+  return locallySaved;
 }
 
 async function writeMatchJob(job) {
-  if (!firebaseReady || matchConflict) return;
   const { id, revision } = job;
+  if (!firebaseReady || conflictedMatches.has(String(id))) return;
   const data = {...job.data, squad:job.data.squad || squad || []};
   const ref = firebase.database().ref('matches/' + id);
   // Append-only recovery copy: conflicts cannot destroy these snapshots.
@@ -2972,6 +2981,7 @@ async function writeMatchJob(job) {
   }, undefined, false);
   if (!result.committed) {
     matchConflict = true;
+    conflictedMatches.add(String(id));
     storageStatus('Anderes Gerät oder beendetes Spiel erkannt. Überschreiben blockiert; beide Stände sind gesichert. Bitte Sicherung herunterladen.', true);
     return;
   }

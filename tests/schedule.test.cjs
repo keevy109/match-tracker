@@ -11,7 +11,7 @@ test('public ticker cannot add schedule entries',()=>{const {c}=setup('Gegner');
 test('a newly added fixture can immediately be started from the tracker',async()=>{
 const {c,fields}=setup('Gegner FC');fields.matchTitle={value:''};
 for(const name of ['resetTimer','resolveLogos','updateScoreLabels','updateGoalButtons','updateScore','renderEvents','updateEndMatchBtn','switchTab']) c[name]=()=>{};
-c.localStorage={setItem(){}};c.storageReady=true;c.matchTransition=false;c.matchConflict=false;c.activeMatchId=null;c.firebaseReady=true;c.navigator={onLine:true};c.matchRevisions={};c.firebase={database:()=>({ref:()=>({})})};c.readStoredValue=async()=>({val:()=>null});c.storageStatus=()=>{};fields.matchDate={textContent:''};
+c.conflictedMatches=new Set();c.localStorage={setItem(){}};c.storageReady=true;c.matchTransition=false;c.matchConflict=false;c.activeMatchId=null;c.firebaseReady=true;c.navigator={onLine:true};c.matchRevisions={};c.firebase={database:()=>({ref:()=>({})})};c.readStoredValue=async()=>({val:()=>null});c.storageStatus=()=>{};fields.matchDate={textContent:''};
 vm.runInContext(html.slice(html.indexOf('async function startMatchFromSchedule('),html.indexOf('function endCurrentMatch(')),c);
 c.addScheduleMatch();await c.startMatchFromSchedule(c.schedule[0].id);assert.equal(c.activeMatchId,c.schedule[0].id);assert.equal(fields.matchTitle.value,'Gegner FC vs. Unser FC');assert.equal(c.isHomeTeam,false);
 });
