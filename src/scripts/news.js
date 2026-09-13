@@ -6,7 +6,7 @@ export async function init() {
     const items=await api.load('news');grid.replaceChildren();
     items.filter(n=>n.published!==false).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(n=>{
       const card=document.createElement('article');card.className='news-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',n.title);
-      Object.assign(card.dataset,{date:newsDate(n.date),title:n.title,text:sanitizeNews(n.body),image:safeImage(n.image),icon:n.icon||'📰'});
+      Object.assign(card.dataset,{date:newsDate(n.date),title:n.title,text:sanitizeNews(n.body),image:safeImage(n.image),photos:JSON.stringify(n.photos||[]),icon:n.icon||'📰'});
       const picture=document.createElement('div');picture.className='news-image';
       if(card.dataset.image)picture.style.backgroundImage=`url(${JSON.stringify(card.dataset.image)})`;else picture.textContent=n.icon||'📰';
       picture.style.backgroundSize='cover';picture.style.backgroundPosition='center';

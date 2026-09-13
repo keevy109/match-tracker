@@ -28,3 +28,17 @@ export function newsDate(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? new Date(value+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'}) : '';
 }
 export function plainText(html) { const doc=new DOMParser().parseFromString(html,'text/html');return doc.body.textContent.trim(); }
+
+export function renderNewsPhotos(container, photos) {
+  container.replaceChildren();
+  for (const [index, photo] of (Array.isArray(photos) ? photos : []).entries()) {
+    const src = safeImage(photo);
+    if (!src) continue;
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Beitragsfoto ${index + 1}`;
+    img.loading = 'lazy';
+    img.style.cssText = 'display:block;width:100%;height:auto;margin-top:16px;border-radius:8px';
+    container.append(img);
+  }
+}

@@ -1,4 +1,4 @@
-import {sanitizeNews,safeImage} from './news-content.js';
+import {sanitizeNews,safeImage,renderNewsPhotos} from './news-content.js';
 export function init() {
   const modal = document.getElementById('newsModal');
   if (!modal) return;
@@ -7,6 +7,9 @@ export function init() {
     document.getElementById('nmDate').textContent  = card.dataset.date  || '';
     document.getElementById('nmTitle').textContent = card.dataset.title || '';
     document.getElementById('nmText').innerHTML    = sanitizeNews(card.dataset.text || '');
+    const photos = document.createElement('div');
+    try { renderNewsPhotos(photos, JSON.parse(card.dataset.photos || '[]')); } catch {}
+    document.getElementById('nmText').append(photos);
     const hasImg = !!card.dataset.image;
     document.getElementById('nmIcon').textContent  = hasImg ? '' : (card.dataset.icon || '');
     document.getElementById('nmImage').style.background = hasImg
