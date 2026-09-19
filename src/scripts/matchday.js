@@ -24,14 +24,27 @@ async function checkAndOpen() {
       api.loadTrackedTeams().catch(() => api.load('vereine')),
     ]);
 
-    const today = new Date().toISOString().slice(0, 10);
-    const match = spielplan.find(m => m.status === 'next' && !m.result && m.date === today);
+    const today = localDateKey(new Date());
+    const match = spielplan.find(m => m.status === 'next' && !m.result && isInMatchWeek(m.date, today));
     if (!match) return;
 
     populate(match, vereine);
     populateBanner(match, vereine);
     open();
   } catch {}
+}
+
+function localDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function isInMatchWeek(matchDate, today) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(matchDate || '') || !/^\d{4}-\d{2}-\d{2}$/.test(today || '')) return false;
+  const matchDay = new Date(`${matchDate}T12:00:00`);
+  const monday = new Date(matchDay);
+  const daysSinceMonday = (matchDay.getDay() + 6) % 7;
+  monday.setDate(matchDay.getDate() - daysSinceMonday);
+  return today >= localDateKey(monday) && today <= matchDate;
 }
 
 function populateBanner(match, vereine) {
