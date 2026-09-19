@@ -32,5 +32,18 @@
     return items;
   }
 
-  root.MatchTrackerSchedule = {normalize};
+  function visibleMatches(matches, schedule) {
+    const archivedIds = new Set();
+    Object.entries(schedule || {}).forEach(([key, item]) => {
+      if (item?.archived === true) {
+        archivedIds.add(String(key));
+        if (item.id != null) archivedIds.add(String(item.id));
+      }
+    });
+    return Object.fromEntries(
+      Object.entries(matches || {}).filter(([id]) => !archivedIds.has(String(id))),
+    );
+  }
+
+  root.MatchTrackerSchedule = {normalize, visibleMatches};
 })(globalThis);

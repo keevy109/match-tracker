@@ -9,8 +9,8 @@ async function remote(path) {
 export async function load(collection) {
   if (collection === 'kader') {
     try {
-      const [roster, matches, participants, training] = await Promise.all([remote('app/squad'), remote('matches'), remote('matchParticipants'), remote('trainingSessions')]);
-      if (roster) return globalThis.MatchTrackerStats.calculate(roster, matches, participants || {}, training || {});
+      const [roster, matches, participants, training, schedule] = await Promise.all([remote('app/squad'), remote('matches'), remote('matchParticipants'), remote('trainingSessions'), remote('app/schedule')]);
+      if (roster) return globalThis.MatchTrackerStats.calculate(roster, globalThis.MatchTrackerSchedule.visibleMatches(matches, schedule), participants || {}, training || {});
     } catch (error) { console.warn('Kader: gespeicherte lokale Version wird verwendet.', error); }
   }
   const res = await fetch(`${import.meta.env.BASE_URL}data/${collection}.json`);
@@ -27,7 +27,10 @@ export async function save(collection, data) {
   if (!res.ok) throw new Error(await res.text().catch(() => 'Unbekannter Fehler'));
 }
 
-export async function loadMatchRecords() { return remote('matches'); }
+export async function loadMatchRecords() {
+  const [matches, schedule] = await Promise.all([remote('matches'), remote('app/schedule')]);
+  return globalThis.MatchTrackerSchedule.visibleMatches(matches, schedule);
+}
 
 export async function loadTrackedSchedule() {
   const [schedule, matches] = await Promise.all([remote('app/schedule'), remote('matches')]);
