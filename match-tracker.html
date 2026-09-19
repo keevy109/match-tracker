@@ -3013,8 +3013,14 @@ async function writeMatchJob(job) {
   if (!firebaseReady || conflictedMatches.has(String(id))) return;
   const data = {...job.data, squad:job.data.squad || squad || []};
   const ref = firebase.database().ref('matches/' + id);
-  // Append-only recovery copy: conflicts cannot destroy these snapshots.
-  await firebase.database().ref('matchHistory/' + id + '/' + revision).set({...data, savedAt: Date.now()});
+  // The live match must remain writable even if separate history permissions lag
+  // behind a deployment. A local immutable copy already exists in the outbox.
+  let remoteHistorySaved = true;
+  try {
+    await firebase.database().ref('matchHistory/' + id + '/' + revision).set({...data, savedAt: Date.now()});
+  } catch(e) {
+    remoteHistorySaved = false;
+  }
   const before = (await ref.once('value')).val();
   if (before?.revision === revision) {
     const pending = JSON.parse(localStorage.getItem('mt_pending_' + id) || 'null');
@@ -3025,7 +3031,11 @@ async function writeMatchJob(job) {
   }
   const expected = matchRevisions[id] === undefined ? job.expected : matchRevisions[id];
   if (before) {
-    await firebase.database().ref('matchHistory/' + id + '/before-' + revision).set(before);
+    try {
+      await firebase.database().ref('matchHistory/' + id + '/before-' + revision).set(before);
+    } catch(e) {
+      remoteHistorySaved = false;
+    }
   }
   const result = await ref.transaction(current => {
     if ((current?.revision || current?.updatedAt || null) !== expected || current?.matchFinished) return;
@@ -3042,7 +3052,8 @@ async function writeMatchJob(job) {
   const pending = JSON.parse(localStorage.getItem('mt_pending_' + id) || 'null');
   if (pending?.revision === revision) {
     localStorage.removeItem('mt_pending_' + id);
-    storageStatus(localStorageFailed ? 'Online gespeichert. Lokale Sicherung fehlgeschlagen – Sicherung herunterladen!' : 'Auf diesem Gerät und online gespeichert', localStorageFailed);
+    const historyWarning = !remoteHistorySaved ? ' Live-Update aktiv; zusätzliche Server-Historie nicht verfügbar.' : '';
+    storageStatus(localStorageFailed ? 'Online gespeichert. Lokale Sicherung fehlgeschlagen – Sicherung herunterladen!' : 'Auf diesem Gerät und online gespeichert.' + historyWarning, localStorageFailed || !remoteHistorySaved);
   } else if (pending) {
     pending.expected = revision;
     localStorage.setItem('mt_pending_' + id, JSON.stringify(pending));
