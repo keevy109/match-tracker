@@ -548,8 +548,8 @@ function buildBasePanel() {
       </div>
       <div class="form-row">
         <div class="form-field">
-          <label class="form-label">Tore</label>
-          <input class="form-input" id="fPlayerGoals" readonly type="number" placeholder="0" min="0">
+        <label class="form-label">Tore</label>
+          <input class="form-input" id="fPlayerGoals" type="number" placeholder="0" min="0">
         </div>
 
       </div>
