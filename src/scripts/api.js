@@ -1,5 +1,6 @@
 import '../../public/player-stats.js';
 import '../../public/schedule-data.js';
+import '../../public/team-data.js';
 const DATABASE = 'https://match-tracker-891ac-default-rtdb.europe-west1.firebasedatabase.app';
 async function remote(path) {
   const res = await fetch(`${DATABASE}/${path}.json`, {signal:AbortSignal.timeout(8000), cache:'no-store'});
@@ -76,4 +77,19 @@ export async function saveTrackedSchedule(items) {
     signal:AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error('Gemeinsamer Spielplan konnte nicht gespeichert werden.');
+}
+
+export async function loadTrackedTeams() {
+  return globalThis.MatchTrackerTeams.normalize(await remote('app/teams'));
+}
+
+export async function saveTrackedTeams(clubs) {
+  const teams = globalThis.MatchTrackerTeams.merge(await remote('app/teams'), clubs);
+  const res = await fetch(`${DATABASE}/app/teams.json`, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(teams),
+    signal:AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error('Gemeinsame Teams konnten nicht gespeichert werden.');
 }

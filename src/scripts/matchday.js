@@ -21,7 +21,7 @@ async function checkAndOpen() {
   try {
     const [spielplan, vereine] = await Promise.all([
       api.loadTrackedSchedule().catch(() => api.load('spielplan')),
-      api.load('vereine').catch(()   => JSON.parse(localStorage.getItem('ssv_vereine')   || '[]')),
+      api.loadTrackedTeams().catch(() => api.load('vereine')),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);

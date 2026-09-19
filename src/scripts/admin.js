@@ -43,7 +43,7 @@ async function uploadImage(subpath, dataUrl, originalName) {
 async function loadAll() {
   try { kader     = await api.load('kader'); }    catch { kader = []; }
   try { spielplan = await api.loadTrackedSchedule(); } catch { spielplan = []; }
-  try { vereine   = await api.load('vereine'); }  catch { vereine = []; }
+  try { vereine   = await api.loadTrackedTeams(); } catch { vereine = []; }
   try { trainer   = await api.load('trainer'); }  catch { trainer = []; }
   await migrateFromLocalStorage();
 }
@@ -91,7 +91,7 @@ async function migrateFromLocalStorage() {
   if (!vereine.length) {
     try {
       const loc = JSON.parse(localStorage.getItem(KEY_VEREINE) || '[]');
-      if (loc.length) { vereine = loc; await api.save('vereine', vereine); migrated = true; }
+      if (loc.length) { vereine = loc; await api.saveTrackedTeams(vereine); migrated = true; }
     } catch {}
   }
 
@@ -112,7 +112,7 @@ async function saveSpielplan() {
   catch (e) { alert('Fehler beim Speichern (Spielplan): ' + e.message); throw e; }
 }
 async function saveVereine() {
-  try { await api.save('vereine', vereine); }
+  try { await api.saveTrackedTeams(vereine); }
   catch (e) { alert('Fehler beim Speichern (Vereine): ' + e.message); throw e; }
 }
 async function saveTrainer() {
