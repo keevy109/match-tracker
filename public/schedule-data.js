@@ -45,5 +45,53 @@
     );
   }
 
-  root.MatchTrackerSchedule = {normalize, visibleMatches};
+  function mergeAdminSchedule(current, items) {
+    const existing = current || {};
+    const wanted = new Set((items || []).map(item => String(item.id)));
+    const updates = {};
+
+    Object.entries(existing).forEach(([key, item]) => {
+      if (item && item.archived !== true && !wanted.has(String(item.id ?? key))) {
+        updates[key] = {...item, archived:true};
+      }
+    });
+
+    (items || []).forEach(item => {
+      const key = String(item.id);
+      const oldKey = Object.keys(existing).find(candidate =>
+        String(existing[candidate]?.id ?? candidate) === key);
+      const old = oldKey ? existing[oldKey] : {};
+      const merged = {
+        ...old,
+        id:item.id,
+        opponent:item.opponent,
+        date:item.date || null,
+        time:item.time || null,
+        isHome:item.home !== false,
+        venue:item.venue || null,
+        type:item.type || old.type || null,
+        archived:false,
+      };
+      delete merged.home;
+      delete merged.status;
+
+      if (typeof item.result === 'string') {
+        const [home, away] = item.result.split(':').map(Number);
+        if (Number.isInteger(home) && Number.isInteger(away) && home >= 0 && away >= 0) {
+          const previous = old.result && typeof old.result === 'object' ? old.result : {};
+          merged.result = {
+            ...previous,
+            home,
+            away,
+            ourScore:merged.isHome ? home : away,
+            theirScore:merged.isHome ? away : home,
+          };
+        }
+      }
+      updates[key] = merged;
+    });
+    return updates;
+  }
+
+  root.MatchTrackerSchedule = {normalize, visibleMatches, mergeAdminSchedule};
 })(globalThis);

@@ -42,7 +42,7 @@ async function uploadImage(subpath, dataUrl, originalName) {
 // ── Persistence ───────────────────────────────────────────────────
 async function loadAll() {
   try { kader     = await api.load('kader'); }    catch { kader = []; }
-  try { spielplan = await api.load('spielplan'); } catch { spielplan = []; }
+  try { spielplan = await api.loadTrackedSchedule(); } catch { spielplan = []; }
   try { vereine   = await api.load('vereine'); }  catch { vereine = []; }
   try { trainer   = await api.load('trainer'); }  catch { trainer = []; }
   await migrateFromLocalStorage();
@@ -71,7 +71,7 @@ async function migrateFromLocalStorage() {
   if (!spielplan.length) {
     try {
       const loc = JSON.parse(localStorage.getItem(KEY_SPIELPLAN) || '[]');
-      if (loc.length) { spielplan = loc; await api.save('spielplan', spielplan); migrated = true; }
+      if (loc.length) { spielplan = loc; await api.saveTrackedSchedule(spielplan); migrated = true; }
     } catch {}
     if (!spielplan.length) {
       try {
@@ -83,7 +83,7 @@ async function migrateFromLocalStorage() {
             venue: s.venue || 'Sportplatz Berghausen', time: s.time || '',
             result: s.result || null, status: s.status || (s.result ? 'past' : 'future'),
           }));
-          await api.save('spielplan', spielplan); migrated = true;
+          await api.saveTrackedSchedule(spielplan); migrated = true;
         }
       } catch {}
     }
@@ -108,7 +108,7 @@ async function saveKader() {
   catch (e) { alert('Fehler beim Speichern (Kader): ' + e.message); throw e; }
 }
 async function saveSpielplan() {
-  try { await api.save('spielplan', spielplan); }
+  try { await api.saveTrackedSchedule(spielplan); }
   catch (e) { alert('Fehler beim Speichern (Spielplan): ' + e.message); throw e; }
 }
 async function saveVereine() {
@@ -461,18 +461,20 @@ function openResultForm(id) {
   const m = spielplan.find(x => x.id === id);
   const [hs, as] = (m?.result || '').split(':').map(v => parseInt(v) || 0);
 
+  const homeName = m?.home ? 'SSV Berghausen' : (m?.opponent || 'Heim');
+  const awayName = m?.home ? (m?.opponent || 'Gast') : 'SSV Berghausen';
   document.getElementById('formTitle').textContent = 'Ergebnis eintragen';
   const panel = document.querySelector('.form-panel');
-  panel.innerHTML = buildResultPanel(hs || 0, as || 0);
+  panel.innerHTML = buildResultPanel(hs || 0, as || 0, homeName, awayName);
   openPanel();
 }
 
-function buildResultPanel(hs, as) {
+function buildResultPanel(hs, as, homeName = 'Heim', awayName = 'Gast') {
   return `
     <div class="form-handle"></div>
     <div class="form-title" id="formTitle">Ergebnis eintragen</div>
     <div class="form-field">
-      <label class="form-label">Tore SSV Berghausen : Gegner</label>
+      <label class="form-label">${escHtml(homeName)} : ${escHtml(awayName)}</label>
       <div class="result-row">
         <input class="score-input" id="fHomeScore" type="number" min="0" max="30" value="${hs}">
         <span class="result-sep">:</span>

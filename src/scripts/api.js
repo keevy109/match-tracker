@@ -40,3 +40,40 @@ export async function loadTrackedSchedule() {
     new Date().toISOString().slice(0, 10),
   );
 }
+
+export async function saveTrackedSchedule(items) {
+  const [schedule, matches] = await Promise.all([remote('app/schedule'), remote('matches')]);
+  const scheduleUpdates = globalThis.MatchTrackerSchedule.mergeAdminSchedule(schedule, items);
+  const updates = {};
+
+  Object.entries(scheduleUpdates).forEach(([id, fixture]) => {
+    updates[`app/schedule/${id}`] = fixture;
+  });
+
+  (items || []).forEach(item => {
+    if (typeof item.result !== 'string') return;
+    const id = String(item.id);
+    const fixture = scheduleUpdates[id];
+    if (!fixture?.result) return;
+    const old = matches?.[id] || {};
+    updates[`matches/${id}`] = {
+      ...old,
+      homeTeam:fixture.isHome ? 'SSV Berghausen' : fixture.opponent,
+      awayTeam:fixture.isHome ? fixture.opponent : 'SSV Berghausen',
+      homeScore:fixture.result.home,
+      awayScore:fixture.result.away,
+      isHomeTeam:fixture.isHome,
+      matchFinished:true,
+      fixture,
+      updatedAt:Date.now(),
+    };
+  });
+
+  const res = await fetch(`${DATABASE}/.json`, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(updates),
+    signal:AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error('Gemeinsamer Spielplan konnte nicht gespeichert werden.');
+}

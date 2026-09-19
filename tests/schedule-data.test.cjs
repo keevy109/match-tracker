@@ -7,6 +7,7 @@ const context = vm.createContext({});
 vm.runInContext(fs.readFileSync('public/schedule-data.js', 'utf8'), context);
 const normalize = context.MatchTrackerSchedule.normalize;
 const visibleMatches = context.MatchTrackerSchedule.visibleMatches;
+const mergeAdminSchedule = context.MatchTrackerSchedule.mergeAdminSchedule;
 
 test('tracked schedule exposes a completed match to the public website', () => {
   const schedule = {10: {id: 10, date: '2026-09-19', opponent: 'TG Burg', isHome: true, result: {home: 7, away: 3}}};
@@ -52,4 +53,22 @@ test('archived tracker runs are excluded from website statistics', () => {
     Object.keys(visibleMatches(matches, schedule)).sort(),
     ['orphan', 'real'],
   );
+});
+
+test('admin schedule editing preserves ticker events and archives only removed games', () => {
+  const current = {
+    1: {id: 1, opponent: 'Alt', isHome: true, result: {home: 7, away: 3, events: [{id: 9}]}},
+    2: {id: 2, opponent: 'Entfernen', isHome: false},
+    3: {id: 3, opponent: 'Alter Test', archived: true},
+  };
+  const updates = mergeAdminSchedule(current, [
+    {id: 1, opponent: 'Neu', home: true, date: '2026-09-19', time: '12:30', result: '8:3'},
+    {id: 4, opponent: 'Nächstes Spiel', home: false, date: '2026-09-26', time: '12:00', result: null},
+  ]);
+  assert.equal(updates['1'].opponent, 'Neu');
+  assert.equal(updates['1'].result.home, 8);
+  assert.equal(updates['1'].result.events.length, 1);
+  assert.equal(updates['2'].archived, true);
+  assert.equal(updates['3'], undefined);
+  assert.equal(updates['4'].isHome, false);
 });
