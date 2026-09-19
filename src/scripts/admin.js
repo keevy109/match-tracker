@@ -281,9 +281,12 @@ async function savePlayerForm() {
   }
 
   if (editingId) {
-    if (existing) Object.assign(existing, { name, num, position, goals, games, minutes, training, photo, detailPhoto });
+    if (existing) {
+      const goalAdjustment = (Number(existing.goalAdjustment) || 0) + goals - (Number(existing.goals) || 0);
+      Object.assign(existing, { name, num, position, goals, goalAdjustment, games, minutes, training, photo, detailPhoto });
+    }
   } else {
-    kader.push({ id: nextId(), name, num, position, goals, games, minutes, training, photo, detailPhoto });
+    kader.push({ id: nextId(), name, num, position, goals, goalAdjustment:goals, games, minutes, training, photo, detailPhoto });
   }
   await saveKader();
   renderKader();

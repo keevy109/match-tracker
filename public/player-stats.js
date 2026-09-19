@@ -1,6 +1,9 @@
 (function(root) {
   function calculate(roster, matches, participants = {}, training = {}) {
-    const list = Object.values(roster || {}).filter(Boolean).map(p => { const {assists, ...rest} = p; return {...rest, goals:0, games:0}; });
+    const list = Object.values(roster || {}).filter(Boolean).map(p => {
+      const {assists, ...rest} = p;
+      return {...rest, goals:Number(p.goalAdjustment) || 0, games:0};
+    });
     const byId = new Map(list.map(p => [String(p.id), p]));
     Object.entries(matches || {}).forEach(([id, match]) => {
       if (!match || id === 'null') return;
@@ -14,6 +17,7 @@
       new Set(Object.values(ids).map(String)).forEach(id => { const player = byId.get(id); if (player) player.games++; });
     });
     list.forEach(player => {
+      player.goals = Math.max(0, player.goals);
       let attended = 0, total = 0;
       Object.values(training || {}).forEach(session => {
         if (!session || session.cancelled) return;

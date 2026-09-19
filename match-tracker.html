@@ -2326,7 +2326,7 @@ function editPlayer(id) {
       <input id="es-pnum" type="number" min="1" max="99" value="${p.num || ''}">
     </label>
     <label>Saisontore
-      <input id="es-pgoals" readonly type="number" min="0" value="${p.goals || 0}">
+      <input id="es-pgoals" type="number" min="0" value="${p.goals || 0}">
     </label>
     <label>Foto
       <input type="file" accept="image/*" id="es-pphoto" style="padding:6px">
@@ -2334,11 +2334,14 @@ function editPlayer(id) {
   `, () => {
     const name = document.getElementById('es-pname').value.trim();
     const num  = document.getElementById('es-pnum').value.trim();
-    const goals = parseInt(document.getElementById('es-pgoals').value) || 0;
+    const goals = Math.max(0, parseInt(document.getElementById('es-pgoals').value) || 0);
     const file = document.getElementById('es-pphoto').files[0];
     if (name) p.name = name;
     p.num = num;
-    // Goals are calculated from recorded match events.
+    // Keep manual corrections as an offset so recorded match goals can still
+    // be recalculated without overwriting the edited season total.
+    p.goalAdjustment = (Number(p.goalAdjustment) || 0) + goals - (Number(p.goals) || 0);
+    p.goals = goals;
     const doSave = () => { renderKaderList(); save(); document.getElementById('editSheet').classList.remove('active'); };
     if (file) {
       resizeLogo(file, base64 => { p.photo = base64; doSave(); });
