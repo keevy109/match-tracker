@@ -794,11 +794,9 @@
     </div>
   </div>
 
-  <div id="storageLoading" style="position:fixed;inset:0;z-index:99999;background:#101820ee;display:grid;place-items:center;color:white;text-align:center"><div>Gespeicherte Spiele werden geprüft …<br><button class="btn-export" onclick="downloadMatchBackup()">Lokale Sicherung herunterladen</button></div></div>
+  <div id="storageLoading" style="position:fixed;inset:0;z-index:99999;background:#101820ee;display:grid;place-items:center;color:white;text-align:center"><div>Gespeicherte Spiele werden geprüft …</div></div>
   <div id="storageStatus" role="status" style="padding:8px 20px;font-size:13px">Speicher wird geprüft …</div>
   <div class="export-row">
-    <button class="btn-export" onclick="retryPendingMatches()">Speichern erneut versuchen</button>
-    <button class="btn-export" onclick="downloadMatchBackup()">Sicherung herunterladen</button>
     <button class="btn-export" onclick="exportText()">Text kopieren</button>
     <button class="btn-export" onclick="exportImage()">Bild teilen</button>
     <button class="btn-export" onclick="showTickerShare()" id="btnTickerShare" style="display:none">📡 Live-Ticker</button>
@@ -1188,11 +1186,6 @@ function switchTab(name) {
 // Durable match state: no automatic writes while loading another device's data.
 let storageReady = false;
 let matchTransition = false;
-let matchRevisions = {};
-let matchWriteQueue = Promise.resolve();
-let remoteHistoryQueue = Promise.resolve();
-let matchConflict = false;
-const conflictedMatches = new Set();
 let globalLoaded = false;
 let localStorageFailed = false;
 
@@ -1222,60 +1215,6 @@ function matchSnapshot(finished = false) {
     matchFinished: finished,
     fixture: schedule.find(m => String(m.id) === String(activeMatchId)) || null
   }));
-}
-
-function storeHistory(key, value) {
-  if (typeof indexedDB === 'undefined') { localStorage.setItem(key, value); return; }
-  const request = indexedDB.open('matchtracker-history', 1);
-  request.onupgradeneeded = () => request.result.createObjectStore('versions');
-  request.onerror = () => storageStatus('Lokale Historie konnte nicht gesichert werden. Bitte Sicherung herunterladen.', true);
-  request.onsuccess = () => {
-    const db = request.result;
-    const tx = db.transaction('versions', 'readwrite');
-    tx.objectStore('versions').put(JSON.parse(value), key);
-    tx.oncomplete = () => db.close();
-    tx.onerror = () => { db.close(); storageStatus('Lokale Historie konnte nicht gesichert werden.', true); };
-  };
-}
-
-function archiveMatch(id, data) {
-  const key = 'mt_match_' + id;
-  const previous = localStorage.getItem(key);
-  // Retain each change to score/events/finished, not every timer tick.
-  const signature = value => JSON.stringify([value.homeScore, value.awayScore, value.events, value.matchFinished]);
-  if (previous && signature(JSON.parse(previous)) !== signature(data)) {
-    storeHistory('mt_history_' + id + '_' + crypto.randomUUID(), previous);
-  }
-  const {squad: roster, ...compact} = data;
-  localStorage.setItem(key, JSON.stringify({...compact, matchId:id}));
-}
-
-async function downloadMatchBackup() {
-  const data = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key === 'matchtracker_v3' || key.startsWith('mt_')) data[key] = JSON.parse(localStorage.getItem(key));
-  }
-  if (typeof indexedDB !== 'undefined') {
-    try {
-      data.localHistory = await new Promise((resolve, reject) => {
-        const request = indexedDB.open('matchtracker-history', 1);
-        request.onupgradeneeded = () => request.result.createObjectStore('versions');
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          const db = request.result; const result = db.transaction('versions').objectStore('versions').getAll();
-          result.onsuccess = () => { resolve(result.result); db.close(); };
-          result.onerror = () => { reject(result.error); db.close(); };
-        };
-      });
-    } catch(e) { showToast('Lokale Historie konnte nicht gelesen werden.'); }
-  }
-  if (firebaseReady && navigator.onLine) {
-    try { data.serverHistory = (await readStoredValue(firebase.database().ref('matchHistory'))).val(); data.trainingHistory = (await readStoredValue(firebase.database().ref('trainingHistory'))).val(); data.trainingSessions = (await readStoredValue(firebase.database().ref('trainingSessions'))).val(); } catch(e) { showToast('Server nicht erreichbar. Lokale Sicherung wird heruntergeladen.'); }
-  }
-  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
-  const a = document.createElement('a'); a.href = url; a.download = 'matchtracker-sicherung-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function applyMatchSnapshot(id, data) {
@@ -2164,7 +2103,6 @@ function deleteScheduleMatch(id) {
 
 async function startMatchFromSchedule(id) {
   if (!storageReady || matchTransition) return;
-  if (conflictedMatches.has(String(id))) { showToast('Für dieses Spiel gibt es einen Speicherkonflikt. Andere Spiele können gestartet werden.'); return; }
   const match = schedule.find(m => m.id === id);
   if (!match) return;
   if (String(activeMatchId) === String(id)) { switchTab('spiel'); return; }
@@ -2176,8 +2114,6 @@ async function startMatchFromSchedule(id) {
     const snap = await readStoredValue(firebase.database().ref('matches/' + id));
     const existing = snap.val();
     if (existing?.matchFinished || match.result) { showToast('Dieses Spiel ist beendet. Das Ergebnis bleibt im Spielplan.'); return; }
-    matchRevisions[id] = existing?.revision || existing?.updatedAt || null;
-    localStorage.setItem('mt_revision_' + id, JSON.stringify(matchRevisions[id]));
     if (existing) {
       applyMatchSnapshot(id, existing);
     } else {
@@ -2956,7 +2892,7 @@ const FIREBASE_CONFIG = {
 };
 
 let firebaseReady = false;
-let syncTimeout = null;
+let syncWritePromise = Promise.resolve();
 
 function initFirebase() {
   if (!FIREBASE_CONFIG.databaseURL || typeof firebase === 'undefined') return false;
@@ -2973,96 +2909,18 @@ function initFirebase() {
   }
 }
 
-function retryPendingMatches() {
-  if (!storageReady) return;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key.startsWith('mt_pending_')) {
-      const job = JSON.parse(localStorage.getItem(key));
-      if ((job.resetId || null) !== localStorage.getItem('mt_reset_id')) continue;
-      matchWriteQueue = matchWriteQueue.then(() => writeMatchJob(job)).catch(() => storageStatus('Übertragung noch nicht möglich. Sicherung bleibt auf diesem Gerät.', true));
-    }
-  }
-}
-window.addEventListener('online', retryPendingMatches);
-
 function syncToFirebase(finished = false) {
-  if (!storageReady || !activeMatchId || matchTransition) return;
+  if (!firebaseReady || !storageReady || !activeMatchId || matchTransition) return false;
   const id = String(activeMatchId);
-  const data = matchSnapshot(finished);
-  const revision = crypto.randomUUID();
-  if (matchRevisions[id] === undefined) {
-    try { matchRevisions[id] = JSON.parse(localStorage.getItem('mt_revision_' + id) || 'null'); } catch(e) { matchRevisions[id] = null; }
-  }
-  const job = { id, data, revision, expected: matchRevisions[id] || null, resetId:localStorage.getItem('mt_reset_id') };
-  let locallySaved = false;
-  try {
-    const {squad: roster, ...compact} = data;
-    localStorage.setItem('mt_pending_' + id, JSON.stringify({...job, data:compact}));
-    locallySaved = true;
-    archiveMatch(id, data);
-  } catch(e) { localStorageFailed = true; storageStatus('Lokale Sicherung fehlgeschlagen! Bitte Sicherung herunterladen.', true); }
-  if (!localStorageFailed) storageStatus('Auf diesem Gerät gespeichert – Übertragung ausstehend …');
-  // Capture immutable state now, not after a timer or a match switch.
-  matchWriteQueue = matchWriteQueue.then(() => writeMatchJob(job)).catch(e => {
-    storageStatus('Übertragung fehlgeschlagen. Lokale Sicherung behalten und erneut versuchen.', true);
+  const data = {...matchSnapshot(finished), updatedAt:firebase.database.ServerValue.TIMESTAMP};
+  storageStatus('Live-Spielstand wird übertragen …');
+  syncWritePromise = firebase.database().ref('matches/' + id).set(data).then(() => {
+    storageStatus('Live-Spielstand online');
+  }).catch(error => {
+    console.warn('Firebase sync failed:', error);
+    storageStatus('Live-Spielstand konnte nicht übertragen werden. Bitte Verbindung prüfen.', true);
   });
-  return locallySaved;
-}
-
-async function writeMatchJob(job) {
-  const { id, revision } = job;
-  if (!firebaseReady || conflictedMatches.has(String(id))) return;
-  // Events contain the names/photos needed by the ticker. Do not upload the
-  // complete photo-heavy roster on every score change.
-  const {squad: unusedRoster, ...data} = job.data;
-  const ref = firebase.database().ref('matches/' + id);
-  const before = (await ref.once('value')).val();
-  if (before?.revision === revision) {
-    queueRemoteHistory(id, revision, data);
-    const pending = JSON.parse(localStorage.getItem('mt_pending_' + id) || 'null');
-    matchRevisions[id] = revision;
-    localStorage.setItem('mt_revision_' + id, JSON.stringify(revision));
-    if (pending?.revision === revision) localStorage.removeItem('mt_pending_' + id);
-    return;
-  }
-  const expected = matchRevisions[id] === undefined ? job.expected : matchRevisions[id];
-  const result = await ref.transaction(current => {
-    if ((current?.revision || current?.updatedAt || null) !== expected || current?.matchFinished) return;
-    return {...data, revision, updatedAt: firebase.database.ServerValue.TIMESTAMP};
-  }, undefined, false);
-  if (!result.committed) {
-    queueRemoteHistory(id, revision, data, before);
-    matchConflict = true;
-    conflictedMatches.add(String(id));
-    storageStatus('Anderes Gerät oder beendetes Spiel erkannt. Überschreiben blockiert; beide Stände sind gesichert. Bitte Sicherung herunterladen.', true);
-    return;
-  }
-  matchRevisions[id] = revision;
-  localStorage.setItem('mt_revision_' + id, JSON.stringify(revision));
-  const pending = JSON.parse(localStorage.getItem('mt_pending_' + id) || 'null');
-  if (pending?.revision === revision) {
-    localStorage.removeItem('mt_pending_' + id);
-    storageStatus(localStorageFailed ? 'Online gespeichert. Lokale Sicherung fehlgeschlagen – Sicherung herunterladen!' : 'Auf diesem Gerät und online gespeichert.', localStorageFailed);
-  } else if (pending) {
-    pending.expected = revision;
-    localStorage.setItem('mt_pending_' + id, JSON.stringify(pending));
-  }
-  // History starts only after the live transaction has completed and is not
-  // awaited by matchWriteQueue.
-  queueRemoteHistory(id, revision, data, before);
-}
-
-function queueRemoteHistory(id, revision, data, before = null) {
-  remoteHistoryQueue = remoteHistoryQueue.then(async () => {
-    const writes = [firebase.database().ref('matchHistory/' + id + '/' + revision).set({...data, savedAt: Date.now()})];
-    if (before) writes.push(firebase.database().ref('matchHistory/' + id + '/before-' + revision).set(before));
-    await Promise.all(writes);
-  }).catch(() => {
-    if (!localStorage.getItem('mt_pending_' + id) && !conflictedMatches.has(String(id))) {
-      storageStatus('Live-Update aktiv; zusätzliche Server-Historie wird später erneut versucht.', true);
-    }
-  });
+  return true;
 }
 
 // ─── FIREBASE GLOBAL SYNC (squad / schedule / teams) ─────────────────────────
@@ -3502,26 +3360,15 @@ function checkAccess() {
             fixture.result = {home:data.homeScore || 0, away:data.awayScore || 0, ourScore:data.isHomeTeam === false ? data.awayScore : data.homeScore, theirScore:data.isHomeTeam === false ? data.homeScore : data.awayScore, events:Object.values(data.events || {})};
           }
         });
-        const pending = [];
+        const obsoleteSyncKeys = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key.startsWith('mt_pending_')) pending.push(JSON.parse(localStorage.getItem(key)));
+          if (key.startsWith('mt_pending_') || key.startsWith('mt_revision_')) obsoleteSyncKeys.push(key);
         }
-        for (const job of pending) {
-          if ((job.resetId || null) !== localStorage.getItem('mt_reset_id')) continue;
-          // A successful commit may have happened just before the page closed.
-          if (all[job.id]?.revision === job.revision) { matchRevisions[job.id] = job.revision; localStorage.setItem('mt_revision_' + job.id, JSON.stringify(job.revision)); localStorage.removeItem('mt_pending_' + job.id); continue; }
-          matchRevisions[job.id] = job.expected;
-          await withStorageTimeout(writeMatchJob(job));
-          if (!matchConflict) all[job.id] = {...job.data, revision:job.revision};
-        }
-        if (activeMatchId && all[activeMatchId] && !matchConflict) {
-          // Preserve the pre-load local copy for recovery before adopting remote state.
-          archiveMatch(activeMatchId, matchSnapshot());
+        obsoleteSyncKeys.forEach(key => localStorage.removeItem(key));
+        if (activeMatchId && all[activeMatchId]) {
           const data = all[activeMatchId];
           applyMatchSnapshot(activeMatchId, data);
-          matchRevisions[activeMatchId] = data.revision || data.updatedAt || null;
-          localStorage.setItem('mt_revision_' + activeMatchId, JSON.stringify(matchRevisions[activeMatchId]));
           if (data.matchFinished) { activeMatchId = null; updateEndMatchBtn(); }
         }
         Object.entries(all).forEach(([id, data]) => {
@@ -3537,12 +3384,12 @@ function checkAccess() {
         renderSpielplan();
         storageReady = true;
         document.getElementById('storageLoading').style.display = 'none';
-        if (!matchConflict) storageStatus('Speicher bereit. Vorhandene Spiele werden fortgesetzt, nicht zurückgesetzt.');
+        storageStatus('Speicher bereit. Live-Spielstände werden direkt übertragen.');
       } catch(e) {
         // A previously tracked game can continue offline; starting a fixture cannot.
         storageReady = true;
         document.getElementById('storageLoading').style.display = 'none';
-        storageStatus('Offline oder Laden fehlgeschlagen. Kein Spiel neu starten; lokale Sicherung herunterladen.', true);
+        storageStatus('Offline oder Laden fehlgeschlagen. Bitte Verbindung prüfen.', true);
       }
     });
   }
