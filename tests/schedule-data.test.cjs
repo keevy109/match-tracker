@@ -32,11 +32,20 @@ test('archived test matches stay hidden and an upcoming match becomes next', () 
 });
 
 test('a running tracker score is not shown as a completed result', () => {
-  const schedule = {1: {id: 1, date: '2026-09-19', result: {home: 2, away: 1}}};
+  const schedule = {1: {id: 1, date: '2026-09-19', result: null}};
   const matches = {1: {matchFinished: false, homeScore: 2, awayScore: 1}};
   const [match] = normalize(schedule, matches, '2026-09-19');
   assert.equal(match.result, null);
   assert.equal(match.status, 'next');
+});
+
+test('a saved schedule result remains completed when a stale match record says live', () => {
+  const schedule = {1: {id: 1, date: '2026-09-19', result: {home: 7, away: 3}}};
+  const matches = {1: {matchFinished: false, homeScore: 7, awayScore: 3}};
+  const [match] = normalize(schedule, matches, '2026-09-19');
+  assert.equal(match.result, '7:3');
+  assert.equal(match.status, 'past');
+  assert.equal(visibleMatches(matches, schedule)['1'].matchFinished, true);
 });
 
 test('archived tracker runs are excluded from website statistics', () => {

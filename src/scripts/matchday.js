@@ -25,7 +25,7 @@ async function checkAndOpen() {
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
-    const match = spielplan.find(m => m.status === 'next' && m.date === today);
+    const match = spielplan.find(m => m.status === 'next' && !m.result && m.date === today);
     if (!match) return;
 
     populate(match, vereine);

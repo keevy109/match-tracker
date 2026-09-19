@@ -11,10 +11,13 @@
       .map(([key, item]) => {
         const id = item.id ?? key;
         const match = matchRecords[String(id)];
-        const finished = match?.matchFinished === true;
+        const savedResult = typeof item.result === 'string' ? item.result : score(item.result);
+        const finished = match?.matchFinished === true || savedResult !== null;
         const result = finished
-          ? score({home: match.homeScore, away: match.awayScore})
-          : (!match ? (typeof item.result === 'string' ? item.result : score(item.result)) : null);
+          ? (match?.matchFinished === true
+              ? score({home: match.homeScore, away: match.awayScore})
+              : savedResult)
+          : null;
 
         return {
           ...item,
@@ -40,9 +43,17 @@
         if (item.id != null) archivedIds.add(String(item.id));
       }
     });
-    return Object.fromEntries(
+    const visible = Object.fromEntries(
       Object.entries(matches || {}).filter(([id]) => !archivedIds.has(String(id))),
     );
+    Object.entries(schedule || {}).forEach(([key, item]) => {
+      if (!item || item.archived === true || typeof item.result !== 'object') return;
+      const id = String(item.id ?? key);
+      const home = item.result.home, away = item.result.away;
+      if (!visible[id] || !Number.isInteger(home) || !Number.isInteger(away)) return;
+      visible[id] = {...visible[id], homeScore:home, awayScore:away, matchFinished:true};
+    });
+    return visible;
   }
 
   function mergeAdminSchedule(current, items) {

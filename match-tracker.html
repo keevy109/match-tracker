@@ -2915,6 +2915,10 @@ function initFirebase() {
 function syncToFirebase(finished = false) {
   if (!firebaseReady || !storageReady || !activeMatchId || matchTransition) return false;
   const id = String(activeMatchId);
+  const fixture = schedule.find(m => String(m.id) === id);
+  // A saved fixture result is authoritative. A stale open tab must never
+  // turn a completed match back into a live match.
+  if (fixture?.result) finished = true;
   const data = {...matchSnapshot(finished), updatedAt:firebase.database.ServerValue.TIMESTAMP};
   storageStatus('Live-Spielstand wird übertragen …');
   syncWritePromise = firebase.database().ref('matches/' + id).set(data).then(() => {
@@ -3372,7 +3376,8 @@ function checkAccess() {
         if (activeMatchId && all[activeMatchId]) {
           const data = all[activeMatchId];
           applyMatchSnapshot(activeMatchId, data);
-          if (data.matchFinished) { activeMatchId = null; updateEndMatchBtn(); }
+          const fixture = schedule.find(m => String(m.id) === String(activeMatchId));
+          if (data.matchFinished || fixture?.result) { activeMatchId = null; updateEndMatchBtn(); }
         }
         Object.entries(all).forEach(([id, data]) => {
           if (!data.matchFinished || id === 'null') return;
