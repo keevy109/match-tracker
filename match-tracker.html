@@ -1190,6 +1190,7 @@ let storageReady = false;
 let matchTransition = false;
 let matchRevisions = {};
 let matchWriteQueue = Promise.resolve();
+let remoteHistoryQueue = Promise.resolve();
 let matchConflict = false;
 const conflictedMatches = new Set();
 let globalLoaded = false;
@@ -1213,7 +1214,7 @@ function matchSnapshot(finished = false) {
   const { home, away } = getMatchTeams();
   return JSON.parse(JSON.stringify({
     homeTeam: home, awayTeam: away, homeScore, awayScore, isHomeTeam,
-    events: events || [], squad: squad || [], timerBase,
+    events: events || [], timerBase,
     timerOffset, timerRunning: timerBase !== null,
     matchDate: document.getElementById('matchDate').textContent,
     homeLogo: homeLogo || '', awayLogo: awayLogo || '',
@@ -1564,6 +1565,7 @@ function addGoal(team, isOwnGoal, player) {
     scorerNum: player?.num || null,
     scorerId:  player?.id  || null,
     scorerPhoto: player?.photo || '',
+    seasonGoals: player && !isOwnGoal ? (player.goals || 0) + 1 : null,
     snapshot:  `${homeScore}:${awayScore}`
   });
   if (player && !isOwnGoal) {
@@ -3011,18 +3013,13 @@ function syncToFirebase(finished = false) {
 async function writeMatchJob(job) {
   const { id, revision } = job;
   if (!firebaseReady || conflictedMatches.has(String(id))) return;
-  const data = {...job.data, squad:job.data.squad || squad || []};
+  // Events contain the names/photos needed by the ticker. Do not upload the
+  // complete photo-heavy roster on every score change.
+  const {squad: unusedRoster, ...data} = job.data;
   const ref = firebase.database().ref('matches/' + id);
-  // The live match must remain writable even if separate history permissions lag
-  // behind a deployment. A local immutable copy already exists in the outbox.
-  let remoteHistorySaved = true;
-  try {
-    await firebase.database().ref('matchHistory/' + id + '/' + revision).set({...data, savedAt: Date.now()});
-  } catch(e) {
-    remoteHistorySaved = false;
-  }
   const before = (await ref.once('value')).val();
   if (before?.revision === revision) {
+    queueRemoteHistory(id, revision, data);
     const pending = JSON.parse(localStorage.getItem('mt_pending_' + id) || 'null');
     matchRevisions[id] = revision;
     localStorage.setItem('mt_revision_' + id, JSON.stringify(revision));
@@ -3030,18 +3027,12 @@ async function writeMatchJob(job) {
     return;
   }
   const expected = matchRevisions[id] === undefined ? job.expected : matchRevisions[id];
-  if (before) {
-    try {
-      await firebase.database().ref('matchHistory/' + id + '/before-' + revision).set(before);
-    } catch(e) {
-      remoteHistorySaved = false;
-    }
-  }
   const result = await ref.transaction(current => {
     if ((current?.revision || current?.updatedAt || null) !== expected || current?.matchFinished) return;
     return {...data, revision, updatedAt: firebase.database.ServerValue.TIMESTAMP};
   }, undefined, false);
   if (!result.committed) {
+    queueRemoteHistory(id, revision, data, before);
     matchConflict = true;
     conflictedMatches.add(String(id));
     storageStatus('Anderes Gerät oder beendetes Spiel erkannt. Überschreiben blockiert; beide Stände sind gesichert. Bitte Sicherung herunterladen.', true);
@@ -3052,12 +3043,26 @@ async function writeMatchJob(job) {
   const pending = JSON.parse(localStorage.getItem('mt_pending_' + id) || 'null');
   if (pending?.revision === revision) {
     localStorage.removeItem('mt_pending_' + id);
-    const historyWarning = !remoteHistorySaved ? ' Live-Update aktiv; zusätzliche Server-Historie nicht verfügbar.' : '';
-    storageStatus(localStorageFailed ? 'Online gespeichert. Lokale Sicherung fehlgeschlagen – Sicherung herunterladen!' : 'Auf diesem Gerät und online gespeichert.' + historyWarning, localStorageFailed || !remoteHistorySaved);
+    storageStatus(localStorageFailed ? 'Online gespeichert. Lokale Sicherung fehlgeschlagen – Sicherung herunterladen!' : 'Auf diesem Gerät und online gespeichert.', localStorageFailed);
   } else if (pending) {
     pending.expected = revision;
     localStorage.setItem('mt_pending_' + id, JSON.stringify(pending));
   }
+  // History starts only after the live transaction has completed and is not
+  // awaited by matchWriteQueue.
+  queueRemoteHistory(id, revision, data, before);
+}
+
+function queueRemoteHistory(id, revision, data, before = null) {
+  remoteHistoryQueue = remoteHistoryQueue.then(async () => {
+    const writes = [firebase.database().ref('matchHistory/' + id + '/' + revision).set({...data, savedAt: Date.now()})];
+    if (before) writes.push(firebase.database().ref('matchHistory/' + id + '/before-' + revision).set(before));
+    await Promise.all(writes);
+  }).catch(() => {
+    if (!localStorage.getItem('mt_pending_' + id) && !conflictedMatches.has(String(id))) {
+      storageStatus('Live-Update aktiv; zusätzliche Server-Historie wird später erneut versucht.', true);
+    }
+  });
 }
 
 // ─── FIREBASE GLOBAL SYNC (squad / schedule / teams) ─────────────────────────
@@ -3272,7 +3277,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
     if (isGoal && event.scorerId && !event.isOwnGoal) {
       const rawSquad = data.squad || squad || [];
       const sp = (Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad)).find(s => s.id === event.scorerId);
-      const g = sp ? (sp.goals || 0) : 0;
+      const g = event.seasonGoals ?? (sp ? (sp.goals || 0) : 0);
       seasonEl.textContent = g === 1 ? 'Erstes Saisontor' : g > 1 ? g + '. Saisontor' : '';
     } else {
       seasonEl.textContent = '';
