@@ -11,12 +11,8 @@
       .map(([key, item]) => {
         const id = item.id ?? key;
         const match = matchRecords[String(id)];
-        const savedResult = typeof item.result === 'string' ? item.result : score(item.result);
-        const finished = match?.matchFinished === true || savedResult !== null;
-        const result = finished
-          ? (match?.matchFinished === true
-              ? score({home: match.homeScore, away: match.awayScore})
-              : savedResult)
+        const result = match?.matchFinished === true
+          ? score({home: match.homeScore, away: match.awayScore})
           : null;
 
         return {
@@ -37,22 +33,20 @@
 
   function visibleMatches(matches, schedule) {
     const archivedIds = new Set();
+    const scheduledIds = new Set();
     Object.entries(schedule || {}).forEach(([key, item]) => {
+      if (item && item.archived !== true) {
+        scheduledIds.add(String(key));
+        if (item.id != null) scheduledIds.add(String(item.id));
+      }
       if (item?.archived === true) {
         archivedIds.add(String(key));
         if (item.id != null) archivedIds.add(String(item.id));
       }
     });
     const visible = Object.fromEntries(
-      Object.entries(matches || {}).filter(([id]) => !archivedIds.has(String(id))),
+      Object.entries(matches || {}).filter(([id]) => scheduledIds.has(String(id)) && !archivedIds.has(String(id))),
     );
-    Object.entries(schedule || {}).forEach(([key, item]) => {
-      if (!item || item.archived === true || typeof item.result !== 'object') return;
-      const id = String(item.id ?? key);
-      const home = item.result.home, away = item.result.away;
-      if (!visible[id] || !Number.isInteger(home) || !Number.isInteger(away)) return;
-      visible[id] = {...visible[id], homeScore:home, awayScore:away, matchFinished:true};
-    });
     return visible;
   }
 
@@ -85,20 +79,10 @@
       };
       delete merged.home;
       delete merged.status;
-
-      if (typeof item.result === 'string') {
-        const [home, away] = item.result.split(':').map(Number);
-        if (Number.isInteger(home) && Number.isInteger(away) && home >= 0 && away >= 0) {
-          const previous = old.result && typeof old.result === 'object' ? old.result : {};
-          merged.result = {
-            ...previous,
-            home,
-            away,
-            ourScore:merged.isHome ? home : away,
-            theirScore:merged.isHome ? away : home,
-          };
-        }
-      }
+      // Results and events belong exclusively to matches/{id}.
+      delete merged.result;
+      // Appearances belong exclusively to matchParticipants/{id}.
+      delete merged.participantIds;
       updates[key] = merged;
     });
     return updates;

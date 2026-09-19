@@ -39,13 +39,13 @@ test('a running tracker score is not shown as a completed result', () => {
   assert.equal(match.status, 'next');
 });
 
-test('a saved schedule result remains completed when a stale match record says live', () => {
+test('a fixture result is ignored when the authoritative match record is still live', () => {
   const schedule = {1: {id: 1, date: '2026-09-19', result: {home: 7, away: 3}}};
   const matches = {1: {matchFinished: false, homeScore: 7, awayScore: 3}};
   const [match] = normalize(schedule, matches, '2026-09-19');
-  assert.equal(match.result, '7:3');
-  assert.equal(match.status, 'past');
-  assert.equal(visibleMatches(matches, schedule)['1'].matchFinished, true);
+  assert.equal(match.result, null);
+  assert.equal(match.status, 'next');
+  assert.equal(visibleMatches(matches, schedule)['1'].matchFinished, false);
 });
 
 test('archived tracker runs are excluded from website statistics', () => {
@@ -60,13 +60,13 @@ test('archived tracker runs are excluded from website statistics', () => {
   };
   assert.deepEqual(
     Object.keys(visibleMatches(matches, schedule)).sort(),
-    ['orphan', 'real'],
+    ['real'],
   );
 });
 
-test('admin schedule editing preserves ticker events and archives only removed games', () => {
+test('admin schedule editing keeps results out of fixtures and archives only removed games', () => {
   const current = {
-    1: {id: 1, opponent: 'Alt', isHome: true, result: {home: 7, away: 3, events: [{id: 9}]}},
+    1: {id: 1, opponent: 'Alt', isHome: true, result: {home: 7, away: 3, events: [{id: 9}]}, participantIds:[4,5]},
     2: {id: 2, opponent: 'Entfernen', isHome: false},
     3: {id: 3, opponent: 'Alter Test', archived: true},
   };
@@ -75,8 +75,8 @@ test('admin schedule editing preserves ticker events and archives only removed g
     {id: 4, opponent: 'Nächstes Spiel', home: false, date: '2026-09-26', time: '12:00', result: null},
   ]);
   assert.equal(updates['1'].opponent, 'Neu');
-  assert.equal(updates['1'].result.home, 8);
-  assert.equal(updates['1'].result.events.length, 1);
+  assert.equal(updates['1'].result, undefined);
+  assert.equal(updates['1'].participantIds, undefined);
   assert.equal(updates['2'].archived, true);
   assert.equal(updates['3'], undefined);
   assert.equal(updates['4'].isHome, false);

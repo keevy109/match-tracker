@@ -23,6 +23,7 @@
     <nav class="admin-tabs">
       <button class="admin-tab active" data-tab="kader">Kader</button>
       <button class="admin-tab" data-tab="spielplan">Spielplan</button>
+      <button class="admin-tab" data-tab="training">Training</button>
       <button class="admin-tab" data-tab="vereine">Vereine</button>
       <button class="admin-tab" data-tab="news">Aktuelles</button>
     </nav>
@@ -66,9 +67,19 @@
     <div class="item-list" id="spielplanList"></div>
   </section>
 
+  <!-- TRAINING -->
+  <section class="admin-section" data-section="training">
+    <div class="section-header">
+      <span class="section-title">Trainingsbeteiligung</span>
+      <button class="btn-add" onclick="openTrainingForm()">+ Training</button>
+    </div>
+    <p>Tatsächliche Anwesenheit eintragen. Ausgefallene Einheiten werden nicht in die Quote eingerechnet.</p>
+    <div class="item-list" id="trainingList"></div>
+  </section>
+
 <section class="admin-section" data-section="news">
   <div class="section-header"><span class="section-title">Aktuelles</span><button class="btn-add" id="newNews">+ Beitrag</button></div>
-  <p>Hier bearbeitest du Beiträge lokal. Veröffentlicht werden sie mit dem nächsten GitHub-Push.</p>
+  <p>Hier bearbeitest du die Beiträge der Website zentral.</p>
   <div class="item-list" id="newsAdminList"></div>
   <div id="newsEditorPanel" class="news-editor-panel" hidden>
     <div class="form-row"><label class="form-field">Titel<input class="form-input" id="newsTitle" maxlength="160" required></label><label class="form-field">Datum<input class="form-input" id="newsDate" type="date" required></label></div>
@@ -85,7 +96,7 @@
       <button type="button" data-command="undo">Rückgängig</button><button type="button" data-command="redo">Wiederholen</button>
     </div>
     <div id="newsBody" class="news-richtext" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="newsBodyLabel" spellcheck="true"></div>
-    <div class="news-editor-actions"><button class="btn-secondary" id="newsShowPreview" type="button">Vorschau</button><button class="btn-primary" id="newsSave" type="button">Lokal speichern</button></div>
+    <div class="news-editor-actions"><button class="btn-secondary" id="newsShowPreview" type="button">Vorschau</button><button class="btn-primary" id="newsSave" type="button">Speichern</button></div>
     <p id="newsSaveStatus" role="status" aria-live="polite"></p>
     <label class="form-field">Fotos unterhalb des Textes<input id="newsPhotos" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif"></label><div id="newsPhotosList"></div>
     <article id="newsPreview" hidden><img id="newsPreviewImage" alt="Titelbild" hidden><div id="newsPreviewDate"></div><h2 id="newsPreviewTitle"></h2><div id="newsPreviewBody" class="news-richtext"></div><div id="newsPreviewPhotos"></div></article>

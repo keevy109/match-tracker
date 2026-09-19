@@ -714,7 +714,7 @@
 
 <header>
   <div class="match-meta">
-    <input type="text" id="matchTitle" placeholder="Heimteam vs. Gegner" maxlength="40" oninput="updateGoalButtons(); updateScoreLabels(); save()" />
+    <input type="text" id="matchTitle" placeholder="Spiel im Spielplan auswählen" maxlength="80" readonly />
   </div>
   <div class="header-right">
     <div class="match-date" id="matchDate"></div>
@@ -725,8 +725,6 @@
   <button class="tab-btn active" onclick="switchTab('spiel')">Spiel</button>
   <button class="tab-btn" onclick="switchTab('kader')">Kader</button>
   <button class="tab-btn" onclick="switchTab('spielplan')">Spielplan</button>
-  <button class="tab-btn" onclick="switchTab('teams')">Teams</button>
-  <button class="tab-btn" onclick="switchTab('training')">Training</button>
 </nav>
 
 <!-- ═══ TAB: SPIEL ═══ -->
@@ -804,7 +802,6 @@
 
   <div class="reset-row">
     <button class="btn-reset" id="btnEndMatch" onclick="confirmAction('beenden')" style="display:none">Spiel beenden</button>
-    <button class="btn-reset" onclick="confirmAction('spiel')">Neues Spiel</button>
   </div>
 
 </section>
@@ -823,51 +820,9 @@
 <!-- ═══ TAB: SPIELPLAN ═══ -->
 <section class="tab-content" id="tabSpielplan">
   <div class="spielplan-section">
-    <div class="spielplan-add">
-      <div class="spielplan-add-title">Spiel anlegen</div>
-      <form class="spielplan-form" onsubmit="event.preventDefault(); addScheduleMatch()">
-        <label for="spGegner">Gegner</label>
-        <input id="spGegner" list="spGegnerOptions" placeholder="Gegner auswählen oder eingeben" maxlength="80" required oninput="validateSpForm()">
-        <datalist id="spGegnerOptions"></datalist>
-        <label for="spVenue">Spielort</label>
-        <select id="spVenue"><option value="home">Heimspiel</option><option value="away">Auswärtsspiel</option></select>
-        <div class="spielplan-form-row">
-          <label style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0" for="spDate">Datum<input id="spDate" type="date"></label>
-          <label style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0" for="spTime">Uhrzeit<input id="spTime" type="time"></label>
-        </div>
-        <button class="btn-add-match" id="btnAddMatch" type="submit" disabled>Spiel hinzufügen</button>
-      </form>
-    </div>
     <div class="spielplan-list" id="spielplanList">
       <div class="spielplan-empty">Noch keine Spiele geplant</div>
     </div>
-  </div>
-</section>
-
-<section class="tab-content" id="tabTraining">
-  <div class="spielplan-section">
-    <div class="spielplan-add">
-      <div class="spielplan-add-title">Training erfassen</div>
-      <p style="color:var(--muted);font-size:13px">Mittwoch / Freitag · Tatsächliche Anwesenheit eintragen. Andere Tage sind ebenfalls möglich.</p>
-      <form class="spielplan-form" onsubmit="event.preventDefault();editTraining()">
-        <label for="trainingDate">Datum</label><input id="trainingDate" type="date" required>
-        <button class="btn-add-match" type="submit">Anwesenheit auswählen</button>
-      </form>
-    </div>
-    <div class="spielplan-list" id="trainingList"></div>
-  </div>
-</section>
-<!-- ═══ TAB: TEAMS ═══ -->
-<section class="tab-content" id="tabTeams">
-  <div class="teams-section">
-    <span class="section-label">Teams verwalten</span>
-    <div class="teams-add-row">
-      <input type="file" id="teamLogoFile" class="team-logo-upload" accept="image/*" onchange="handleLogoFileChange(this)">
-      <button class="btn-logo-upload" id="btnLogoUpload" onclick="document.getElementById('teamLogoFile').click()">📷 Logo</button>
-      <input type="text" id="newTeamName" class="kader-name-input" placeholder="Teamname" maxlength="40" onkeydown="if(event.key==='Enter') addTeam()">
-      <button class="btn-add-player" onclick="addTeam()">+</button>
-    </div>
-    <div class="teams-list" id="teamsList"></div>
   </div>
 </section>
 
@@ -1022,7 +977,6 @@
 </div>
 
 <script src="./player-stats.js"></script>
-<script src="./training.js"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
 (function() {
@@ -1138,6 +1092,7 @@
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let homeScore = 0, awayScore = 0;
 let events = [], squad = [], schedule = [], teams = [];
+let trainingSessions = {};
 let homeLogo = '', awayLogo = '';
 let homeColor = '', awayColor = '';
 let confirmCallback = null;
@@ -1179,8 +1134,11 @@ function switchTab(name) {
   document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
   const tab = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
   if (tab) tab.classList.add('active');
-  if (name === 'training') renderTraining();
   if (name === 'kader') setTimeout(() => document.getElementById('newPlayerName')?.focus(), 100);
+}
+
+async function loadTrainingForStats() {
+  trainingSessions = (await readStoredValue(firebase.database().ref('trainingSessions'))).val() || {};
 }
 
 // Durable match state: no automatic writes while loading another device's data.
@@ -1265,19 +1223,15 @@ function applyMatchSnapshot(id, data) {
       activeMatchId = d.activeMatchId || null;
       document.getElementById('matchTitle').value  = d.matchTitle || '';
 
-      if (!d.matchReady) {
-        openSetup(squad.length > 0);
-      } else {
-        updateScoreLabels();
-        updateGoalButtons();
-        closeSetup();
-      }
+      updateScoreLabels();
+      updateGoalButtons();
+      closeSetup();
     } else {
       teams = [{ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true }];
-      openSetup(false);
+      closeSetup();
     }
   } catch(e) {
-    openSetup(false);
+    closeSetup();
   }
 
   document.getElementById('matchDate').textContent =
@@ -2028,11 +1982,9 @@ function renderKaderList() {
     item.className='kader-player-item';
     const photoHtml = p.photo
       ? `<img class="player-avatar" src="${p.photo}" alt="">`
-      : `<label class="player-avatar-placeholder" title="Foto hinzufügen">
-           <input type="file" accept="image/*" class="player-photo-file" onchange="updatePlayerPhoto(${p.id}, this)">📷
-         </label>`;
+      : '<span class="player-avatar-placeholder">👤</span>';
     const goalsTag = (p.goals||0) > 0 ? `<span class="kader-player-goals">${p.goals} ⚽</span>` : '';
-    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span>${goalsTag}<span class="kader-player-goals" title="${p.trainingAttended || 0} von ${p.trainingTotal || 0} Einheiten">${p.training || 0}% Training</span><button class="btn-row-edit" onclick="editPlayer(${p.id})" title="Bearbeiten">✎</button><button class="btn-remove-player btn-row-delete" onclick="removePlayer(${p.id})">×</button>`;
+    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span>${goalsTag}<span class="kader-player-goals" title="${p.trainingAttended || 0} von ${p.trainingTotal || 0} Einheiten">${p.training || 0}% Training</span>`;
     list.appendChild(item);
   });
 }
@@ -2195,8 +2147,6 @@ function renderSpielplan() {
       resultHTML = `<span class="spielplan-result ${outcome}">${m.result.home}:${m.result.away}</span>`;
       actionsHTML = `<div class="spielplan-actions">
         <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="exportImageForMatch(${m.id})">📤 Bild</button>
-        <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="editScheduleMatch(${m.id})">✎ Bearbeiten</button>
-        <button class="btn-delete-match" onclick="deleteScheduleMatch(${m.id})">Löschen</button>
       </div>`;
     } else {
       if (activeMatchId === m.id) {
@@ -2205,8 +2155,6 @@ function renderSpielplan() {
       actionsHTML = activeMatchId === m.id ? '' :
         `<div class="spielplan-actions">
           <button class="btn-start-match" onclick="startMatchFromSchedule(${m.id})">Spiel starten</button>
-          <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="editScheduleMatch(${m.id})">✎ Bearbeiten</button>
-          <button class="btn-delete-match" onclick="deleteScheduleMatch(${m.id})">Löschen</button>
         </div>`;
     }
 
@@ -2933,22 +2881,7 @@ function syncToFirebase(finished = false) {
 // ─── FIREBASE GLOBAL SYNC (squad / schedule / teams) ─────────────────────────
 let globalSyncTimeout = null;
 function saveGlobal() {
-  if (!firebaseReady || !globalLoaded || !storageReady) return;
-  clearTimeout(globalSyncTimeout);
-  const captured = JSON.parse(JSON.stringify({squad, teams, schedule}));
-  globalSyncTimeout = setTimeout(async () => {
-    try {
-      await firebase.database().ref('app/schedule').transaction(current => {
-        const merged = new Map(Object.values(current || {}).filter(Boolean).map(m => [String(m.id), m]));
-        captured.schedule.forEach(m => {
-          const previous = merged.get(String(m.id));
-          merged.set(String(m.id), {...previous, ...m, ...(previous?.result ? {result:previous.result} : {})});
-        });
-        return Object.fromEntries(merged);
-      }, undefined, false);
-      await firebase.database().ref('app').update({squad:captured.squad, teams:captured.teams});
-    } catch(e) { storageStatus('Spielplan konnte nicht online gespeichert werden. Bitte Verbindung prüfen.', true); }
-  }, 500);
+  // Stammdaten gehören dem Admin. Der Ticker speichert nur matches/ und matchParticipants/.
 }
 
 async function loadGlobalFromFirebase(cb) {
@@ -2967,13 +2900,9 @@ async function loadGlobalFromFirebase(cb) {
         updateScore(false); renderEvents(); updateEndMatchBtn(); updateTimerDisplay();
       }
       const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
-      if (d.squad    && toArr(d.squad).length)    squad    = toArr(d.squad);
-      if (d.schedule) {
-        const merged = new Map((d.matchResetId ? [] : schedule).map(m => [String(m.id), m]));
-        toArr(d.schedule).forEach(m => { const local = merged.get(String(m.id)); merged.set(String(m.id), {...local, ...m, ...(local?.result && !m.result ? {result:local.result} : {})}); });
-        schedule = [...merged.values()];
-      }
-      if (d.teams    && toArr(d.teams).length)    teams    = toArr(d.teams);
+      squad = toArr(d.squad);
+      schedule = toArr(d.schedule);
+      teams = toArr(d.teams);
       if (!teams.find(t => t.isOurTeam)) {
         teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
       }
@@ -3355,18 +3284,6 @@ function checkAccess() {
     loadGlobalFromFirebase(async () => {
       try {
         const all = (await readStoredValue(firebase.database().ref('matches'))).val() || {};
-        Object.entries(all).forEach(([id, data]) => {
-          if (id === 'null') return;
-          if (data.fixture && !schedule.some(m => String(m.id) === id)) schedule.push(data.fixture);
-          if (data.matchFinished) {
-            let fixture = schedule.find(m => String(m.id) === id);
-            if (!fixture) {
-              fixture = data.fixture || {id:Number(id), opponent:data.isHomeTeam === false ? data.homeTeam : data.awayTeam, isHome:data.isHomeTeam !== false};
-              schedule.push(fixture);
-            }
-            fixture.result = {home:data.homeScore || 0, away:data.awayScore || 0, ourScore:data.isHomeTeam === false ? data.awayScore : data.homeScore, theirScore:data.isHomeTeam === false ? data.homeScore : data.awayScore, events:Object.values(data.events || {})};
-          }
-        });
         const obsoleteSyncKeys = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
@@ -3381,13 +3298,13 @@ function checkAccess() {
         }
         Object.entries(all).forEach(([id, data]) => {
           if (!data.matchFinished || id === 'null') return;
-          let m = schedule.find(m => String(m.id) === id);
-          if (!m) { m = data.fixture || {id:Number(id), opponent:data.isHomeTeam === false ? data.homeTeam : data.awayTeam, isHome:data.isHomeTeam !== false}; schedule.push(m); }
+          const m = schedule.find(m => String(m.id) === id);
+          if (!m) return;
           m.result = {home:data.homeScore || 0, away:data.awayScore || 0, ourScore:data.isHomeTeam === false ? data.awayScore : data.homeScore, theirScore:data.isHomeTeam === false ? data.homeScore : data.awayScore, events:Object.values(data.events || {})};
         });
         const appearances = (await readStoredValue(firebase.database().ref('matchParticipants'))).val() || {};
         schedule.forEach(m => { if (appearances[m.id]) m.participantIds = Object.values(appearances[m.id].playerIds || []); });
-        await loadTraining();
+        await loadTrainingForStats();
         recalculatePlayerStats(); renderKaderList();
         renderSpielplan();
         storageReady = true;

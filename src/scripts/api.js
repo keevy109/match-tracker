@@ -14,6 +14,12 @@ export async function load(collection) {
       if (roster) return globalThis.MatchTrackerStats.calculate(roster, globalThis.MatchTrackerSchedule.visibleMatches(matches, schedule), participants || {}, training || {});
     } catch (error) { console.warn('Kader: gespeicherte lokale Version wird verwendet.', error); }
   }
+  if (collection === 'trainer' || collection === 'news') {
+    try {
+      const shared = await remote(`app/${collection}`);
+      if (shared) return Array.isArray(shared) ? shared : Object.values(shared);
+    } catch (error) { console.warn(`${collection}: statische Version wird verwendet.`, error); }
+  }
   const res = await fetch(`${import.meta.env.BASE_URL}data/${collection}.json`);
   if (!res.ok) return [];
   try { return await res.json(); } catch { return []; }
@@ -22,6 +28,11 @@ export async function save(collection, data) {
   if (collection === 'kader') {
     const res = await fetch(`${DATABASE}/app/squad.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), signal:AbortSignal.timeout(10000)});
     if (!res.ok) throw new Error('Gemeinsamer Kader konnte nicht gespeichert werden.');
+  }
+  if (collection === 'trainer' || collection === 'news') {
+    const res = await fetch(`${DATABASE}/app/${collection}.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), signal:AbortSignal.timeout(10000)});
+    if (!res.ok) throw new Error('Gemeinsame Inhalte konnten nicht gespeichert werden.');
+    return;
   }
   if (!import.meta.env.DEV) return;
   const res = await fetch(`/api/${collection}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
@@ -43,31 +54,12 @@ export async function loadTrackedSchedule() {
 }
 
 export async function saveTrackedSchedule(items) {
-  const [schedule, matches] = await Promise.all([remote('app/schedule'), remote('matches')]);
+  const schedule = await remote('app/schedule');
   const scheduleUpdates = globalThis.MatchTrackerSchedule.mergeAdminSchedule(schedule, items);
   const updates = {};
 
   Object.entries(scheduleUpdates).forEach(([id, fixture]) => {
     updates[`app/schedule/${id}`] = fixture;
-  });
-
-  (items || []).forEach(item => {
-    if (typeof item.result !== 'string') return;
-    const id = String(item.id);
-    const fixture = scheduleUpdates[id];
-    if (!fixture?.result) return;
-    const old = matches?.[id] || {};
-    updates[`matches/${id}`] = {
-      ...old,
-      homeTeam:fixture.isHome ? 'SSV Berghausen' : fixture.opponent,
-      awayTeam:fixture.isHome ? fixture.opponent : 'SSV Berghausen',
-      homeScore:fixture.result.home,
-      awayScore:fixture.result.away,
-      isHomeTeam:fixture.isHome,
-      matchFinished:true,
-      fixture,
-      updatedAt:Date.now(),
-    };
   });
 
   const res = await fetch(`${DATABASE}/.json`, {
@@ -92,4 +84,26 @@ export async function saveTrackedTeams(clubs) {
     signal:AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error('Gemeinsame Teams konnten nicht gespeichert werden.');
+}
+
+export async function loadTrainingSessions() {
+  return (await remote('trainingSessions')) || {};
+}
+
+export async function saveTrainingSession(id, session) {
+  const res = await fetch(`${DATABASE}/trainingSessions/${encodeURIComponent(id)}.json`, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(session),
+    signal:AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error('Training konnte nicht gespeichert werden.');
+}
+
+export async function deleteTrainingSession(id) {
+  const res = await fetch(`${DATABASE}/trainingSessions/${encodeURIComponent(id)}.json`, {
+    method:'DELETE',
+    signal:AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error('Training konnte nicht gelöscht werden.');
 }

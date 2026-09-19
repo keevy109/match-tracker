@@ -25,12 +25,12 @@ test('completed fixture cannot restart; another active match cannot be replaced'
 test('offline start leaves state intact',async()=>{const x=setup();x.c.activeMatchId=null;x.c.navigator.onLine=false;await x.c.startMatchFromSchedule(1);assert.equal(x.c.awayScore,5);assert.equal(x.c.activeMatchId,null);});
 
 async function boot(x) {
- x.c.loadTraining=async()=>{};x.c.checkAccess=()=>true;x.c.initFirebase=()=>true;
+ x.c.loadTrainingForStats=async()=>{};x.c.checkAccess=()=>true;x.c.initFirebase=()=>true;
  x.c.loadGlobalFromFirebase=cb=>{x.boot=cb();};
  vm.runInContext(html.slice(html.lastIndexOf('(function() {'),html.lastIndexOf('</script>')),x.c);
  await x.boot;
 }
 test('reload adopts the saved server score without writing a zero baseline',async()=>{const data={homeTeam:'Home',awayTeam:'Away',homeScore:2,awayScore:5,events:[{id:1}]};const x=setup({matches:{1:data}});x.c.homeScore=0;x.c.awayScore=0;await boot(x);assert.equal(x.c.awayScore,5);assert.deepEqual(x.db.matches[1],data);assert(!x.db['matches/1']);});
 test('obsolete backup outbox keys are discarded during startup',async()=>{const x=setup({matches:{}});x.store.set('mt_pending_1','{}');x.store.set('mt_revision_1','"old"');await boot(x);assert(!x.store.has('mt_pending_1'));assert(!x.store.has('mt_revision_1'));});
-test('completed match is recovered into an empty schedule during reload',async()=>{const x=setup({matches:{1:{homeTeam:'Home',awayTeam:'Away',homeScore:2,awayScore:5,matchFinished:true,events:[{id:1}],isHomeTeam:false}}});x.c.schedule=[];await boot(x);assert.equal(x.c.schedule[0].result.away,5);assert.equal(x.c.activeMatchId,null);assert.equal(x.c.schedule[0].result.events.length,1);});
+test('an orphan match cannot create a fixture outside the admin schedule',async()=>{const x=setup({matches:{1:{homeTeam:'Home',awayTeam:'Away',homeScore:2,awayScore:5,matchFinished:true,events:[{id:1}],isHomeTeam:false}}});x.c.schedule=[];await boot(x);assert.equal(x.c.schedule.length,0);assert.equal(x.c.activeMatchId,null);});
 test('finish then start another fixture preserves the completed result and events',async()=>{const x=setup();x.c.resetTimer=()=>{};x.c.schedule.push({id:2,opponent:'Next',isHome:true});x.c.endCurrentMatch();await x.c.startMatchFromSchedule(2);await x.flush();assert.equal(x.c.activeMatchId,2);assert.equal(x.c.homeScore,0);assert.equal(x.c.events.length,0);assert.equal(x.db['matches/1'].awayScore,5);assert(x.db['matches/1'].matchFinished);assert.equal(x.c.schedule[0].result.away,5);});

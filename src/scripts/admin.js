@@ -13,6 +13,7 @@ let kader    = [];
 let spielplan = [];
 let vereine  = [];
 let trainer  = [];
+let trainingSessions = {};
 let editingId = null;
 let editMode  = null;
 let pendingPhoto           = null;
@@ -26,7 +27,7 @@ let pendingTrainerDetail      = null;
 let pendingTrainerDetailName  = null;
 
 async function uploadImage(subpath, dataUrl, originalName) {
-  if (!import.meta.env.DEV) return '';
+  if (!import.meta.env.DEV) return dataUrl;
   const ext      = (originalName.split('.').pop() || 'jpg').toLowerCase();
   const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
   const res = await fetch(`/api/upload/${subpath}`, {
@@ -45,6 +46,7 @@ async function loadAll() {
   try { spielplan = await api.loadTrackedSchedule(); } catch { spielplan = []; }
   try { vereine   = await api.loadTrackedTeams(); } catch { vereine = []; }
   try { trainer   = await api.load('trainer'); }  catch { trainer = []; }
+  try { trainingSessions = await api.loadTrainingSessions(); } catch { trainingSessions = {}; }
   await migrateFromLocalStorage();
 }
 
@@ -149,6 +151,7 @@ function switchTab(name) {
   document.querySelectorAll('.admin-section').forEach(s =>
     s.classList.toggle('active', s.dataset.section === name));
   if (name === 'vereine') renderVereine();
+  if (name === 'training') renderTraining();
 }
 
 // ── Kader-Rendering ───────────────────────────────────────────────
@@ -187,7 +190,7 @@ function renderSpielplan() {
   }
   el.innerHTML = sorted.map(m => {
     const { day, month } = formatDate(m.date);
-    const isPast = !!m.result, isNext = m.status === 'next';
+    const isPast = !!m.result;
     const teamLine = m.home
       ? `SSV Berghausen vs. ${escHtml(m.opponent)}`
       : `${escHtml(m.opponent)} vs. SSV Berghausen`;
@@ -203,11 +206,9 @@ function renderSpielplan() {
       const won = m.home ? hs > as : as > hs;
       const draw = hs === as;
       rightCol = `<div class="mc-result ${draw ? 'draw' : won ? 'win' : 'loss'}">${m.result}</div>`;
-    } else if (isNext) {
-      rightCol = `<div class="mc-next-label">Nächstes</div>`;
     }
 
-    const cardClass = ['item-card match-card-grid', isNext ? 'is-next' : '', !isPast && !isNext ? 'mc-future' : ''].filter(Boolean).join(' ');
+    const cardClass = ['item-card match-card-grid', !isPast ? 'mc-future' : ''].filter(Boolean).join(' ');
     return `<div class="${cardClass}" data-id="${m.id}">
       <div class="mc-date"><strong>${day}</strong>${month}</div>
       <div class="mc-info">
@@ -216,13 +217,103 @@ function renderSpielplan() {
       </div>
       <div>${rightCol}</div>
       <div class="card-actions">
-        ${!isPast ? `<button class="btn-sm" onclick="openResultForm(${m.id})">Ergebnis</button>` : ''}
-        ${!isNext ? `<button class="btn-icon" onclick="setNextMatch(${m.id})">📌</button>` : ''}
         <button class="btn-icon" onclick="openMatchForm(${m.id})">✏️</button>
         <button class="btn-icon danger" onclick="deleteMatch(${m.id})">🗑</button>
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Training ─────────────────────────────────────────────────────
+function trainingToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function trainingPlayerIds(value) {
+  return Object.values(value || {}).map(String);
+}
+
+function renderTraining() {
+  const el = document.getElementById('trainingList');
+  if (!el) return;
+  const entries = Object.entries(trainingSessions || {}).sort((a, b) => b[0].localeCompare(a[0]));
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty-state">Noch keine Trainingseinheiten erfasst.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([id, session]) => {
+    const date = new Date(`${session.date || id}T12:00:00`).toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', year:'numeric'});
+    const count = trainingPlayerIds(session.playerIds).length;
+    return `<div class="item-card training-card" data-id="${escHtml(id)}">
+      <div>
+        <div class="kader-name">${escHtml(date)}</div>
+        <div class="kader-pos">${session.cancelled ? 'Ausgefallen · zählt nicht zur Beteiligung' : `${count} Spieler anwesend`}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-icon" title="Bearbeiten" onclick="openTrainingForm('${escHtml(id)}')">✏️</button>
+        <button class="btn-icon danger" title="Löschen" onclick="deleteTraining('${escHtml(id)}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openTrainingForm(id = trainingToday()) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(id) || id > trainingToday()) id = trainingToday();
+  editMode = 'training';
+  editingId = id;
+  const session = trainingSessions[id] || {};
+  const selected = new Set(trainingPlayerIds(session.playerIds));
+  const players = kader.slice().sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}));
+  document.getElementById('formPanel').innerHTML = `
+    <div class="form-handle"></div>
+    <div class="form-title">Training erfassen</div>
+    <div class="form-field"><label class="form-label">Datum</label><input class="form-input" id="fTrainingDate" type="date" max="${trainingToday()}" value="${id}"></div>
+    <div class="form-field"><label class="form-label">Status</label><select class="form-select" id="fTrainingCancelled"><option value="no">Durchgeführt</option><option value="yes" ${session.cancelled ? 'selected' : ''}>Ausgefallen</option></select></div>
+    <div class="form-field"><span class="form-label">Anwesende Spieler</span>
+      <div class="training-actions"><button class="btn-sm" type="button" onclick="setAllTrainingPlayers(true)">Alle</button><button class="btn-sm" type="button" onclick="setAllTrainingPlayers(false)">Keine</button></div>
+      <div class="training-player-list">${players.map(p => `<label class="training-player"><input type="checkbox" value="${p.id}" ${selected.has(String(p.id)) ? 'checked' : ''}><span>${escHtml(p.name)}</span></label>`).join('')}</div>
+    </div>
+    <p id="trainingSaveStatus" role="status"></p>
+    <div class="form-actions"><button class="btn-secondary" onclick="closePanel()">Abbrechen</button><button class="btn-primary" onclick="saveTrainingForm()">Speichern</button></div>`;
+  openPanel();
+}
+
+function setAllTrainingPlayers(checked) {
+  document.querySelectorAll('.training-player input').forEach(input => { input.checked = checked; });
+}
+
+async function saveTrainingForm() {
+  const date = document.getElementById('fTrainingDate').value;
+  const status = document.getElementById('trainingSaveStatus');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > trainingToday()) {
+    status.textContent = 'Bitte ein gültiges Datum bis heute wählen.';
+    return;
+  }
+  const existing = trainingSessions[editingId] || trainingSessions[date] || {};
+  const playerIds = Array.from(document.querySelectorAll('.training-player input:checked'), input => Number(input.value));
+  const eligiblePlayerIds = [...new Set([...trainingPlayerIds(existing.eligiblePlayerIds), ...kader.map(p => String(p.id)), ...playerIds.map(String)])].map(Number);
+  const data = {date, cancelled:document.getElementById('fTrainingCancelled').value === 'yes', playerIds, eligiblePlayerIds, revision:crypto.randomUUID(), updatedAt:Date.now()};
+  status.textContent = 'Training wird gespeichert …';
+  try {
+    if (editingId && editingId !== date) await api.deleteTrainingSession(editingId);
+    await api.saveTrainingSession(date, data);
+    if (editingId && editingId !== date) delete trainingSessions[editingId];
+    trainingSessions[date] = data;
+    renderTraining();
+    closePanel();
+  } catch (error) {
+    status.textContent = error.message || 'Training konnte nicht gespeichert werden.';
+  }
+}
+
+async function deleteTraining(id) {
+  if (!confirm('Trainingseinheit wirklich löschen?')) return;
+  try {
+    await api.deleteTrainingSession(id);
+    delete trainingSessions[id];
+    renderTraining();
+  } catch (error) { alert(error.message || 'Training konnte nicht gelöscht werden.'); }
 }
 
 // ── Player-Form ───────────────────────────────────────────────────
@@ -508,9 +599,14 @@ function openPanel() {
 }
 
 function closePanel() {
+  const restoreBasePanel = editMode === 'training';
   document.getElementById('formOverlay').classList.remove('open');
   document.getElementById('formPanel').classList.remove('open');
   editingId = null; editMode = null;
+  if (restoreBasePanel) setTimeout(() => {
+    document.getElementById('formPanel').innerHTML = buildBasePanel();
+    bindFormEvents();
+  }, 300);
 }
 
 function resetPanel() {
@@ -975,6 +1071,7 @@ async function boot() {
     openResultForm, saveResultForm,
     openClubForm,   deleteClub,   saveClubForm,
     openTrainerForm, deleteTrainer, saveTrainerForm,
+    openTrainingForm, saveTrainingForm, deleteTraining, setAllTrainingPlayers,
     closePanel, saveForm, deleteFromForm,
     openCrop,
   });
@@ -983,6 +1080,7 @@ async function boot() {
   renderSpielplan();
   renderVereine();
   renderTrainer();
+  renderTraining();
   await newsReady;
 }
 

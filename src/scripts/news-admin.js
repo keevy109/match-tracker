@@ -43,10 +43,9 @@ async function save(){
  saving=true;lockEditor(true);
  try{
   try{localStorage.setItem('ssv_news_draft_'+current,JSON.stringify(data));}catch{}
-  if(!import.meta.env.DEV)throw Error('Bitte den lokalen Admin öffnen. Beiträge werden lokal gespeichert und anschließend über GitHub veröffentlicht.');
-  if(imageData){const response=await fetch('/api/upload/news',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:crypto.randomUUID()+'.jpg',data:imageData})});if(!response.ok)throw Error('Bild konnte nicht gespeichert werden.');data.image=(await response.json()).url;}
+  if(imageData&&import.meta.env.DEV){const response=await fetch('/api/upload/news',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:crypto.randomUUID()+'.jpg',data:imageData})});if(!response.ok)throw Error('Bild konnte nicht gespeichert werden.');data.image=(await response.json()).url;}
   data.photos=await Promise.all(data.photos.map(uploadPhoto));
-  const next=items.filter(n=>n.id!==current).concat(data);await api.save('news',next);items=next;photos=data.photos;renderPhotos();image=data.image;imageData='';dirty=false;localStorage.removeItem('ssv_news_draft_'+current);render();$('newsSaveStatus').textContent='Lokal gespeichert. Mit dem nächsten GitHub-Push wird der Beitrag veröffentlicht.';
+  const next=items.filter(n=>n.id!==current).concat(data);await api.save('news',next);items=next;photos=data.photos;renderPhotos();image=data.image;imageData='';dirty=false;localStorage.removeItem('ssv_news_draft_'+current);render();$('newsSaveStatus').textContent='Gespeichert und auf der Website veröffentlicht.';
  }catch(error){$('newsSaveStatus').textContent=error.message+' Bitte diesen Tab offen lassen und erneut speichern.';}finally{saving=false;lockEditor(false);}
 }
 export async function init(){
@@ -71,6 +70,7 @@ function safeLinkForEditor(value){try{const url=new URL(value);return ['https:',
 
 async function uploadPhoto(photo){
  if(!photo.startsWith('data:'))return photo;
+ if(!import.meta.env.DEV)return photo;
  const response=await fetch('/api/upload/news',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:crypto.randomUUID()+'.jpg',data:photo})});
  if(!response.ok)throw Error('Foto konnte nicht gespeichert werden.');
  return (await response.json()).url;
