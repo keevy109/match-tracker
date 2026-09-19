@@ -75,9 +75,11 @@ function render(matches) {
 export async function init() {
   let matches = [];
   try {
-    matches = await api.load('spielplan');
+    matches = await api.loadTrackedSchedule();
   } catch {
-    try { matches = JSON.parse(localStorage.getItem('ssv_spielplan') || '[]'); } catch {}
+    try { matches = await api.load('spielplan'); } catch {
+      try { matches = JSON.parse(localStorage.getItem('ssv_spielplan') || '[]'); } catch {}
+    }
   }
   render(matches);
 }

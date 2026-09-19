@@ -20,7 +20,7 @@ export async function init() {
 async function checkAndOpen() {
   try {
     const [spielplan, vereine] = await Promise.all([
-      api.load('spielplan').catch(() => JSON.parse(localStorage.getItem('ssv_spielplan') || '[]')),
+      api.loadTrackedSchedule().catch(() => api.load('spielplan')),
       api.load('vereine').catch(()   => JSON.parse(localStorage.getItem('ssv_vereine')   || '[]')),
     ]);
 

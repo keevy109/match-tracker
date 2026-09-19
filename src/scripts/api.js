@@ -1,4 +1,5 @@
 import '../../public/player-stats.js';
+import '../../public/schedule-data.js';
 const DATABASE = 'https://match-tracker-891ac-default-rtdb.europe-west1.firebasedatabase.app';
 async function remote(path) {
   const res = await fetch(`${DATABASE}/${path}.json`, {signal:AbortSignal.timeout(8000), cache:'no-store'});
@@ -27,3 +28,12 @@ export async function save(collection, data) {
 }
 
 export async function loadMatchRecords() { return remote('matches'); }
+
+export async function loadTrackedSchedule() {
+  const [schedule, matches] = await Promise.all([remote('app/schedule'), remote('matches')]);
+  return globalThis.MatchTrackerSchedule.normalize(
+    schedule,
+    matches,
+    new Date().toISOString().slice(0, 10),
+  );
+}
