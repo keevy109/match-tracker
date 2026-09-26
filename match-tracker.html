@@ -1115,6 +1115,9 @@ const DEFAULT_OUR_TEAM = 'SSV Berghausen';
 function getOurTeamName() {
   return teams.find(team => team.isOurTeam)?.name || DEFAULT_OUR_TEAM;
 }
+function getCanonicalTeamName(name) {
+  return globalThis.MatchTrackerTeams.find(teams, name)?.name || name;
+}
 function getOurTeamSide() {
   const normalize = name => String(name || '').trim().normalize('NFC').toLocaleLowerCase('de');
   const ownName = normalize(getOurTeamName());
@@ -1789,8 +1792,9 @@ function exportImage() {
 function exportImageForMatch(matchId) {
   const m = schedule.find(sm => sm.id === matchId);
   if (!m || !m.result) return;
-  const homeName = m.isHome ? getOurTeamName() : m.opponent;
-  const awayName = m.isHome ? m.opponent : getOurTeamName();
+  const opponentName = getCanonicalTeamName(m.opponent);
+  const homeName = m.isHome ? getOurTeamName() : opponentName;
+  const awayName = m.isHome ? opponentName : getOurTeamName();
   const sorted = [...(m.result.events || [])].sort((a,b) => a.id - b.id);
   let dateStr = '';
   if (m.date) {
@@ -2074,8 +2078,9 @@ async function startMatchFromSchedule(id) {
       resetTimer();
       activeMatchId = id;
       isHomeTeam = match.isHome ?? match.home ?? true;
-      const home = isHomeTeam ? getOurTeamName() : match.opponent;
-      const away = isHomeTeam ? match.opponent : getOurTeamName();
+      const opponentName = getCanonicalTeamName(match.opponent);
+      const home = isHomeTeam ? getOurTeamName() : opponentName;
+      const away = isHomeTeam ? opponentName : getOurTeamName();
       document.getElementById('matchTitle').value = home + ' vs. ' + away;
       document.getElementById('matchDate').textContent = new Date().toLocaleDateString('de-DE');
       resolveLogos(home, away); updateScoreLabels(); updateGoalButtons(); updateScore(false); renderEvents(); updateEndMatchBtn();
@@ -2133,8 +2138,9 @@ function renderSpielplan() {
   }
   list.innerHTML = '';
   schedule.filter(m => !m.archived).forEach(m => {
-    const homeName = m.isHome ? getOurTeamName() : m.opponent;
-    const awayName = m.isHome ? m.opponent : getOurTeamName();
+    const opponentName = getCanonicalTeamName(m.opponent);
+    const homeName = m.isHome ? getOurTeamName() : opponentName;
+    const awayName = m.isHome ? opponentName : getOurTeamName();
     const item = document.createElement('div');
 
     let resultClass = '';

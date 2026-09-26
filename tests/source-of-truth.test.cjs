@@ -22,3 +22,10 @@ test('admin owns the training editor and does not expose result entry',()=>{
   const renderSchedule=adminScript.slice(adminScript.indexOf('function renderSpielplan()'),adminScript.indexOf('// ── Training'));
   assert.doesNotMatch(renderSchedule,/openResultForm|setNextMatch/);
 });
+
+test('tracker always renders and starts fixtures with canonical admin club names',()=>{
+  const renderSchedule=tracker.slice(tracker.indexOf('function renderSpielplan()'),tracker.indexOf('// ── CONFIRM'));
+  const startMatch=tracker.slice(tracker.indexOf('async function startMatchFromSchedule'),tracker.indexOf('function editScheduleMatch'));
+  assert.match(renderSchedule,/getCanonicalTeamName\(m\.opponent\)/);
+  assert.match(startMatch,/getCanonicalTeamName\(match\.opponent\)/);
+});
