@@ -26,8 +26,8 @@
 
       <div class="md-team md-team-home">
         <div class="md-badge" id="mdHomeBadge"><img src="/ssvlogo_white.png" alt="SSV Berghausen"></div>
-        <div class="md-team-name">SSV Berghausen</div>
-        <div class="md-team-sub">E-Jugend</div>
+        <div class="md-team-name" id="mdHomeName">SSV Berghausen</div>
+        <div class="md-team-sub" id="mdHomeShort">E-Jugend</div>
       </div>
 
       <div class="md-center-block">

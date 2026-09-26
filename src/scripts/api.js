@@ -45,12 +45,15 @@ export async function loadMatchRecords() {
 }
 
 export async function loadTrackedSchedule() {
-  const [schedule, matches] = await Promise.all([remote('app/schedule'), remote('matches')]);
+  const [schedule, matches, teams] = await Promise.all([remote('app/schedule'), remote('matches'), remote('app/teams')]);
   return globalThis.MatchTrackerSchedule.normalize(
     schedule,
     matches,
     new Date().toISOString().slice(0, 10),
-  );
+  ).map(item => {
+    const club = globalThis.MatchTrackerTeams.find(teams, item.opponent);
+    return club ? {...item, opponent:club.name, opponentId:club.id} : item;
+  });
 }
 
 export async function saveTrackedSchedule(items) {

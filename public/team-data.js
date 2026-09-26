@@ -12,6 +12,36 @@
     return fallback;
   }
 
+  function canonicalName(value) {
+    const tokens = String(value || '')
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase('de')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    while (tokens.length > 1 && /^(?:[ivx]{1,4}|[a-g]\d+|u\d+|\d{4}|\d)$/i.test(tokens[tokens.length - 1])) {
+      tokens.pop();
+    }
+    return tokens.join(' ');
+  }
+
+  function find(teams, name) {
+    const candidates = list(teams);
+    const exact = String(name || '').trim().toLocaleLowerCase('de');
+    const direct = candidates.find(team => String(team.name || '').trim().toLocaleLowerCase('de') === exact);
+    if (direct) return direct;
+    const wanted = canonicalName(name);
+    if (!wanted) return undefined;
+    return candidates.find(team => {
+      const candidate = canonicalName(team.name);
+      return candidate === wanted ||
+        (candidate.length >= 5 && wanted.endsWith(` ${candidate}`)) ||
+        (wanted.length >= 5 && candidate.endsWith(` ${wanted}`));
+    });
+  }
+
   function normalize(teams) {
     return list(teams).filter(team => !team.isOurTeam).map(team => ({
       ...team,
@@ -43,5 +73,5 @@
     return [...ownTeams, ...opponents];
   }
 
-  root.MatchTrackerTeams = {normalize, merge};
+  root.MatchTrackerTeams = {normalize, merge, canonicalName, find};
 })(globalThis);

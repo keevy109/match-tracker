@@ -976,6 +976,7 @@
   </div>
 </div>
 
+<script src="./team-data.js"></script>
 <script src="./player-stats.js"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
@@ -2533,12 +2534,12 @@ function renderTeamsList() {
 }
 
 function getTeamLogo(name) {
-  const t = teams.find(t => t.name === name);
+  const t = globalThis.MatchTrackerTeams.find(teams, name);
   return t?.logo || '';
 }
 
 function getTeamColor(name) {
-  const t = teams.find(t => t.name === name);
+  const t = globalThis.MatchTrackerTeams.find(teams, name);
   return t?.color || '';
 }
 
@@ -2903,6 +2904,10 @@ async function loadGlobalFromFirebase(cb) {
       squad = toArr(d.squad);
       schedule = toArr(d.schedule);
       teams = toArr(d.teams);
+      schedule = schedule.map(match => {
+        const club = globalThis.MatchTrackerTeams.find(teams, match.opponent);
+        return club ? {...match, opponent:club.name, opponentId:club.id} : match;
+      });
       if (!teams.find(t => t.isOurTeam)) {
         teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
       }
