@@ -13,7 +13,17 @@ function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function render(matches) {
+function escAttr(str) {
+  return esc(str).replace(/"/g, '&quot;');
+}
+
+function teamLabel(name, ownTeam, clubs) {
+  const club = ownTeam ? null : globalThis.MatchTrackerTeams.find(clubs, name);
+  const logo = ownTeam ? `${import.meta.env.BASE_URL}ssvlogo.png` : club?.badge;
+  return `<span class="match-card-team">${logo ? `<img class="match-card-club-logo" src="${escAttr(logo)}" alt="">` : ''}<span>${esc(ownTeam ? 'SSV Berghausen' : (club?.name || name))}</span></span>`;
+}
+
+function render(matches, clubs = []) {
   const container = document.querySelector('.match-list');
   if (!container) return;
 
@@ -36,9 +46,11 @@ function render(matches) {
     const isNext   = m.status === 'next';
     const isFuture = !isPast && !isNext;
 
+    const ownTeam = teamLabel('SSV Berghausen', true, clubs);
+    const opponent = teamLabel(m.opponent, false, clubs);
     const teams = m.home
-      ? `SSV Berghausen vs. ${esc(m.opponent)}`
-      : `${esc(m.opponent)} vs. SSV Berghausen`;
+      ? `${ownTeam}<span class="match-card-versus">vs.</span>${opponent}`
+      : `${opponent}<span class="match-card-versus">vs.</span>${ownTeam}`;
 
     const badgeHtml = !isPast
       ? `<span class="badge ${m.home ? 'badge-home' : 'badge-away'}">${m.home ? 'Heim' : 'Auswärts'}</span>`
@@ -74,6 +86,7 @@ function render(matches) {
 
 export async function init() {
   let matches = [];
+  let clubs = [];
   try {
     matches = await api.loadTrackedSchedule();
   } catch {
@@ -81,5 +94,6 @@ export async function init() {
       try { matches = JSON.parse(localStorage.getItem('ssv_spielplan') || '[]'); } catch {}
     }
   }
-  render(matches);
+  try { clubs = await api.loadTrackedTeams(); } catch {}
+  render(matches, clubs);
 }

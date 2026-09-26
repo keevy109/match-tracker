@@ -19,7 +19,10 @@
   letter-spacing: 0.04em; text-align: center; line-height: 1.4;
 }
 .match-card-date strong { display: block; font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--mono); }
-.match-card-teams { font-size: 15px; font-weight: 600; color: var(--text); }
+.match-card-teams { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; font-size: 15px; font-weight: 600; color: var(--text); }
+.match-card-team { display: inline-flex; align-items: center; gap: 6px; }
+.match-card-club-logo { width: 24px; height: 24px; object-fit: contain; flex: 0 0 auto; }
+.match-card-versus { color: var(--muted); font-family: var(--mono); font-size: 11px; }
 .match-card-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 3px; }
 .match-card-result {
   font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--muted);

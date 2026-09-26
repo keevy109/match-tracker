@@ -19,7 +19,7 @@
         <div class="kd-bg-overlay"></div>
         <div class="kd-inner">
           <!-- Club-Logo oben links -->
-          <img src="/ssvlogo.png" alt="SSV" class="kd-clogo">
+          <img src="/ssvlogo_white.png" alt="SSV" class="kd-clogo">
           <!-- Bewertung + Name -->
           <div class="kd-head">
             <div class="kd-rating-col">

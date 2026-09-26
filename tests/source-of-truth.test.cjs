@@ -29,3 +29,13 @@ test('tracker always renders and starts fixtures with canonical admin club names
   assert.match(renderSchedule,/getCanonicalTeamName\(m\.opponent\)/);
   assert.match(startMatch,/getCanonicalTeamName\(match\.opponent\)/);
 });
+
+test('new crest is limited to team contexts while branding keeps the white logo',()=>{
+  const read=relative=>fs.readFileSync(path.join(__dirname,'..',relative),'utf8');
+  assert.match(read('src/sections/nav.frag'),/ssvlogo_white\.png/);
+  assert.match(read('src/sections/splash.frag'),/ssvlogo_white\.png/);
+  assert.match(read('src/sections/kader.frag'),/ssvlogo_white\.png/);
+  assert.match(read('src/sections/matchday-modal.frag'),/ssvlogo\.png/);
+  assert.match(read('src/scripts/spielplan.js'),/ssvlogo\.png/);
+  assert.match(tracker,/const OUR_TEAM_LOGO = '\.\/ssvlogo\.png'/);
+});

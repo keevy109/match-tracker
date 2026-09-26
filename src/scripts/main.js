@@ -12,7 +12,9 @@ import footerHtml    from '../sections/footer.frag?raw';
 import modalHtml        from '../sections/news-modal.frag?raw';
 import matchdayHtml    from '../sections/matchday-modal.frag?raw';
 
-import logoUrl from '/ssvlogo.png';
+import brandLogoUrl from '/ssvlogo_white.png';
+
+const clubLogoUrl = `${import.meta.env.BASE_URL}ssvlogo.png`;
 
 import { init as initNews } from './news.js';
 import { init as initHero } from './hero.js';
@@ -31,7 +33,9 @@ initTheme();
 const app = document.getElementById('app');
 const rawHtml = splashHtml + navHtml + heroHtml + tickerHtml + spielplanHtml +
   kaderHtml + aktuellesHtml + kontaktHtml + footerHtml + modalHtml + matchdayHtml;
-app.innerHTML = rawHtml.replaceAll('/ssvlogo.png', logoUrl);
+app.innerHTML = rawHtml
+  .replaceAll('/ssvlogo_white.png', brandLogoUrl)
+  .replaceAll('/ssvlogo.png', clubLogoUrl);
 
 // Module initialisieren
 initBackground();

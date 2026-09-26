@@ -1,7 +1,7 @@
 <nav class="nav">
   <div class="nav-inner">
     <a class="nav-brand" href="index.html">
-      <div class="nav-crest"><img src="/ssvlogo.png" alt="SSV Berghausen"></div>
+      <div class="nav-crest"><img src="/ssvlogo_white.png" alt="SSV Berghausen"></div>
     </a>
     <div class="nav-links">
       <a class="nav-link" href="#spielplan">Spielplan</a>

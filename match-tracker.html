@@ -1112,6 +1112,7 @@ function elapsedSeconds() {
 }
 
 const DEFAULT_OUR_TEAM = 'SSV Berghausen';
+const OUR_TEAM_LOGO = './ssvlogo.png';
 function getOurTeamName() {
   return teams.find(team => team.isOurTeam)?.name || DEFAULT_OUR_TEAM;
 }
@@ -2526,8 +2527,9 @@ function renderTeamsList() {
     const item = document.createElement('div');
     item.className = 'team-item';
     const swatchStyle = t.color ? `style="background:${t.color};width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:6px;flex-shrink:0"` : '';
+    const teamLogo = t.isOurTeam ? OUR_TEAM_LOGO : t.logo;
     item.innerHTML = `
-      ${t.logo ? `<img class="team-item-logo" src="${t.logo}" alt="">` : `<div class="team-item-logo-placeholder"></div>`}
+      ${teamLogo ? `<img class="team-item-logo" src="${teamLogo}" alt="">` : `<div class="team-item-logo-placeholder"></div>`}
       <span class="team-item-name">${esc(t.name)}</span>${t.color ? `<span ${swatchStyle}></span>` : ''}
       ${t.isOurTeam ? `<span class="team-item-badge">Unser Team</span>` : ''}
       <button class="btn-row-edit" onclick="editTeam(${t.id})" title="Bearbeiten">✎</button>
@@ -2541,6 +2543,7 @@ function renderTeamsList() {
 
 function getTeamLogo(name) {
   const t = globalThis.MatchTrackerTeams.find(teams, name);
+  if (t?.isOurTeam || getCanonicalTeamName(name) === getOurTeamName()) return OUR_TEAM_LOGO;
   return t?.logo || '';
 }
 
