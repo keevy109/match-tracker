@@ -43,7 +43,7 @@
     rgba(255,220,80,1.00) 50%, rgba(230,150,0,0.55) 57%, rgba(210,120,0,0.00) 64%, transparent 72%
   );
   background-repeat: no-repeat; background-size: 220% 100%; background-position: -70% 0;
-  -webkit-mask-image: url('/ssvlogo_white.png'); mask-image: url('/ssvlogo_white.png');
+  -webkit-mask-image: url('/ssvlogo.png'); mask-image: url('/ssvlogo.png');
   -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
   animation: logo-sweep 4.5s ease-in-out infinite;

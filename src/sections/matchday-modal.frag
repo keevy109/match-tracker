@@ -1,7 +1,7 @@
 <!-- ── Spieltags-Ergebnisbanner ───────────────────────────────────── -->
 <div class="matchday-banner" id="matchdayBanner">
   <div class="mdb-slot">
-    <div class="mdb-badge" id="mdbHomeBadge"><img src="/ssvlogo_white.png" alt="SSV Berghausen"></div>
+    <div class="mdb-badge" id="mdbHomeBadge"><img src="/ssvlogo.png" alt="SSV Berghausen"></div>
   </div>
   <div class="mdb-score" id="mdbScore">–&thinsp;:&thinsp;–</div>
   <div class="mdb-slot">
@@ -25,7 +25,7 @@
       <div class="md-side-label md-label-home">HEIM</div>
 
       <div class="md-team md-team-home">
-        <div class="md-badge" id="mdHomeBadge"><img src="/ssvlogo_white.png" alt="SSV Berghausen"></div>
+        <div class="md-badge" id="mdHomeBadge"><img src="/ssvlogo.png" alt="SSV Berghausen"></div>
         <div class="md-team-name" id="mdHomeName">SSV Berghausen</div>
         <div class="md-team-sub" id="mdHomeShort">E-Jugend</div>
       </div>
