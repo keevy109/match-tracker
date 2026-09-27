@@ -152,6 +152,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
 .mc-result.win  { color: #4d7a00; }
 .mc-result.loss { color: var(--red); }
 .mc-result.draw { color: var(--muted); }
+.mc-result.abandoned { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
 .mc-next-label {
   font-family: var(--mono); font-size: 10px; color: var(--accent);
   letter-spacing: 0.06em; text-align: right;

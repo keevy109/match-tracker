@@ -353,12 +353,14 @@
   .spielplan-item.has-result { border-left-color: var(--accent); }
   .spielplan-item.is-loss { border-left-color: var(--red); }
   .spielplan-item.is-draw { border-left-color: var(--own); }
+  .spielplan-item.is-abandoned { border-left-color: var(--muted); }
   .spielplan-item-top { display: flex; justify-content: space-between; align-items: center; }
   .spielplan-teams { font-size: 14px; font-weight: 600; }
   .spielplan-result { font-family: var(--mono); font-size: 16px; font-weight: 700; }
   .spielplan-result.win { color: var(--accent); }
   .spielplan-result.loss { color: var(--red); }
   .spielplan-result.draw { color: var(--own); }
+  .spielplan-result.abandoned { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
   .spielplan-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
   .spielplan-actions { display: flex; gap: 8px; margin-top: 4px; }
   .btn-start-match {
@@ -707,7 +709,7 @@
 
 <!-- Ticker header (only visible in ticker mode) -->
 <div class="ticker-header">
-  <div class="ticker-live-badge"><div class="ticker-live-dot"></div> LIVE</div>
+  <div class="ticker-live-badge" id="tickerLiveBadge"><div class="ticker-live-dot"></div> LIVE</div>
   <div class="ticker-date" id="tickerDate"></div>
   <div class="ticker-clock" id="tickerClock"></div>
 </div>
@@ -802,6 +804,7 @@
 
   <div class="reset-row">
     <button class="btn-reset" id="btnEndMatch" onclick="confirmAction('beenden')" style="display:none">Spiel beenden</button>
+    <button class="btn-reset" id="btnAbandonMatch" onclick="confirmAction('abbruch')" style="display:none">Spielabbruch</button>
   </div>
 
 </section>
@@ -1166,7 +1169,7 @@ function storageStatus(message, failed = false) {
   if (el) { el.textContent = message; el.style.color = failed ? '#ff6262' : '#aaa'; }
 }
 
-function matchSnapshot(finished = false) {
+function matchSnapshot(finished = false, abandoned = false) {
   const { home, away } = getMatchTeams();
   return JSON.parse(JSON.stringify({
     homeTeam: home, awayTeam: away, homeScore, awayScore, isHomeTeam,
@@ -1175,7 +1178,7 @@ function matchSnapshot(finished = false) {
     matchDate: document.getElementById('matchDate').textContent,
     homeLogo: homeLogo || '', awayLogo: awayLogo || '',
     homeColor: homeColor || '', awayColor: awayColor || '',
-    matchFinished: finished,
+    matchFinished: finished, abandoned: abandoned === true,
     fixture: schedule.find(m => String(m.id) === String(activeMatchId)) || null
   }));
 }
@@ -2092,7 +2095,7 @@ async function startMatchFromSchedule(id) {
   if (String(activeMatchId) === String(id)) save(true);
 }
 
-function endCurrentMatch() {
+function endCurrentMatch(abandoned = false) {
   if (!activeMatchId) return;
   const idx = schedule.findIndex(m => m.id === activeMatchId);
   if (idx === -1) return;
@@ -2111,9 +2114,10 @@ function endCurrentMatch() {
     theirScore,
     events: [...events]
   };
+  schedule[idx].abandoned = abandoned === true;
 
   // Capture final score AND events before detaching the match.
-  if (!syncToFirebase(true)) {
+  if (!syncToFirebase(true, abandoned)) {
     showToast('Das Ergebnis konnte nicht auf dem Gerät gesichert werden. Bitte Sicherung herunterladen; das Spiel bleibt geöffnet.');
     return;
   }
@@ -2122,12 +2126,14 @@ function endCurrentMatch() {
   renderSpielplan();
   save();
   switchTab('spielplan');
-  showToast('Ergebnis auf diesem Gerät gesichert. Du kannst jetzt das nächste Spiel starten.');
+  showToast(abandoned ? 'Spielabbruch gespeichert. Tore und Gegentore werden gezählt.' : 'Ergebnis auf diesem Gerät gesichert. Du kannst jetzt das nächste Spiel starten.');
 }
 
 function updateEndMatchBtn() {
   const btn = document.getElementById('btnEndMatch');
   btn.style.display = activeMatchId ? 'block' : 'none';
+  const abandonBtn = document.getElementById('btnAbandonMatch');
+  if (abandonBtn) abandonBtn.style.display = activeMatchId ? 'block' : 'none';
 }
 
 function renderSpielplan() {
@@ -2148,7 +2154,10 @@ function renderSpielplan() {
     let resultHTML = '';
     let actionsHTML = '';
 
-    if (m.result) {
+    if (m.abandoned) {
+      resultClass = 'is-abandoned';
+      resultHTML = '<span class="spielplan-result abandoned">Abbruch</span>';
+    } else if (m.result) {
       const { ourScore, theirScore } = m.result;
       const outcome = ourScore > theirScore ? 'win' : ourScore < theirScore ? 'loss' : 'draw';
       resultClass = outcome === 'win' ? 'has-result' : outcome === 'loss' ? 'is-loss' : 'is-draw';
@@ -2198,6 +2207,10 @@ function confirmAction(type) {
     cfg = { icon:'🏁', title:'Spiel beenden?', msg:'Das Ergebnis wird im Spielplan gespeichert.',
       btn: 'Beenden',
       cb: ()=>{ endCurrentMatch(); } };
+  } else if (type === 'abbruch') {
+    cfg = { icon:'⚠️', title:'Spiel als abgebrochen beenden?', msg:'Der aktuelle Spielstand zählt für Tore und Gegentore, aber nicht als Sieg, Niederlage oder Unentschieden.',
+      btn: 'Abbruch speichern',
+      cb: ()=>{ endCurrentMatch(true); } };
   } else {
     cfg = { icon:'⚠️', title:'Neues Spiel starten?', msg:'Spielstand, Tore und Uhr werden zurückgesetzt. Der Kader bleibt erhalten.',
       cb: ()=>{ if (activeMatchId) { showToast('Bitte das laufende Spiel zuerst beenden.'); return; } events=[]; homeScore=0; awayScore=0; activeMatchId=null; resetTimer(); document.getElementById('matchTitle').value=''; updateScore(false); renderEvents(); updateEndMatchBtn(); save(false); openSetup(true); } };
@@ -2870,14 +2883,14 @@ function initFirebase() {
   }
 }
 
-function syncToFirebase(finished = false) {
+function syncToFirebase(finished = false, abandoned = false) {
   if (!firebaseReady || !storageReady || !activeMatchId || matchTransition) return false;
   const id = String(activeMatchId);
   const fixture = schedule.find(m => String(m.id) === id);
   // A saved fixture result is authoritative. A stale open tab must never
   // turn a completed match back into a live match.
   if (fixture?.result) finished = true;
-  const data = {...matchSnapshot(finished), updatedAt:firebase.database.ServerValue.TIMESTAMP};
+  const data = {...matchSnapshot(finished, abandoned), updatedAt:firebase.database.ServerValue.TIMESTAMP};
   storageStatus('Live-Spielstand wird übertragen …');
   syncWritePromise = firebase.database().ref('matches/' + id).set(data).then(() => {
     storageStatus('Live-Spielstand online');
@@ -2964,7 +2977,7 @@ function initTickerMode(matchId) {
     const clockEl = document.getElementById('tickerClock');
     if (!clockEl) return;
     if (tickerData.matchFinished) {
-      clockEl.textContent = 'Spiel beendet';
+      clockEl.textContent = tickerData.abandoned ? 'Spiel abgebrochen' : 'Spiel beendet';
       return;
     }
     const offset = tickerData.timerOffset || 0;
@@ -3136,6 +3149,12 @@ function showGoalOverlay(event, data, onDone = () => {}) {
 }
 
 function updateTickerUI(data, lastScore) {
+  const liveBadge = document.getElementById('tickerLiveBadge');
+  if (liveBadge) liveBadge.innerHTML = data.abandoned
+    ? '<div class="ticker-live-dot"></div> ABBRUCH'
+    : data.matchFinished
+      ? '<div class="ticker-live-dot"></div> ENDE'
+      : '<div class="ticker-live-dot"></div> LIVE';
   // Apply team colors from Firebase data (with contrast correction for dark bg)
   if (data.homeColor || data.awayColor) {
     const root = document.documentElement;
@@ -3209,7 +3228,7 @@ function updateTickerUI(data, lastScore) {
   }
 
   // Page title
-  const statusTag = data.matchFinished ? '– Abpfiff' : '– LIVE';
+  const statusTag = data.abandoned ? '– Abbruch' : data.matchFinished ? '– Abpfiff' : '– LIVE';
   document.title = `${data.homeScore ?? 0}:${data.awayScore ?? 0} ${data.homeTeam||''} vs ${data.awayTeam||''} ${statusTag}`;
 }
 
@@ -3314,6 +3333,7 @@ function checkAccess() {
           if (!data.matchFinished || id === 'null') return;
           const m = schedule.find(m => String(m.id) === id);
           if (!m) return;
+          m.abandoned = data.abandoned === true;
           m.result = {home:data.homeScore || 0, away:data.awayScore || 0, ourScore:data.isHomeTeam === false ? data.awayScore : data.homeScore, theirScore:data.isHomeTeam === false ? data.homeScore : data.awayScore, events:Object.values(data.events || {})};
         });
         const appearances = (await readStoredValue(firebase.database().ref('matchParticipants'))).val() || {};

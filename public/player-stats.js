@@ -41,6 +41,7 @@
       const scored = match.isHomeTeam === false ? away : home;
       const conceded = match.isHomeTeam === false ? home : away;
       totals.played++; totals.scored += scored; totals.conceded += conceded;
+      if (match.abandoned === true) return;
       if (scored > conceded) totals.wins++;
       if (scored < conceded) totals.losses++;
     });

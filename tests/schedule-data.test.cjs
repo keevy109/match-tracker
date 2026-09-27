@@ -39,6 +39,15 @@ test('a running tracker score is not shown as a completed result', () => {
   assert.equal(match.status, 'next');
 });
 
+test('an abandoned match is completed without publishing its score as a result', () => {
+  const schedule = {1: {id: 1, date: '2026-09-26', opponent: 'Solingen', isHome: false}};
+  const matches = {1: {matchFinished: true, abandoned: true, homeScore: 8, awayScore: 3}};
+  const [match] = normalize(schedule, matches, '2026-09-27');
+  assert.equal(match.result, null);
+  assert.equal(match.abandoned, true);
+  assert.equal(match.status, 'abandoned');
+});
+
 test('a fixture result is ignored when the authoritative match record is still live', () => {
   const schedule = {1: {id: 1, date: '2026-09-19', result: {home: 7, away: 3}}};
   const matches = {1: {matchFinished: false, homeScore: 7, awayScore: 3}};

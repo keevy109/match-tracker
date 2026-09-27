@@ -30,6 +30,7 @@
 }
 .match-card-result.win  { color: #4d7a00; }
 .match-card-result.loss { color: var(--red); }
+.match-card-result.abandoned { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
 .badge {
   display: inline-block; font-family: var(--mono); font-size: 10px;
   letter-spacing: 0.08em; text-transform: uppercase;

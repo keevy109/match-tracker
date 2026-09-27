@@ -190,7 +190,7 @@ function renderSpielplan() {
   }
   el.innerHTML = sorted.map(m => {
     const { day, month } = formatDate(m.date);
-    const isPast = !!m.result;
+    const isPast = !!m.result || m.abandoned === true;
     const teamLine = m.home
       ? `SSV Berghausen vs. ${escHtml(m.opponent)}`
       : `${escHtml(m.opponent)} vs. SSV Berghausen`;
@@ -201,7 +201,9 @@ function renderSpielplan() {
     ].filter(Boolean).join(' · ');
 
     let rightCol = '';
-    if (isPast) {
+    if (m.abandoned) {
+      rightCol = '<div class="mc-result abandoned">Abbruch</div>';
+    } else if (isPast) {
       const [hs, as] = (m.result || '0:0').split(':').map(Number);
       const won = m.home ? hs > as : as > hs;
       const draw = hs === as;

@@ -11,7 +11,9 @@
       .map(([key, item]) => {
         const id = item.id ?? key;
         const match = matchRecords[String(id)];
-        const result = match?.matchFinished === true
+        const finished = match?.matchFinished === true;
+        const abandoned = finished && match?.abandoned === true;
+        const result = finished && !abandoned
           ? score({home: match.homeScore, away: match.awayScore})
           : null;
 
@@ -20,12 +22,13 @@
           id,
           home: typeof item.home === 'boolean' ? item.home : item.isHome !== false,
           result,
-          status: result ? 'past' : 'future',
+          abandoned,
+          status: abandoned ? 'abandoned' : result ? 'past' : 'future',
         };
       });
 
     const next = items
-      .filter(item => !item.result && (!item.date || item.date >= today))
+      .filter(item => item.status === 'future' && (!item.date || item.date >= today))
       .sort((a, b) => `${a.date || ''}T${a.time || ''}`.localeCompare(`${b.date || ''}T${b.time || ''}`))[0];
     if (next) next.status = 'next';
     return items;

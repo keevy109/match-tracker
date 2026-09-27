@@ -36,13 +36,13 @@ function render(matches, clubs = []) {
   }
 
   const total  = sorted.length;
-  const played = sorted.filter(m => m.result).length;
+  const played = sorted.filter(m => m.result || m.abandoned).length;
   const badge  = document.querySelector('.section-title .placeholder-badge');
   if (badge) badge.textContent = `${played}/${total}`;
 
   container.innerHTML = sorted.map(m => {
     const { day, month } = formatDate(m.date);
-    const isPast   = !!m.result;
+    const isPast   = !!m.result || m.abandoned === true;
     const isNext   = m.status === 'next';
     const isFuture = !isPast && !isNext;
 
@@ -60,7 +60,9 @@ function render(matches, clubs = []) {
     const meta  = [venue, m.time ? m.time + ' Uhr' : ''].filter(Boolean).join(' · ');
 
     let rightCol = '';
-    if (isPast) {
+    if (m.abandoned) {
+      rightCol = '<div class="match-card-result abandoned">Abbruch</div>';
+    } else if (isPast) {
       const [hs, as] = (m.result || '0:0').split(':').map(Number);
       const won  = m.home ? hs > as : as > hs;
       const draw = hs === as;
