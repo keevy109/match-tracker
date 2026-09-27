@@ -40,6 +40,14 @@ async function uploadImage(subpath, dataUrl, originalName) {
   return url;
 }
 
+function detailMediaPreview(src) {
+  if (!src) return '🖼️';
+  const video = /^data:video\//i.test(src) || /\.(?:mp4|webm|ogg)(?:[?#].*)?$/i.test(src);
+  return video
+    ? `<video src="${src}" muted loop playsinline autoplay></video>`
+    : `<img src="${src}" alt="">`;
+}
+
 // ── Persistence ───────────────────────────────────────────────────
 async function loadAll() {
   try { kader     = await api.load('kader'); }    catch { kader = []; }
@@ -343,7 +351,7 @@ function openPlayerForm(id) {
   if (photoInput) photoInput.value = '';
 
   const detailPreview = document.getElementById('fPlayerDetailPreview');
-  if (detailPreview) detailPreview.innerHTML = p?.detailPhoto ? `<img src="${p.detailPhoto}" alt="">` : '🖼️';
+  if (detailPreview) detailPreview.innerHTML = detailMediaPreview(p?.detailPhoto);
   const detailInput = document.getElementById('fPlayerDetail');
   if (detailInput) detailInput.value = '';
 
@@ -436,7 +444,7 @@ function openTrainerForm(id) {
   if (photoInput) photoInput.value = '';
 
   const detailPreview = document.getElementById('fTrainerDetailPreview');
-  if (detailPreview) detailPreview.innerHTML = t?.detailPhoto ? `<img src="${t.detailPhoto}" alt="">` : '🖼️';
+  if (detailPreview) detailPreview.innerHTML = detailMediaPreview(t?.detailPhoto);
   const detailInput = document.getElementById('fTrainerDetail');
   if (detailInput) detailInput.value = '';
 
@@ -679,7 +687,7 @@ function buildBasePanel() {
           <label class="form-label">Detail-Hintergrund <span style="font-weight:400;color:var(--muted)">(Karte)</span></label>
           <div class="photo-field">
             <div id="fPlayerDetailPreview" class="photo-preview photo-preview--wide">🖼️</div>
-            <label class="photo-btn">Bild wählen<input type="file" id="fPlayerDetail" accept="image/*"></label>
+            <label class="photo-btn">Bild/Video wählen<input type="file" id="fPlayerDetail" accept="image/*,video/mp4,video/webm"></label>
           </div>
         </div>
       </div>
@@ -747,7 +755,7 @@ function buildBasePanel() {
           <label class="form-label">Detail-Hintergrund <span style="font-weight:400;color:var(--muted)">(Karte)</span></label>
           <div class="photo-field">
             <div id="fTrainerDetailPreview" class="photo-preview photo-preview--wide">🖼️</div>
-            <label class="photo-btn">Bild wählen<input type="file" id="fTrainerDetail" accept="image/*"></label>
+            <label class="photo-btn">Bild/Video wählen<input type="file" id="fTrainerDetail" accept="image/*,video/mp4,video/webm"></label>
           </div>
         </div>
       </div>
@@ -836,7 +844,7 @@ function bindFormEvents() {
         const apply = url => {
           onDone(url, name);
           const preview = document.getElementById(previewId);
-          if (preview) preview.innerHTML = `<img src="${url}" alt="">`;
+          if (preview) preview.innerHTML = crop ? `<img src="${url}" alt="">` : detailMediaPreview(url);
         };
         if (crop) openCrop(ev.target.result, apply);
         else apply(ev.target.result);

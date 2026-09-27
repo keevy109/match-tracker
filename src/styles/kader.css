@@ -179,6 +179,9 @@
   z-index: 1;
   transition: opacity 0.6s ease;
 }
+.kd-bg-video[hidden],
+.kd-bg-img[hidden] { display: none; }
+.kd-bg-video { background: #05080c; }
 /* Vorheriges Bild: absolut hinter dem aktiven */
 .kd-bg-prev {
   position: absolute;

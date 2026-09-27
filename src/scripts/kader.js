@@ -134,47 +134,55 @@ function placeDetail() {
   }
 }
 
+function isVideoSource(src) {
+  return /^data:video\//i.test(src || '') || /\.(?:mp4|webm|ogg)(?:[?#].*)?$/i.test(src || '');
+}
+
+function activeBg() {
+  const video = document.getElementById('kdVideo');
+  const image = document.getElementById('kdBg');
+  return video && !video.hidden ? video : image;
+}
+
 function setBg(src) {
-  const bg = document.getElementById('kdBg');
-  if (bg) bg.src = src || '';
+  const image = document.getElementById('kdBg');
+  const video = document.getElementById('kdVideo');
+  if (!image || !video) return;
+
+  if (isVideoSource(src)) {
+    image.hidden = true;
+    image.src = '';
+    video.hidden = false;
+    if (video.getAttribute('src') !== src) {
+      video.src = src;
+      video.load();
+    }
+    video.play().catch(() => {});
+    return;
+  }
+
+  video.pause();
+  video.hidden = true;
+  video.removeAttribute('src');
+  video.load();
+  image.hidden = false;
+  image.src = src || '';
 }
 
 function crossfadeBg(src) {
-  const bg = document.getElementById('kdBg');
+  const bg = activeBg();
   if (!bg) return;
-
-  const container = bg.parentElement;
-
-  // Altes Bild auf Prev-Ebene (dahinter) sichern
-  let prev = document.getElementById('kdBgPrev');
-  if (!prev) {
-    prev = document.createElement('img');
-    prev.id = 'kdBgPrev';
-    prev.alt = '';
-    prev.className = 'kd-bg-prev';
-    container.insertBefore(prev, bg);
-  }
-  prev.src = bg.src;
-
-  // Neues Bild sofort auf 0 (ohne Transition)
-  bg.style.transition = 'none';
   bg.style.opacity = '0';
-  void bg.offsetHeight; // Reflow
-
-  // CSS-Transition wieder aktiv
-  bg.style.transition = '';
-
-  if (!src) { bg.src = ''; bg.style.opacity = ''; return; }
-
-  const img = new Image();
-  const done = () => {
-    bg.src = src;
-    void bg.offsetHeight; // Reflow damit Transition von 0→1 feuert
-    bg.style.opacity = '';
-  };
-  img.onload = done;
-  img.onerror = done;
-  img.src = src;
+  setTimeout(() => {
+    setBg(src);
+    const next = activeBg();
+    if (!next) return;
+    next.style.transition = 'none';
+    next.style.opacity = '0';
+    void next.offsetHeight;
+    next.style.transition = '';
+    requestAnimationFrame(() => { next.style.opacity = ''; });
+  }, 250);
 }
 
 function applyPlayerContent(player) {
