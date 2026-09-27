@@ -62,4 +62,7 @@ test('player detail cards support videos and use the supplied player clips',()=>
   const jonah=JSON.parse(read('public/data/kader.json')).find(player=>player.name==='Jonah');
   assert.equal(jonah.detailPhoto,'uploads/kader/detail/1774612459953_viggle.mp4');
   assert.equal(fs.existsSync(path.join(__dirname,'../public',jonah.detailPhoto)),true);
+  const max=JSON.parse(read('public/data/kader.json')).find(player=>player.name==='Max');
+  assert.equal(max.detailPhoto,'uploads/kader/detail/1783802799906_viggle.mp4');
+  assert.equal(fs.existsSync(path.join(__dirname,'../public',max.detailPhoto)),true);
 });
