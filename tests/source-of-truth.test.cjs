@@ -47,7 +47,7 @@ test('abandoned fixtures retain image export with an explicit intermediate-score
   assert.match(renderSchedule,/if \(m\.abandoned\)[\s\S]*?exportImageForMatch/);
 });
 
-test('player detail cards support videos and Grigorios uses the supplied clip',()=>{
+test('player detail cards support videos and use the supplied player clips',()=>{
   const read=relative=>fs.readFileSync(path.join(__dirname,'..',relative),'utf8');
   const fragment=read('src/sections/kader.frag');
   const script=read('src/scripts/kader.js');
@@ -59,4 +59,7 @@ test('player detail cards support videos and Grigorios uses the supplied clip',(
   const grigorios=JSON.parse(read('public/data/kader.json')).find(player=>player.name==='Grigorios');
   assert.equal(grigorios.detailPhoto,'uploads/kader/detail/1783855173705_uywz5o8pbzc.mp4');
   assert.equal(fs.existsSync(path.join(__dirname,'../public',grigorios.detailPhoto)),true);
+  const jonah=JSON.parse(read('public/data/kader.json')).find(player=>player.name==='Jonah');
+  assert.equal(jonah.detailPhoto,'uploads/kader/detail/1774612459953_viggle.mp4');
+  assert.equal(fs.existsSync(path.join(__dirname,'../public',jonah.detailPhoto)),true);
 });
