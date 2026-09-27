@@ -183,6 +183,7 @@
 .kd-bg-img[hidden] { display: none; }
 .kd-bg-video { background: #05080c; }
 .kader-detail.kd-has-video { cursor: pointer; }
+.kader-detail.kd-rewinding { cursor: progress; }
 /* Vorheriges Bild: absolut hinter dem aktiven */
 .kd-bg-prev {
   position: absolute;

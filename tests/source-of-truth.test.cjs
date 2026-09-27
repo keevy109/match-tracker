@@ -54,7 +54,8 @@ test('player detail cards support videos and Grigorios uses the supplied clip',(
   assert.match(fragment,/<video id="kdVideo"[^>]*muted[^>]*playsinline/);
   assert.doesNotMatch(fragment,/<video id="kdVideo"[^>]*loop/);
   assert.match(script,/function isVideoSource\(src\)/);
-  assert.match(script,/kaderDetail[^\n]*addEventListener\('click',[\s\S]*?video\.currentTime = 0/);
+  assert.match(script,/function rewindAndReplay\(video\)[\s\S]*?startAt - \(now - startedAt\) \/ 1000/);
+  assert.match(script,/kaderDetail[^\n]*addEventListener\('click',[\s\S]*?rewindAndReplay\(video\)/);
   const grigorios=JSON.parse(read('public/data/kader.json')).find(player=>player.name==='Grigorios');
   assert.equal(grigorios.detailPhoto,'uploads/kader/detail/1783855173705_uywz5o8pbzc.mp4');
   assert.equal(fs.existsSync(path.join(__dirname,'../public',grigorios.detailPhoto)),true);

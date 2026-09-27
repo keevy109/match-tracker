@@ -25,6 +25,7 @@ let squad   = [];
 let coaches = [];
 let sortField = 'name';
 let sortDir   = 1;
+let rewindFrame = null;
 
 const SORT_COLS = [
   { field: 'num',      label: '#',      right: false },
@@ -144,15 +145,57 @@ function activeBg() {
   return video && !video.hidden ? video : image;
 }
 
+function cancelVideoRewind() {
+  if (rewindFrame !== null) cancelAnimationFrame(rewindFrame);
+  rewindFrame = null;
+  document.getElementById('kaderDetail')?.classList.remove('kd-rewinding');
+}
+
+function rewindAndReplay(video) {
+  if (rewindFrame !== null || video.hidden) return;
+  video.pause();
+
+  const startAt = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  if (startAt <= 0.02) {
+    video.currentTime = 0;
+    video.play().catch(() => {});
+    return;
+  }
+
+  const source = video.currentSrc;
+  const startedAt = performance.now();
+  const detail = document.getElementById('kaderDetail');
+  detail?.classList.add('kd-rewinding');
+
+  const step = now => {
+    if (video.hidden || video.currentSrc !== source) {
+      cancelVideoRewind();
+      return;
+    }
+    video.currentTime = Math.max(0, startAt - (now - startedAt) / 1000);
+    if (video.currentTime > 0.02) {
+      rewindFrame = requestAnimationFrame(step);
+      return;
+    }
+    rewindFrame = null;
+    detail?.classList.remove('kd-rewinding');
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  };
+
+  rewindFrame = requestAnimationFrame(step);
+}
+
 function setBg(src) {
   const image = document.getElementById('kdBg');
   const video = document.getElementById('kdVideo');
   const detail = document.getElementById('kaderDetail');
   if (!image || !video) return;
+  cancelVideoRewind();
 
   if (isVideoSource(src)) {
     detail?.classList.add('kd-has-video');
-    if (detail) detail.title = 'Klicken, um das Video erneut abzuspielen';
+    if (detail) detail.title = 'Klicken, um das Video zurückzuspulen und erneut abzuspielen';
     image.hidden = true;
     image.src = '';
     video.hidden = false;
@@ -317,8 +360,7 @@ export async function init() {
   document.getElementById('kaderDetail')?.addEventListener('click', () => {
     const video = document.getElementById('kdVideo');
     if (!video || video.hidden) return;
-    video.currentTime = 0;
-    video.play().catch(() => {});
+    rewindAndReplay(video);
   });
 
   window.addEventListener('resize', () => {
