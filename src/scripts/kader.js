@@ -147,20 +147,27 @@ function activeBg() {
 function setBg(src) {
   const image = document.getElementById('kdBg');
   const video = document.getElementById('kdVideo');
+  const detail = document.getElementById('kaderDetail');
   if (!image || !video) return;
 
   if (isVideoSource(src)) {
+    detail?.classList.add('kd-has-video');
+    if (detail) detail.title = 'Klicken, um das Video erneut abzuspielen';
     image.hidden = true;
     image.src = '';
     video.hidden = false;
     if (video.getAttribute('src') !== src) {
       video.src = src;
       video.load();
+    } else {
+      video.currentTime = 0;
     }
     video.play().catch(() => {});
     return;
   }
 
+  detail?.classList.remove('kd-has-video');
+  if (detail) detail.removeAttribute('title');
   video.pause();
   video.hidden = true;
   video.removeAttribute('src');
@@ -306,6 +313,13 @@ export async function init() {
 
   renderKader();
   renderTrainer();
+
+  document.getElementById('kaderDetail')?.addEventListener('click', () => {
+    const video = document.getElementById('kdVideo');
+    if (!video || video.hidden) return;
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  });
 
   window.addEventListener('resize', () => {
     const detail = document.getElementById('kaderDetail');

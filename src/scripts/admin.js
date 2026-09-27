@@ -44,7 +44,7 @@ function detailMediaPreview(src) {
   if (!src) return '🖼️';
   const video = /^data:video\//i.test(src) || /\.(?:mp4|webm|ogg)(?:[?#].*)?$/i.test(src);
   return video
-    ? `<video src="${src}" muted loop playsinline autoplay></video>`
+    ? `<video src="${src}" muted playsinline autoplay></video>`
     : `<img src="${src}" alt="">`;
 }
 

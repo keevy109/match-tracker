@@ -16,7 +16,7 @@
       <!-- Rechte Spalte: Detail-Panel -->
       <div class="kader-detail" id="kaderDetail">
         <img id="kdBg" class="kd-bg-img" src="" alt="">
-        <video id="kdVideo" class="kd-bg-img kd-bg-video" muted loop playsinline preload="metadata" hidden></video>
+        <video id="kdVideo" class="kd-bg-img kd-bg-video" muted playsinline preload="metadata" hidden></video>
         <div class="kd-bg-overlay"></div>
         <div class="kd-inner">
           <!-- Club-Logo oben links -->
