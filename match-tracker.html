@@ -1630,7 +1630,7 @@ function getCanvasColors() {
   };
 }
 
-function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr }) {
+function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr, statusLabel = '' }) {
   sorted = sorted.filter(e => !e.typ || e.typ === 'tor' || e.typ === 'wechsel');
   const colors = getCanvasColors();
   const canvas = document.getElementById('exportCanvas');
@@ -1669,6 +1669,12 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
   ctx.font = '600 28px monospace';
   ctx.textAlign = 'center';
   ctx.fillText(dateStr, w / 2, 60);
+
+  if (statusLabel) {
+    ctx.fillStyle = '#f5a623';
+    ctx.font = '700 24px monospace';
+    ctx.fillText(statusLabel, w / 2, 100);
+  }
 
   // ── Team names ────────────────────────────────────────────
   ctx.font = 'bold 44px sans-serif';
@@ -1768,16 +1774,16 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function shareCanvas(canvas) {
+function shareCanvas(canvas, filename = 'ergebnis.png') {
   canvas.toBlob(blob => {
     if (!blob) { showToast('Fehler beim Erstellen'); return; }
-    const file = new File([blob], 'ergebnis.png', { type: 'image/png' });
+    const file = new File([blob], filename, { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file] }).catch(() => {});
     } else {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'ergebnis.png';
+      a.href = url; a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
       showToast('Bild heruntergeladen');
@@ -1807,8 +1813,16 @@ function exportImageForMatch(matchId) {
   } else {
     dateStr = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
   }
-  const canvas = renderMatchCanvas({ homeName, awayName, hScore: m.result.home, aScore: m.result.away, sorted, dateStr });
-  shareCanvas(canvas);
+  const canvas = renderMatchCanvas({
+    homeName,
+    awayName,
+    hScore: m.result.home,
+    aScore: m.result.away,
+    sorted,
+    dateStr,
+    statusLabel: m.abandoned ? 'ABBRUCH · ZWISCHENSTAND' : '',
+  });
+  shareCanvas(canvas, m.abandoned ? 'spielabbruch.png' : 'ergebnis.png');
 }
 
 function showToast(msg) {
@@ -2157,6 +2171,9 @@ function renderSpielplan() {
     if (m.abandoned) {
       resultClass = 'is-abandoned';
       resultHTML = '<span class="spielplan-result abandoned">Abbruch</span>';
+      actionsHTML = `<div class="spielplan-actions">
+        <button class="btn-row-edit" style="font-size:13px;padding:5px 10px;border-radius:7px;border:1px solid var(--border);color:var(--muted)" onclick="exportImageForMatch(${m.id})">📤 Bild</button>
+      </div>`;
     } else if (m.result) {
       const { ourScore, theirScore } = m.result;
       const outcome = ourScore > theirScore ? 'win' : ourScore < theirScore ? 'loss' : 'draw';

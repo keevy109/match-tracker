@@ -39,3 +39,10 @@ test('new crest is limited to team contexts while branding keeps the white logo'
   assert.match(read('src/scripts/spielplan.js'),/ssvlogo\.png/);
   assert.match(tracker,/const OUR_TEAM_LOGO = '\.\/ssvlogo\.png'/);
 });
+
+test('abandoned fixtures retain image export with an explicit intermediate-score label',()=>{
+  assert.match(tracker,/statusLabel: m\.abandoned \? 'ABBRUCH · ZWISCHENSTAND'/);
+  assert.match(tracker,/shareCanvas\(canvas, m\.abandoned \? 'spielabbruch\.png'/);
+  const renderSchedule=tracker.slice(tracker.indexOf('function renderSpielplan()'),tracker.indexOf('// ── CONFIRM'));
+  assert.match(renderSchedule,/if \(m\.abandoned\)[\s\S]*?exportImageForMatch/);
+});
