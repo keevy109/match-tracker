@@ -28,9 +28,9 @@ test('completed fixture cannot restart; another active match cannot be replaced'
 test('offline start leaves state intact',async()=>{const x=setup();x.c.activeMatchId=null;x.c.navigator.onLine=false;await x.c.startMatchFromSchedule(1);assert.equal(x.c.awayScore,5);assert.equal(x.c.activeMatchId,null);});
 
 async function boot(x) {
- x.c.loadTrainingForStats=async()=>{};x.c.checkAccess=()=>true;x.c.initFirebase=()=>true;
+ x.c.loadTrainingForStats=async()=>{};x.c.loadPlayerDetailMedia=async()=>{};x.c.checkAccess=()=>true;x.c.initFirebase=()=>true;
  x.c.loadGlobalFromFirebase=cb=>{x.boot=cb();};
- vm.runInContext(html.slice(html.lastIndexOf('(function() {'),html.lastIndexOf('</script>')),x.c);
+ await vm.runInContext(html.slice(html.lastIndexOf('(async function() {'),html.lastIndexOf('</script>')),x.c);
  await x.boot;
 }
 test('reload adopts the saved server score without writing a zero baseline',async()=>{const data={homeTeam:'Home',awayTeam:'Away',homeScore:2,awayScore:5,events:[{id:1}]};const x=setup({matches:{1:data}});x.c.homeScore=0;x.c.awayScore=0;await boot(x);assert.equal(x.c.awayScore,5);assert.deepEqual(x.db.matches[1],data);assert(!x.db['matches/1']);});
