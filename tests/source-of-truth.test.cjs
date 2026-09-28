@@ -132,3 +132,11 @@ test('dev tracker previews goals and other events with the spectator overlay',()
   assert.match(tracker,/function addGoal\([\s\S]*?previewDevTickerOverlay\(event\)/);
   assert.match(tracker,/async function saveEventModal\([\s\S]*?previewDevTickerOverlay\(ev\)/);
 });
+
+test('transparent overlay portraits extend above their smaller avatar circles',()=>{
+  const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
+  assert.match(tracker,/\.goal-overlay-card\.has-photo::before\s*\{[^}]*width:\s*132px[^}]*border-radius:\s*50%/);
+  assert.match(tracker,/\.goal-overlay-player-photo\s*\{[^}]*object-fit:\s*contain[^}]*transform:\s*translate\(-50%,\s*-100%\)/);
+  assert.match(tracker,/\.substitution-avatar\s*\{[^}]*overflow:\s*visible/);
+  assert.match(tracker,/\.substitution-avatar::before\s*\{[^}]*width:\s*78%[^}]*border-radius:\s*50%/);
+});

@@ -328,10 +328,11 @@
   .player-btn-photo-placeholder { width: 44px; height: 44px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
   /* Goal overlay player photo */
-  .goal-overlay-player-photo { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 4px solid var(--home-color); background: #222; position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); z-index: 1; }
-  .goal-overlay-card.away-glow .goal-overlay-player-photo { border-color: var(--away-color); }
-  .goal-overlay-card.own-glow .goal-overlay-player-photo { border-color: var(--own); }
-  .goal-overlay-card.has-photo { padding-top: 116px; }
+  .goal-overlay-card.has-photo::before { content: ''; width: 132px; height: 132px; border-radius: 50%; border: 4px solid var(--home-color); background: #222; position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); z-index: 0; }
+  .goal-overlay-card.away-glow.has-photo::before { border-color: var(--away-color); }
+  .goal-overlay-card.own-glow.has-photo::before { border-color: var(--own); }
+  .goal-overlay-player-photo { width: 172px; height: 172px; object-fit: contain; object-position: center bottom; background: transparent; position: absolute; top: 68px; left: 50%; transform: translate(-50%, -100%); z-index: 1; }
+  .goal-overlay-card.has-photo { padding-top: 108px; }
   .goal-overlay-logo { width: 80px; height: 80px; object-fit: contain; margin-bottom: 12px; }
 
   /* SPIELPLAN TAB */
@@ -659,8 +660,10 @@
   .substitution-out { --sub-color:#ff6262; }
   .substitution-in { --sub-color:#55df8c; }
   .substitution-label { color:var(--sub-color); font-size:16px; font-weight:800; margin-bottom:12px; }
-  .substitution-avatar { width:min(96px,100%); aspect-ratio:1; border:3px solid var(--sub-color); border-radius:50%; overflow:hidden; margin:0 auto 10px; background:#222; display:grid; place-items:center; font-size:40px; }
-  .substitution-avatar img { width:100%; height:100%; object-fit:cover; }
+  .substitution-avatar { width:min(96px,100%); aspect-ratio:1; position:relative; overflow:visible; margin:0 auto 10px; display:grid; place-items:center; font-size:40px; }
+  .substitution-avatar::before { content:''; width:78%; height:78%; position:absolute; left:50%; bottom:0; transform:translateX(-50%); border:3px solid var(--sub-color); border-radius:50%; background:#222; z-index:0; }
+  .substitution-avatar img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center bottom; z-index:1; }
+  .substitution-avatar span { position:relative; z-index:1; }
   .substitution-name { color:var(--sub-color); font-size:18px; font-weight:700; overflow-wrap:anywhere; }
   .goal-overlay-card.event-message { max-width: 480px; max-height: 85vh; overflow-y: auto; }
   .event-message .goal-overlay-scorer { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
