@@ -13,7 +13,7 @@
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a class="btn-primary" href="match-tracker.html">Trainer-Ansicht öffnen</a>
-        <a class="btn-secondary" href="match-tracker.html?ticker=demo" style="border-color:#2e2e2e;color:#f0f0f0">Eltern-Ansicht Demo</a>
+        <a class="btn-secondary" href="match-tracker.html?dev=1" style="border-color:#2e2e2e;color:#f0f0f0">Tracker testen</a>
       </div>
     </div>
 

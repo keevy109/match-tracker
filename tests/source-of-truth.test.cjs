@@ -120,3 +120,8 @@ test('tracker roster views use the current player portraits',()=>{
   assert.match(tracker,/function editParticipants\(id\)[\s\S]*?class="player-avatar" src="\$\{esc\(p\.photo\)\}"/);
   assert.match(tracker,/\.player-avatar \{[^}]*object-fit:\s*contain[^}]*object-position:\s*center bottom/s);
 });
+
+test('website links to the isolated tracker test mode',()=>{
+  const ticker=fs.readFileSync(path.join(__dirname,'../src/sections/ticker.frag'),'utf8');
+  assert.match(ticker,/href="match-tracker\.html\?dev=1"[^>]*>Tracker testen</);
+});

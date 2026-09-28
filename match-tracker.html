@@ -56,6 +56,19 @@
     position: relative;
   }
 
+  .dev-banner {
+    display: none; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 9px 14px; background: #c8f542; color: #101010;
+    font-family: var(--mono); font-size: 11px; font-weight: 800;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .dev-mode .dev-banner { display: flex; }
+  .dev-banner button {
+    border: 1px solid #101010; border-radius: 5px; background: transparent;
+    color: #101010; padding: 5px 7px; font: inherit; cursor: pointer;
+  }
+  .dev-mode .admin-edit-link { display: none !important; }
+
   header {
     padding: 18px 20px 0;
     display: flex;
@@ -706,6 +719,10 @@
 </head>
 <body>
 <canvas id="stadium-bg" aria-hidden="true"></canvas>
+<div class="dev-banner" id="devBanner">
+  <span>Testmodus · nichts wird veröffentlicht</span>
+  <button type="button" onclick="resetDevMode()">Zurücksetzen</button>
+</div>
 
 <!-- Ticker header (only visible in ticker mode) -->
 <div class="ticker-header">
@@ -814,7 +831,7 @@
   <div class="kader-section">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
       <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#666">Kader</span>
-      <a href="admin.html" style="font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:#FF8341;text-decoration:none;border:1px solid rgba(255,131,65,0.3);padding:6px 12px;border-radius:6px">✏️ Im Admin bearbeiten</a>
+      <a class="admin-edit-link" href="admin.html" style="font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:#FF8341;text-decoration:none;border:1px solid rgba(255,131,65,0.3);padding:6px 12px;border-radius:6px">✏️ Im Admin bearbeiten</a>
     </div>
     <div class="kader-list" id="kaderList"></div>
   </div>
@@ -1094,6 +1111,9 @@
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
+const PAGE_PARAMS = new URLSearchParams(window.location.search);
+const DEV_MODE = PAGE_PARAMS.get('dev') === '1';
+const STATE_KEY = DEV_MODE ? 'matchtracker_dev_v1' : 'matchtracker_v3';
 let homeScore = 0, awayScore = 0;
 let events = [], squad = [], schedule = [], teams = [];
 let trainingSessions = {};
@@ -1103,6 +1123,12 @@ let confirmCallback = null;
 let isHomeTeam = true;
 let setupVenue = null;
 let activeMatchId = null; // links to schedule entry
+
+function resetDevMode() {
+  if (!DEV_MODE) return;
+  localStorage.removeItem(STATE_KEY);
+  window.location.reload();
+}
 
 // Timer: wall-clock approach
 let timerBase   = null;
@@ -1202,12 +1228,15 @@ function applyMatchSnapshot(id, data) {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 (function init() {
   // Skip normal init in ticker mode
-  if (new URLSearchParams(window.location.search).get('ticker')) return;
+  if (PAGE_PARAMS.get('ticker')) return;
+  if (DEV_MODE) document.body.classList.add('dev-mode');
   try {
-    const d = JSON.parse(localStorage.getItem('matchtracker_v3') || 'null');
+    const d = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
     // Kader + Spielplan aus Admin-Keys laden (ssv_kader / ssv_spielplan)
-    try { const k = JSON.parse(localStorage.getItem('ssv_kader') || '[]'); if (k.length) squad = k; } catch {}
-    try { const sp = JSON.parse(localStorage.getItem('ssv_spielplan') || '[]'); if (sp.length) schedule = sp; } catch {}
+    if (!DEV_MODE) {
+      try { const k = JSON.parse(localStorage.getItem('ssv_kader') || '[]'); if (k.length) squad = k; } catch {}
+      try { const sp = JSON.parse(localStorage.getItem('ssv_spielplan') || '[]'); if (sp.length) schedule = sp; } catch {}
+    }
 
     if (d) {
       homeScore     = d.homeScore     || 0;
@@ -1266,12 +1295,12 @@ function applyMatchSnapshot(id, data) {
 
 // ─── PERSIST ──────────────────────────────────────────────────────────────────
 function save(matchReady) {
-  if (!storageReady || matchTransition || new URLSearchParams(window.location.search).has('ticker')) return;
+  if (!storageReady || matchTransition || PAGE_PARAMS.has('ticker')) return;
   localStorageFailed = false;
   recalculatePlayerStats();
   try {
-    const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
-    localStorage.setItem('matchtracker_v3', JSON.stringify({
+    const existing = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+    localStorage.setItem(STATE_KEY, JSON.stringify({
       ...existing,
       homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo, homeColor, awayColor,
       timerOffset: elapsedSeconds(),
@@ -1282,6 +1311,10 @@ function save(matchReady) {
       matchReady: matchReady !== undefined ? matchReady : (existing.matchReady || false),
     }));
   } catch(e) { localStorageFailed = true; storageStatus('Gerätespeicher voll oder gesperrt! Bitte Sicherung herunterladen und Tab offen lassen.', true); }
+  if (DEV_MODE) {
+    storageStatus('Testmodus: Änderungen sind nur auf diesem Gerät gespeichert.');
+    return;
+  }
   syncToFirebase();
   saveGlobal();
 }
@@ -1998,6 +2031,13 @@ function editParticipants(id) {
   }).join('')}<p id="participantStatus" role="status"></p>`, async () => {
     const playerIds = Array.from(document.querySelectorAll('.participant-check:checked'), el => Number(el.value));
     const status = document.getElementById('participantStatus');
+    if (DEV_MODE) {
+      match.participantIds = playerIds;
+      recalculatePlayerStats(); renderKaderList(); save();
+      document.getElementById('editSheet').classList.remove('active');
+      showToast('Test-Einsätze nur lokal gespeichert.');
+      return;
+    }
     status.textContent = 'Einsätze werden gespeichert …';
     try {
       await withStorageTimeout(firebase.database().ref('matchParticipants/' + id).set({playerIds, complete:true, updatedAt:Date.now()}));
@@ -2099,14 +2139,8 @@ async function startMatchFromSchedule(id) {
   if (activeMatchId) { showToast('Bitte das laufende Spiel zuerst beenden.'); return; }
   matchTransition = true;
   try {
-    // Never reset an existing match. Starting requires a successful server read.
-    if (!firebaseReady || !navigator.onLine) throw new Error('offline');
-    const snap = await readStoredValue(firebase.database().ref('matches/' + id));
-    const existing = snap.val();
-    if (existing?.matchFinished || match.result) { showToast('Dieses Spiel ist beendet. Das Ergebnis bleibt im Spielplan.'); return; }
-    if (existing) {
-      applyMatchSnapshot(id, existing);
-    } else {
+    if (DEV_MODE) {
+      if (match.result) { showToast('Dieses Testspiel ist beendet. Über „Zurücksetzen“ kannst du neu beginnen.'); return; }
       homeScore = 0; awayScore = 0; events = [];
       resetTimer();
       activeMatchId = id;
@@ -2117,6 +2151,26 @@ async function startMatchFromSchedule(id) {
       document.getElementById('matchTitle').value = home + ' vs. ' + away;
       document.getElementById('matchDate').textContent = new Date().toLocaleDateString('de-DE');
       resolveLogos(home, away); updateScoreLabels(); updateGoalButtons(); updateScore(false); renderEvents(); updateEndMatchBtn();
+    } else {
+      // Never reset an existing match. Starting requires a successful server read.
+      if (!firebaseReady || !navigator.onLine) throw new Error('offline');
+      const snap = await readStoredValue(firebase.database().ref('matches/' + id));
+      const existing = snap.val();
+      if (existing?.matchFinished || match.result) { showToast('Dieses Spiel ist beendet. Das Ergebnis bleibt im Spielplan.'); return; }
+      if (existing) {
+        applyMatchSnapshot(id, existing);
+      } else {
+        homeScore = 0; awayScore = 0; events = [];
+        resetTimer();
+        activeMatchId = id;
+        isHomeTeam = match.isHome ?? match.home ?? true;
+        const opponentName = getCanonicalTeamName(match.opponent);
+        const home = isHomeTeam ? getOurTeamName() : opponentName;
+        const away = isHomeTeam ? opponentName : getOurTeamName();
+        document.getElementById('matchTitle').value = home + ' vs. ' + away;
+        document.getElementById('matchDate').textContent = new Date().toLocaleDateString('de-DE');
+        resolveLogos(home, away); updateScoreLabels(); updateGoalButtons(); updateScore(false); renderEvents(); updateEndMatchBtn();
+      }
     }
     switchTab('spiel');
   } catch(e) { storageStatus('Spiel konnte nicht sicher geladen werden. Bitte Verbindung prüfen und erneut versuchen.', true); }
@@ -2155,7 +2209,8 @@ function endCurrentMatch(abandoned = false) {
   renderSpielplan();
   save();
   switchTab('spielplan');
-  showToast(abandoned ? 'Spielabbruch gespeichert. Tore und Gegentore werden gezählt.' : 'Ergebnis auf diesem Gerät gesichert. Du kannst jetzt das nächste Spiel starten.');
+  if (DEV_MODE) showToast('Testspiel beendet. Es wurde nichts veröffentlicht oder gezählt.');
+  else showToast(abandoned ? 'Spielabbruch gespeichert. Tore und Gegentore werden gezählt.' : 'Ergebnis auf diesem Gerät gesichert. Du kannst jetzt das nächste Spiel starten.');
 }
 
 function updateEndMatchBtn() {
@@ -2907,7 +2962,7 @@ function initFirebase() {
     firebaseReady = true;
     // Show ticker button when Firebase is configured
     const btn = document.getElementById('btnTickerShare');
-    if (btn) btn.style.display = '';
+    if (btn && !DEV_MODE) btn.style.display = '';
     return true;
   } catch(e) {
     console.warn('Firebase init failed:', e);
@@ -2916,6 +2971,10 @@ function initFirebase() {
 }
 
 function syncToFirebase(finished = false, abandoned = false) {
+  if (DEV_MODE) {
+    storageStatus('Testmodus: keine Übertragung an den Live-Ticker.');
+    return true;
+  }
   if (!firebaseReady || !storageReady || !activeMatchId || matchTransition) return false;
   const id = String(activeMatchId);
   const fixture = schedule.find(m => String(m.id) === id);
@@ -2945,7 +3004,7 @@ async function loadGlobalFromFirebase(cb) {
     const snap = await readStoredValue(firebase.database().ref('app'));
     const d = snap.val();
     if (d) {
-      if (d.matchResetId && localStorage.getItem('mt_reset_id') !== d.matchResetId) {
+      if (!DEV_MODE && d.matchResetId && localStorage.getItem('mt_reset_id') !== d.matchResetId) {
         localStorage.setItem('mt_before_reset_' + d.matchResetId, localStorage.getItem('matchtracker_v3') || '{}');
         activeMatchId = null; events = []; homeScore = 0; awayScore = 0;
         timerBase = null; timerOffset = 0; stopTimerLoop(); schedule = [];
@@ -2955,12 +3014,19 @@ async function loadGlobalFromFirebase(cb) {
         updateScore(false); renderEvents(); updateEndMatchBtn(); updateTimerDisplay();
       }
       const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+      let devState = null;
+      if (DEV_MODE) {
+        try { devState = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch {}
+      }
       squad = toArr(d.squad);
       schedule = toArr(d.schedule);
       teams = toArr(d.teams);
       schedule = schedule.map(match => {
         const club = globalThis.MatchTrackerTeams.find(teams, match.opponent);
-        return club ? {...match, opponent:club.name, opponentId:club.id} : match;
+        const canonical = club ? {...match, opponent:club.name, opponentId:club.id} : match;
+        if (!DEV_MODE) return canonical;
+        const local = (devState?.schedule || []).find(item => String(item.id) === String(match.id));
+        return local ? {...canonical, result:local.result || null, abandoned:local.abandoned === true, participantIds:local.participantIds || []} : canonical;
       });
       if (!teams.find(t => t.isOurTeam)) {
         teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
@@ -2973,8 +3039,8 @@ async function loadGlobalFromFirebase(cb) {
       updateGoalButtons();
       // Lokales Backup aktualisieren
       try {
-        const existing = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
-        localStorage.setItem('matchtracker_v3', JSON.stringify({ ...existing, squad, schedule, teams }));
+        const existing = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+        localStorage.setItem(STATE_KEY, JSON.stringify({ ...existing, squad, schedule, teams }));
       } catch(_) {}
     }
     globalLoaded = true;
@@ -3273,6 +3339,7 @@ function updateTickerUI(data, lastScore) {
 
 // ─── TICKER SHARE UI ─────────────────────────────────────────────────────────
 function showTickerShare() {
+  if (DEV_MODE) { showToast('Im Testmodus wird kein öffentlicher Live-Ticker erzeugt.'); return; }
   if (!activeMatchId) { showToast('Kein aktives Spiel'); return; }
   const BASE_URL = 'https://keevy109.github.io/match-tracker/match-tracker.html';
   const url = BASE_URL + '?ticker=' + activeMatchId;
@@ -3333,7 +3400,7 @@ function generateQR(canvas, text, size) {
 const ADMIN_PIN = '1909';
 function checkAccess() {
   const params = new URLSearchParams(window.location.search);
-  if (params.has('ticker')) return true; // Ticker-Modus immer erlaubt
+  if (params.has('ticker') || params.get('dev') === '1') return true; // Öffentliche Ansichten immer erlaubt
   if (sessionStorage.getItem('mt_auth') === '1') return true;
   const pin = prompt('Zugang gesperrt. PIN eingeben:');
   if (pin === ADMIN_PIN) { sessionStorage.setItem('mt_auth', '1'); return true; }
@@ -3355,6 +3422,14 @@ function checkAccess() {
     // und localStorage-Stand ggf. überschreiben
     loadGlobalFromFirebase(async () => {
       try {
+        if (DEV_MODE) {
+          try { await loadTrainingForStats(); } catch (_) { trainingSessions = {}; }
+          recalculatePlayerStats(); renderKaderList(); renderSpielplan();
+          storageReady = true;
+          document.getElementById('storageLoading').style.display = 'none';
+          storageStatus('Testmodus: Alles bleibt auf diesem Gerät und wird nicht veröffentlicht.');
+          return;
+        }
         const all = (await readStoredValue(firebase.database().ref('matches'))).val() || {};
         const obsoleteSyncKeys = [];
         for (let i = 0; i < localStorage.length; i++) {
