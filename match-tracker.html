@@ -837,11 +837,6 @@
     object-fit: contain; object-position: center bottom; background: transparent;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-photo { position: relative; z-index: 1; }
-  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-side-photo {
-    display: block; position: absolute; right: 20%; bottom: 0; z-index: 0;
-    width: 108.333%; height: 216.667px; object-fit: contain; object-position: center bottom;
-    opacity: 0.3; pointer-events: none;
-  }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-tag { display: none; }
 
   /* Ticker overlay for sharing */
@@ -1884,8 +1879,8 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     const crest = logo ? `<img class="event-team-crest" src="${esc(logo)}" alt="${esc(teamName)}" loading="lazy">` : '';
     main = `<span class="event-goal-player">${crest}<span><span class="event-scorer-name">${esc(teamName)}</span></span></span>`;
   } else if (typ === 'wechsel' && ourEvent) {
-    main = `<span class="event-substitution-player event-player-in">${eventPlayerSidePortrait(e, members, 'rein')}${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>
-      <span class="event-substitution-player event-player-out">${eventPlayerSidePortrait(e, members, 'raus')}${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>`;
+    main = `<span class="event-substitution-player event-player-in">${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>
+      <span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>`;
   }
   let scoreHtml = '<div class="event-score"></div>';
   if (typ === 'tor') {
