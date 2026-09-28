@@ -754,20 +754,20 @@
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-tag { display: none; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-scorer {
-    order: 1; display: block; overflow: visible; color: #fff; font-size: 14px; font-weight: 700;
+    order: 1; display: block; overflow: visible; color: #fff; font-size: 18px; font-weight: 300;
     text-transform: uppercase; white-space: normal;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-info::after {
     content: 'TOR!'; order: 2; font-size: 34px; line-height: 1; font-weight: 900; letter-spacing: -0.04em;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-score {
-    position: relative; z-index: 2; margin-top: 3px; font-size: 52px; line-height: 1; font-weight: 400;
+    position: relative; z-index: 2; margin-top: 3px; font-size: 52px; line-height: 1; font-weight: 800; opacity: 0.7;
   }
-  body.ticker-mode.ticker-feed .event-score-current { font-weight: 900; }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"].event-current .event-score { opacity: 1; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player { display: block; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player .event-player-photo {
     position: absolute; right: 14px; bottom: -4px; z-index: 1;
-    width: 170px; height: 200px; border: 0; border-radius: 0;
+    width: 196px; height: 230px; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
@@ -1807,17 +1807,9 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     main = `<span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>
       <span class="event-substitution-player event-player-in">${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>`;
   }
-  let scoreHtml = '<div class="event-score"></div>';
-  if (typ === 'tor') {
-    const score = String(e.snapshot || '').match(/^\s*(\d+)\s*:\s*(\d+)\s*$/);
-    if (score) {
-      const homeClass = e.team === 'home' ? ' event-score-current' : '';
-      const awayClass = e.team === 'away' ? ' event-score-current' : '';
-      scoreHtml = `<div class="event-score"><span class="event-score-value${homeClass}">${score[1]}</span><span class="event-score-separator">:</span><span class="event-score-value${awayClass}">${score[2]}</span></div>`;
-    } else {
-      scoreHtml = `<div class="event-score">${esc(e.snapshot || '')}</div>`;
-    }
-  }
+  const scoreHtml = typ === 'tor'
+    ? `<div class="event-score">${esc(e.snapshot || '')}</div>`
+    : '<div class="event-score"></div>';
   const trainerBtns = isTrainer
     ? `${typ==='tor' ? `<button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>` : ''}
        <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`
@@ -1844,9 +1836,10 @@ function renderEvents() {
   const homeName = parts[0]?.trim() || 'Heim';
   const awayName = parts[1]?.trim() || 'Gast';
   list.innerHTML = '';
+  const latestGoalId = [...events].filter(e => !e.typ || e.typ === 'tor').sort((a,b) => b.id - a.id)[0]?.id;
   [...events].sort((a,b) => tickerLayout === 'feed' ? b.id - a.id : a.id - b.id).forEach(e => {
     const item = document.createElement('div');
-    item.className = `event-item ${eventCssClass(e)}`;
+    item.className = `event-item ${eventCssClass(e)}${e.id === latestGoalId ? ' event-current' : ''}`;
     item.dataset.team = e.team === 'away' ? 'away' : 'home';
     item.dataset.type = e.typ || 'tor';
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide() });
@@ -3550,9 +3543,10 @@ function updateTickerUI(data, lastScore) {
     list.innerHTML = '';
     const homeName = data.homeTeam || 'Heim';
     const awayName = data.awayTeam || 'Gast';
+    const latestGoalId = [...evts].filter(e => !e.typ || e.typ === 'tor').sort((a,b) => b.id - a.id)[0]?.id;
     [...evts].sort((a,b) => tickerLayout === 'feed' ? b.id - a.id : a.id - b.id).forEach(e => {
       const item = document.createElement('div');
-      item.className = 'event-item ' + eventCssClass(e);
+      item.className = `event-item ${eventCssClass(e)}${e.id === latestGoalId ? ' event-current' : ''}`;
       item.dataset.team = e.team === 'away' ? 'away' : 'home';
       item.dataset.type = e.typ || 'tor';
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home' });
