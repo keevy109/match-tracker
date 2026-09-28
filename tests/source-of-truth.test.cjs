@@ -112,3 +112,11 @@ test('public ticker loads current roster portraits as its source of truth',()=>{
   assert.match(tracker,/const photo = player\?\.photo \|\| event\[prefix \+ 'Photo'\]/);
   assert.match(tracker,/const photo = isGoal \? scorerMember\?\.photo \|\| event\.scorerPhoto/);
 });
+
+test('tracker roster views use the current player portraits',()=>{
+  const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
+  assert.match(tracker,/function renderKaderList\(\)[\s\S]*?class="player-avatar" src="\$\{esc\(p\.photo\)\}"/);
+  assert.match(tracker,/function renderSetupSquadPreview\(\)[\s\S]*?class="player-avatar" src="\$\{esc\(p\.photo\)\}"/);
+  assert.match(tracker,/function editParticipants\(id\)[\s\S]*?class="player-avatar" src="\$\{esc\(p\.photo\)\}"/);
+  assert.match(tracker,/\.player-avatar \{[^}]*object-fit:\s*contain[^}]*object-position:\s*center bottom/s);
+});
