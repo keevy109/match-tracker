@@ -1,7 +1,7 @@
 const {test}=require('node:test'); const assert=require('node:assert/strict');
 const fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
 const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../match-tracker.html'),'utf8');
-const source=html.slice(html.indexOf('function isCommentPhoto('),html.indexOf('function buildPlayerOptions('))+html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
+const source=html.slice(html.indexOf('function currentMatchSquad('),html.indexOf('function buildEventItemHtml('))+html.slice(html.indexOf('function isCommentPhoto('),html.indexOf('function buildPlayerOptions('))+html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
 function context() {
   const nodes = {}, timers = [];
   const c = vm.createContext({
@@ -67,4 +67,11 @@ test('older substitutions obtain team side and photos from the match snapshot',(
  const {c,nodes}=context();c.showGoalOverlay({typ:'wechsel',reinId:1,rausId:2},{isHomeTeam:false,awayTeam:'Unser Team',squad:{a:{id:1,name:'Rein',photo:'one.png'},b:{id:2,name:'Raus'}}});
  assert.equal(nodes.goalOverlayTeam.textContent,'Unser Team');assert.equal(nodes.subInPhoto.src,'one.png');assert.equal(nodes.subOutFallback.style.display,'');
  nodes.subInPhoto.onerror();assert.equal(nodes.subInPhoto.style.display,'none');assert.equal(nodes.subInFallback.style.display,'');
+});
+test('goal and substitution overlays prefer current roster portraits',()=>{
+ const {c,nodes}=context();c.squad=[{id:1,name:'Neu',photo:'new.png'},{id:2,name:'Raus',photo:'out-new.png'}];
+ c.showGoalOverlay({typ:'tor',team:'home',scorerId:1,scorerPhoto:'old.png',scorer:'Neu'},{homeTeam:'Wir'});
+ assert.equal(nodes.goalOverlayPlayerPhoto.src,'new.png');
+ c.showGoalOverlay({typ:'wechsel',team:'home',reinId:1,reinPhoto:'in-old.png',rausId:2,rausPhoto:'out-old.png'},{homeTeam:'Wir'});
+ assert.equal(nodes.subInPhoto.src,'new.png');assert.equal(nodes.subOutPhoto.src,'out-new.png');
 });

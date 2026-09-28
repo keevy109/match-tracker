@@ -105,3 +105,10 @@ test('supplied transparent roster portraits are assigned by player name',()=>{
     assert.equal(fs.existsSync(path.join(__dirname,'../public',expected)),true);
   }
 });
+
+test('public ticker loads current roster portraits as its source of truth',()=>{
+  const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
+  assert.match(tracker,/ref\('app\/squad'\)\.on\('value'/);
+  assert.match(tracker,/const photo = player\?\.photo \|\| event\[prefix \+ 'Photo'\]/);
+  assert.match(tracker,/const photo = isGoal \? scorerMember\?\.photo \|\| event\.scorerPhoto/);
+});

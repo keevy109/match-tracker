@@ -1544,10 +1544,17 @@ function eventMainText(e, homeName, awayName) {
 
 function eventPlayerPortrait(event, prefix, members) {
   const player = members.find(member => member && event[prefix + 'Id'] != null && String(member.id) === String(event[prefix + 'Id']));
-  const photo = event[prefix + 'Photo'] || player?.photo || '';
+  const photo = player?.photo || event[prefix + 'Photo'] || '';
   const name = event[prefix === 'scorer' ? 'scorer' : prefix + 'Name'] || player?.name || 'Spieler';
   return photo ? `<img class="event-player-photo" src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`
     : '<span class="event-player-placeholder" aria-hidden="true">👤</span>';
+}
+
+function currentMatchSquad(data = {}) {
+  const current = Array.isArray(squad) ? squad.filter(Boolean) : Object.values(squad || {}).filter(Boolean);
+  if (current.length) return current;
+  const snapshot = data.squad || [];
+  return (Array.isArray(snapshot) ? snapshot : Object.values(snapshot)).filter(Boolean);
 }
 
 function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
@@ -2988,6 +2995,14 @@ function initTickerMode(matchId) {
   let tickerData = null;
   let tickerDataReceivedAt = null;
 
+  // Der öffentliche Ticker verwendet immer den aktuellen Admin-Kader. So
+  // erscheinen neue Portraits auch bei bereits gespeicherten Ereignissen.
+  firebase.database().ref('app/squad').on('value', snapshot => {
+    const raw = snapshot.val();
+    squad = !raw ? [] : (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw).filter(Boolean));
+    if (tickerData) updateTickerUI(tickerData, lastScore);
+  });
+
   // Spieluhr live hochzählen im Ticker – berechnet direkt aus Admin-timerBase/timerOffset
   setInterval(() => {
     if (!tickerData) return;
@@ -3081,7 +3096,9 @@ function showGoalOverlay(event, data, onDone = () => {}) {
     teamName = overlayTeam === 'home' ? (data.homeTeam || 'Heim') : (data.awayTeam || 'Gast');
   }
 
-  const photo = isGoal ? event.scorerPhoto || '' : '';
+  const members = currentMatchSquad(data);
+  const scorerMember = members.find(player => player && event.scorerId != null && String(player.id) === String(event.scorerId));
+  const photo = isGoal ? scorerMember?.photo || event.scorerPhoto || '' : '';
   const teamLogo = isGoal ? (overlayTeam === 'home' ? (data.homeLogo || '') : (data.awayLogo || '')) : '';
 
   // Spieler-Foto oder Team-Logo in gleicher Größe — ⚽ Emoji immer ausgeblendet
@@ -3113,8 +3130,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   const seasonEl = document.getElementById('goalOverlaySeason');
   if (seasonEl) {
     if (isGoal && event.scorerId && !event.isOwnGoal) {
-      const rawSquad = data.squad || squad || [];
-      const sp = (Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad)).find(s => s.id === event.scorerId);
+      const sp = members.find(s => String(s.id) === String(event.scorerId));
       const g = event.seasonGoals ?? (sp ? (sp.goals || 0) : 0);
       seasonEl.textContent = g === 1 ? 'Erstes Saisontor' : g > 1 ? g + '. Saisontor' : '';
     } else {
@@ -3133,12 +3149,10 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   if (players) players.style.display = kind === 'wechsel' ? 'grid' : 'none';
   document.getElementById('goalOverlayScorer').style.display = kind === 'wechsel' ? 'none' : '';
   if (kind === 'wechsel') {
-    const rawSquad = data.squad || [];
-    const members = Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad);
     for (const [prefix, field] of [['subOut', 'raus'], ['subIn', 'rein']]) {
       const member = members.find(player => player && String(player.id) === String(event[field + 'Id']));
       const name = event[field + 'Name'] || member?.name || '–';
-      const photo = event[field + 'Photo'] || member?.photo || '';
+      const photo = member?.photo || event[field + 'Photo'] || '';
       const img = document.getElementById(prefix + 'Photo');
       const fallback = document.getElementById(prefix + 'Fallback');
       document.getElementById(prefix + 'Name').textContent = name;
@@ -3232,7 +3246,7 @@ function updateTickerUI(data, lastScore) {
     [...evts].sort((a,b) => a.id - b.id).forEach(e => {
       const item = document.createElement('div');
       item.className = 'event-item ' + eventCssClass(e);
-      item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: data.squad, ownSide: data.isHomeTeam === false ? 'away' : 'home' });
+      item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home' });
       list.appendChild(item);
     });
   }
