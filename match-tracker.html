@@ -1242,6 +1242,8 @@ let activeMatchId = null; // links to schedule entry
 
 function resetDevMode() {
   if (!DEV_MODE) return;
+  storageReady = false;
+  stopTimerLoop();
   localStorage.removeItem(STATE_KEY);
   window.location.reload();
 }

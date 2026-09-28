@@ -150,6 +150,7 @@ test('dev mode switches locally between entry and spectator views',()=>{
   assert.match(tracker,/function setDevView\(mode\)[\s\S]*?classList\.toggle\('ticker-mode', spectator\)/);
   assert.match(tracker,/function refreshDevSpectatorView\(\)[\s\S]*?matchSnapshot\(\)[\s\S]*?updateTickerUI\(data, null\)/);
   assert.match(tracker,/Lokale Testansicht · nichts wird veröffentlicht/);
+  assert.match(tracker,/function resetDevMode\(\)[\s\S]*?storageReady = false;[\s\S]*?localStorage\.removeItem\(STATE_KEY\);[\s\S]*?window\.location\.reload\(\)/);
 });
 
 test('spectator ticker offers cards and an optional highlight feed layout',()=>{
