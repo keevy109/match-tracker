@@ -87,3 +87,9 @@ test('player detail cards support videos and use the supplied player clips',()=>
   assert.equal(paul.detailPhoto,'uploads/kader/detail/1774617570999_viggle.mp4');
   assert.equal(fs.existsSync(path.join(__dirname,'../public',paul.detailPhoto)),true);
 });
+
+test('roster portraits keep their top spacing and sit flush on the row bottom',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../src/styles/kader.css'),'utf8');
+  assert.match(css,/#kaderRows \.kl-avatar\s*\{[^}]*height:\s*46px[^}]*margin-bottom:\s*-10px/s);
+  assert.match(css,/#kaderRows \.kl-avatar img\s*\{[^}]*object-fit:\s*contain[^}]*object-position:\s*center bottom/s);
+});

@@ -20,7 +20,7 @@
 .kl-header,
 #kaderRows .kl-row {
   display: grid;
-  grid-template-columns: 40px 36px 1fr 32px 38px 46px;
+  grid-template-columns: 40px 46px 1fr 32px 38px 46px;
   gap: 6px;
   align-items: center;
 }
@@ -89,6 +89,19 @@
 }
 .kl-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
 
+/* Spielerportraits behalten oben den bisherigen Abstand und schließen unten
+   bündig mit der Zeile ab. Trainer-Avatare bleiben unverändert kompakt. */
+#kaderRows .kl-avatar {
+  width: 46px;
+  height: 46px;
+  align-self: end;
+  margin-bottom: -10px;
+}
+#kaderRows .kl-avatar img {
+  object-fit: contain;
+  object-position: center bottom;
+}
+
 .kl-name {
   font-size: 13px; font-weight: 600; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -115,7 +128,7 @@
 @media (max-width: 420px) {
   .kl-header,
   #kaderRows .kl-row {
-    grid-template-columns: 36px 32px 1fr 30px 36px 42px;
+    grid-template-columns: 36px 46px 1fr 30px 36px 42px;
   }
 
 }
