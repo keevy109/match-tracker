@@ -736,7 +736,7 @@
   body.ticker-mode.ticker-feed .event-item { position: relative; overflow: hidden; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] {
     display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
-    width: 100%; min-height: 230px; padding: 16px; gap: 0; border: 0; border-radius: 0;
+    width: 100%; min-height: 260px; padding: 16px; gap: 0; border: 0; border-radius: 0;
     color: #fff; isolation: isolate;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
@@ -754,7 +754,7 @@
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-tag { display: none; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-scorer {
-    order: 1; display: block; overflow: visible; color: #fff; font-size: 18px; font-weight: 300;
+    order: 1; display: block; overflow: visible; color: #fff; font-size: 18px; font-weight: 800;
     text-transform: uppercase; white-space: normal;
   }
   body.ticker-mode.ticker-feed .event-scorer-name { display: block; }
@@ -768,15 +768,16 @@
   body.ticker-mode.ticker-feed .event-score-previous { opacity: 0.7; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player { display: block; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player .event-player-photo {
-    position: absolute; right: 14px; bottom: -4px; z-index: 1;
-    width: 196px; height: 230px; border: 0; border-radius: 0;
-    object-fit: contain; object-position: center bottom; background: transparent;
+    position: absolute; right: 0; bottom: -4px; z-index: 1;
+    width: 240px; height: 240px; border: 0; border-radius: 0;
+    object-fit: contain; object-position: center bottom; background: transparent; opacity: 1;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) {
     grid-template-columns: 46px minmax(0, 1fr); width: 100%; padding: 14px 12px; gap: 10px;
     color: #151515; background: #fff; background-image: none; border: 0; border-right: 4px solid #777; border-radius: 0;
   }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] { min-height: 260px; }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"])[data-team="home"] { border-right-color: var(--home-color); }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]).own { border-right-color: var(--own); }

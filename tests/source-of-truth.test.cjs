@@ -165,13 +165,14 @@ test('spectator ticker offers cards and an optional highlight feed layout',()=>{
   assert.match(tracker,/align-items: flex-start; justify-content: space-between;/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item \.event-icon \{ display: none; \}/);
-  assert.match(tracker,/font-size: 18px; font-weight: 300;/);
+  assert.match(tracker,/font-size: 18px; font-weight: 800;/);
   assert.match(tracker,/font-size: 52px; line-height: 1; font-weight: 800;/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-score-previous \{ opacity: 0\.7; \}/);
   assert.match(tracker,/\.event-season-goals \{ display: block; margin-top: 3px; font-size: 13px; font-weight: 300; \}/);
-  assert.match(tracker,/width: 100%; min-height: 230px;/);
-  assert.match(tracker,/position: absolute; right: 14px; bottom: -4px;/);
-  assert.match(tracker,/width: 196px; height: 230px;/);
+  assert.match(tracker,/width: 100%; min-height: 260px;/);
+  assert.match(tracker,/\.event-item\[data-type="wechsel"\] \{ min-height: 260px; \}/);
+  assert.match(tracker,/position: absolute; right: 0; bottom: -4px;/);
+  assert.match(tracker,/width: 240px; height: 240px;/);
   assert.doesNotMatch(tracker,/event-player-video/);
   assert.match(tracker,/item\.dataset\.team = e\.team === 'away' \? 'away' : 'home'/);
   assert.match(tracker,/item\.dataset\.type = e\.typ \|\| 'tor'/);
