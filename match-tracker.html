@@ -592,6 +592,9 @@
     font-family: var(--mono); font-size: 12px; color: var(--accent);
     margin-bottom: 2px;
   }
+  .ticker-layout-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 10px; padding: 2px; border: 1px solid rgba(255,255,255,0.28); border-radius: 8px; background: rgba(0,0,0,0.3); }
+  .ticker-layout-toggle button { border: 0; border-radius: 5px; padding: 6px 10px; background: transparent; color: var(--muted); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; }
+  .ticker-layout-toggle button.active { background: var(--accent); color: #101010; }
   /* Tor-Overlay */
   .goal-overlay {
     display: none;
@@ -701,6 +704,27 @@
   body.ticker-mode .events-section { padding-top: 8px; }
   body.ticker-mode .event-item { cursor: default; }
 
+  /* Optionale Zuschaueransicht: Ereignisse chronologisch an einer Mittellinie. */
+  body.ticker-mode.ticker-timeline .events-section { padding-inline: 12px; }
+  body.ticker-mode.ticker-timeline .events-list { display: block; position: relative; padding: 10px 0 24px; }
+  body.ticker-mode.ticker-timeline .events-list::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.32) 18px, rgba(255,255,255,0.18) calc(100% - 18px), transparent); }
+  body.ticker-mode.ticker-timeline .event-item { position: relative; display: flex; width: calc(50% - 22px); min-height: 72px; margin-bottom: 18px; padding: 12px; gap: 5px; align-items: stretch; border-left-width: 0; }
+  body.ticker-mode.ticker-timeline .event-item[data-team="home"] { margin-right: auto; text-align: right; border-right: 3px solid var(--home-color); background-image: linear-gradient(to left, color-mix(in srgb, var(--home-color) 38%, transparent) -35%, var(--surface) 38%); }
+  body.ticker-mode.ticker-timeline .event-item[data-team="away"] { margin-left: auto; text-align: left; border-left: 3px solid var(--away-color); background-image: linear-gradient(to right, color-mix(in srgb, var(--away-color) 38%, transparent) -35%, var(--surface) 38%); }
+  body.ticker-mode.ticker-timeline .event-item.own[data-team="home"] { border-right-color: var(--own); }
+  body.ticker-mode.ticker-timeline .event-item.own[data-team="away"] { border-left-color: var(--own); }
+  body.ticker-mode.ticker-timeline .event-min { position: absolute; top: 10px; width: 42px; min-height: 28px; display: grid; place-items: center; padding: 4px; border: 2px solid var(--border); border-radius: 999px; background: #111; font-size: 10px; line-height: 1.1; text-align: center; z-index: 1; }
+  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-min { right: -44px; border-color: var(--home-color); }
+  body.ticker-mode.ticker-timeline .event-item[data-team="away"] .event-min { left: -44px; border-color: var(--away-color); }
+  body.ticker-mode.ticker-timeline .event-item.own .event-min { border-color: var(--own); }
+  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-info { align-items: flex-end; }
+  body.ticker-mode.ticker-timeline .event-item[data-team="away"] .event-info { align-items: flex-start; }
+  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-scorer { justify-content: flex-end; }
+  body.ticker-mode.ticker-timeline .event-score { order: 3; }
+  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-score { text-align: right; }
+  body.ticker-mode.ticker-timeline .event-item[data-team="away"] .event-score { text-align: left; }
+  body.ticker-mode.ticker-timeline .event-comment-photo { max-height: 120px; }
+
   /* Ticker overlay for sharing */
   .ticker-share-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300;
@@ -749,6 +773,10 @@
   <div class="ticker-live-badge" id="tickerLiveBadge"><div class="ticker-live-dot"></div> LIVE</div>
   <div class="ticker-date" id="tickerDate"></div>
   <div class="ticker-clock" id="tickerClock"></div>
+  <div class="ticker-layout-toggle" aria-label="Ticker-Darstellung auswählen">
+    <button type="button" id="tickerLayoutCards" class="active" aria-pressed="true" onclick="setTickerLayout('cards')">Karten</button>
+    <button type="button" id="tickerLayoutTimeline" aria-pressed="false" onclick="setTickerLayout('timeline')">Zeitstrahl</button>
+  </div>
 </div>
 
 <header>
@@ -1153,6 +1181,19 @@ function resetDevMode() {
 let devViewMode = 'admin';
 let devAdminTab = 'spiel';
 let devTickerClockInterval = null;
+let tickerLayout = 'cards';
+try { tickerLayout = localStorage.getItem('matchtracker_ticker_layout') === 'timeline' ? 'timeline' : 'cards'; } catch (_) {}
+
+function setTickerLayout(layout) {
+  if (!['cards', 'timeline'].includes(layout)) return;
+  tickerLayout = layout;
+  document.body.classList.toggle('ticker-timeline', layout === 'timeline');
+  for (const [id, active] of [['tickerLayoutCards', layout === 'cards'], ['tickerLayoutTimeline', layout === 'timeline']]) {
+    const button = document.getElementById(id);
+    if (button) { button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); }
+  }
+  try { localStorage.setItem('matchtracker_ticker_layout', layout); } catch (_) {}
+}
 
 function updateDevTickerClock() {
   if (!DEV_MODE || devViewMode !== 'ticker') return;
@@ -1195,6 +1236,7 @@ function setDevView(mode) {
   devTickerClockInterval = null;
   if (spectator) {
     switchTab('spiel');
+    setTickerLayout(tickerLayout);
     refreshDevSpectatorView();
     devTickerClockInterval = setInterval(updateDevTickerClock, 1000);
   } else {
@@ -1721,6 +1763,7 @@ function renderEvents() {
   [...events].sort((a,b) => a.id - b.id).forEach(e => {
     const item = document.createElement('div');
     item.className = `event-item ${eventCssClass(e)}`;
+    item.dataset.team = e.team === 'away' ? 'away' : 'home';
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide() });
     list.appendChild(item);
   });
@@ -3139,6 +3182,7 @@ async function loadGlobalFromFirebase(cb) {
 // ─── TICKER MODE ─────────────────────────────────────────────────────────────
 function initTickerMode(matchId) {
   document.body.classList.add('ticker-mode');
+  setTickerLayout(tickerLayout);
   document.title = 'Live-Ticker';
 
   // Set date
@@ -3408,6 +3452,7 @@ function updateTickerUI(data, lastScore) {
     [...evts].sort((a,b) => a.id - b.id).forEach(e => {
       const item = document.createElement('div');
       item.className = 'event-item ' + eventCssClass(e);
+      item.dataset.team = e.team === 'away' ? 'away' : 'home';
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home' });
       list.appendChild(item);
     });

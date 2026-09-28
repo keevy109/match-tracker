@@ -151,3 +151,12 @@ test('dev mode switches locally between entry and spectator views',()=>{
   assert.match(tracker,/function refreshDevSpectatorView\(\)[\s\S]*?matchSnapshot\(\)[\s\S]*?updateTickerUI\(data, null\)/);
   assert.match(tracker,/Lokale Testansicht · nichts wird veröffentlicht/);
 });
+
+test('spectator ticker offers cards and an optional timeline layout',()=>{
+  const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
+  assert.match(tracker,/id="tickerLayoutCards"[^>]*onclick="setTickerLayout\('cards'\)"[^>]*>Karten</);
+  assert.match(tracker,/id="tickerLayoutTimeline"[^>]*onclick="setTickerLayout\('timeline'\)"[^>]*>Zeitstrahl</);
+  assert.match(tracker,/function setTickerLayout\(layout\)[\s\S]*?classList\.toggle\('ticker-timeline', layout === 'timeline'\)/);
+  assert.match(tracker,/body\.ticker-mode\.ticker-timeline \.events-list::before/);
+  assert.match(tracker,/item\.dataset\.team = e\.team === 'away' \? 'away' : 'home'/);
+});
