@@ -203,6 +203,7 @@
   .event-item.kommentar .event-scorer { display: block; white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; }
   .event-scorer { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: baseline; gap: 6px; }
   .event-player-photo, .event-player-placeholder { width:36px; height:36px; flex:0 0 36px; border-radius:50%; object-fit:cover; background:var(--surface2); }
+  .event-player-side-photo { display:none; }
   .event-team-crest { width:36px; height:36px; flex:0 0 36px; object-fit:contain; }
   .event-player-placeholder { display:grid; place-items:center; font-size:20px; }
   .event-goal-player, .event-substitution-player { display:flex; align-items:center; gap:8px; min-width:0; }
@@ -772,6 +773,11 @@
     position: absolute; right: 0; bottom: -4px; z-index: 1;
     width: 240px; height: 240px; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent; opacity: 1;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player .event-player-side-photo {
+    display: block; position: absolute; right: 70px; bottom: -4px; z-index: 0;
+    width: 240px; height: 240px; border: 0; border-radius: 0;
+    object-fit: contain; object-position: center bottom; opacity: 0.5; pointer-events: none;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-team-crest {
     position: absolute; right: 0; bottom: -120px; z-index: 1;
@@ -1796,6 +1802,16 @@ function eventPlayerPortrait(event, prefix, members) {
     : '<span class="event-player-placeholder" aria-hidden="true">👤</span>';
 }
 
+function eventPlayerSidePortrait(event, members) {
+  const player = members.find(member => member && event.scorerId != null && String(member.id) === String(event.scorerId));
+  const name = String(player?.name || event.scorer || '').trim().toLowerCase();
+  const available = ['aleciano', 'emil', 'grigorios', 'jonah', 'leo', 'max', 'pan', 'paul', 'till', 'tom'];
+  const bundledPhoto = available.includes(name) ? `uploads/kader/side-portraits/${name}.png` : '';
+  const photo = player?.sidePhoto || event.scorerSidePhoto || bundledPhoto;
+  if (!photo || !(player?.photo || event.scorerPhoto)) return '';
+  return `<img class="event-player-side-photo" src="${esc(photo)}" alt="" aria-hidden="true" loading="lazy">`;
+}
+
 function currentMatchSquad(data = {}) {
   const current = Array.isArray(squad) ? squad.filter(Boolean) : Object.values(squad || {}).filter(Boolean);
   if (current.length) return current;
@@ -1816,7 +1832,7 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     const seasonGoalHtml = Number.isFinite(seasonGoals) && seasonGoals > 0
       ? `<span class="event-season-goals">${seasonGoals}. Saisontor</span>`
       : '';
-    main = `<span class="event-goal-player">${eventPlayerPortrait(e, 'scorer', members)}<span><span class="event-scorer-name">${main}</span>${seasonGoalHtml}</span></span>`;
+    main = `<span class="event-goal-player">${eventPlayerSidePortrait(e, members)}${eventPlayerPortrait(e, 'scorer', members)}<span><span class="event-scorer-name">${main}</span>${seasonGoalHtml}</span></span>`;
   } else if (typ === 'tor' && context.ownSide && !ourEvent) {
     const teamName = e.team === 'home' ? homeName : awayName;
     const logo = e.team === 'home' ? context.homeLogo : context.awayLogo;
