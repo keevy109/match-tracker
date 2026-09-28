@@ -161,6 +161,7 @@ test('spectator ticker offers cards and an optional highlight feed layout',()=>{
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.scoreboard \{ display: none; \}/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.events-section \{ width: 100%; padding: 0;/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\]/);
+  assert.match(tracker,/align-items: flex-start; justify-content: space-between;/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item \.event-icon \{ display: none; \}/);
   assert.match(tracker,/font-size: 18px; font-weight: 300;/);
