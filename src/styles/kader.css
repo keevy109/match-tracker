@@ -21,7 +21,7 @@
 #kaderRows .kl-row {
   display: grid;
   grid-template-columns: 40px 46px 1fr 32px 38px 46px;
-  gap: 6px;
+  gap: 12px;
   align-items: center;
 }
 
