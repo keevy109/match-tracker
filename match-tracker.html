@@ -1485,6 +1485,11 @@ function renderPickerPlayers() {
   });
 }
 
+function previewDevTickerOverlay(event) {
+  if (!DEV_MODE || !event) return;
+  enqueueTickerOverlay(event, matchSnapshot());
+}
+
 function addGoal(team, isOwnGoal, player) {
   if (!activeMatchId) { showToast('Bitte zuerst ein Spiel im Spielplan starten.'); return; }
   if (team !== 'home' && team !== 'away') return;
@@ -1493,7 +1498,7 @@ function addGoal(team, isOwnGoal, player) {
     : null;
   const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
   if (team==='home') homeScore++; else awayScore++;
-  events.unshift({
+  const event = {
     id: Date.now(), team, isOwnGoal, minute,
     scorer:    player ? player.name : '—',
     scorerNum: player?.num || null,
@@ -1501,12 +1506,14 @@ function addGoal(team, isOwnGoal, player) {
     scorerPhoto: player?.photo || '',
     seasonGoals: player && !isOwnGoal ? (player.goals || 0) + 1 : null,
     snapshot:  `${homeScore}:${awayScore}`
-  });
+  };
+  events.unshift(event);
   if (player && !isOwnGoal) {
     const sp = squad.find(s => s.id === player.id);
     if (sp) { sp.goals = (sp.goals || 0) + 1; }
   }
   updateScore(true); renderEvents(); save();
+  previewDevTickerOverlay(event);
 }
 
 function deleteEvent(id) {
@@ -2938,6 +2945,7 @@ async function saveEventModal() {
 
   if (ev && activeMatchId === targetMatchId) { events.unshift(ev); renderEvents(); save(); }
   closeEventModal();
+  if (ev && activeMatchId === targetMatchId) previewDevTickerOverlay(ev);
 }
 
 // ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────

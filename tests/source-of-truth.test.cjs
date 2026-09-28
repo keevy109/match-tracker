@@ -125,3 +125,10 @@ test('website links to the isolated tracker test mode',()=>{
   const ticker=fs.readFileSync(path.join(__dirname,'../src/sections/ticker.frag'),'utf8');
   assert.match(ticker,/href="match-tracker\.html\?dev=1"[^>]*>Tracker testen</);
 });
+
+test('dev tracker previews goals and other events with the spectator overlay',()=>{
+  const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
+  assert.match(tracker,/function previewDevTickerOverlay\(event\)[\s\S]*?DEV_MODE[\s\S]*?enqueueTickerOverlay\(event, matchSnapshot\(\)\)/);
+  assert.match(tracker,/function addGoal\([\s\S]*?previewDevTickerOverlay\(event\)/);
+  assert.match(tracker,/async function saveEventModal\([\s\S]*?previewDevTickerOverlay\(ev\)/);
+});

@@ -1,11 +1,13 @@
 const {test}=require('node:test'); const assert=require('node:assert/strict');
 const fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
 const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../match-tracker.html'),'utf8');
-const source=html.slice(html.indexOf('function currentMatchSquad('),html.indexOf('function buildEventItemHtml('))+html.slice(html.indexOf('function isCommentPhoto('),html.indexOf('function buildPlayerOptions('))+html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
+const source=html.slice(html.indexOf('function currentMatchSquad('),html.indexOf('function buildEventItemHtml('))+html.slice(html.indexOf('function isCommentPhoto('),html.indexOf('function buildPlayerOptions('))+html.slice(html.indexOf('function previewDevTickerOverlay('),html.indexOf('function addGoal('))+html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
 function context() {
   const nodes = {}, timers = [];
   const c = vm.createContext({
+    DEV_MODE: false,
     squad: [],
+    matchSnapshot: () => ({ homeTeam: 'Heim', awayTeam: 'Gast' }),
     setTimeout: fn => { timers.push(fn); return timers.length; },
     clearTimeout() {},
     document: {
@@ -18,6 +20,15 @@ function context() {
   vm.runInContext(source, c);
   return { c, nodes, timers };
 }
+test('dev mode previews new events with the spectator overlay locally',()=>{
+ const {c,nodes}=context();
+ c.previewDevTickerOverlay({id:1,typ:'kommentar',team:'home',text:'Test'});
+ assert.equal(nodes.goalOverlayTitle,undefined);
+ c.DEV_MODE=true;
+ c.previewDevTickerOverlay({id:2,typ:'kommentar',team:'home',text:'Test'});
+ assert.equal(nodes.goalOverlayTitle.textContent,'Text');
+ assert.equal(nodes.goalOverlayScorer.textContent,'Test');
+});
 test('new goals, substitutions and comments trigger without needing a score change',()=>{
  const {c}=context(); const detect=vm.runInContext('createTickerEventDetector()',c);
  assert.equal(detect([{id:1}]).length,0);
