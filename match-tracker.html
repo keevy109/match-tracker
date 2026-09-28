@@ -704,26 +704,58 @@
   body.ticker-mode .events-section { padding-top: 8px; }
   body.ticker-mode .event-item { cursor: default; }
 
-  /* Optionale Zuschaueransicht: Ereignisse chronologisch an einer Mittellinie. */
-  body.ticker-mode.ticker-timeline .events-section { padding-inline: 12px; }
-  body.ticker-mode.ticker-timeline .events-list { display: block; position: relative; padding: 10px 0 24px; }
-  body.ticker-mode.ticker-timeline .events-list::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%); background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.32) 18px, rgba(255,255,255,0.18) calc(100% - 18px), transparent); }
-  body.ticker-mode.ticker-timeline .event-item { position: relative; display: flex; width: calc(50% - 22px); min-height: 72px; margin-bottom: 18px; padding: 12px; gap: 5px; align-items: stretch; border-left-width: 0; }
-  body.ticker-mode.ticker-timeline .event-item[data-team="home"] { margin-right: auto; text-align: right; border-right: 3px solid var(--home-color); background-image: linear-gradient(to left, color-mix(in srgb, var(--home-color) 38%, transparent) -35%, var(--surface) 38%); }
-  body.ticker-mode.ticker-timeline .event-item[data-team="away"] { margin-left: auto; text-align: left; border-left: 3px solid var(--away-color); background-image: linear-gradient(to right, color-mix(in srgb, var(--away-color) 38%, transparent) -35%, var(--surface) 38%); }
-  body.ticker-mode.ticker-timeline .event-item.own[data-team="home"] { border-right-color: var(--own); }
-  body.ticker-mode.ticker-timeline .event-item.own[data-team="away"] { border-left-color: var(--own); }
-  body.ticker-mode.ticker-timeline .event-min { position: absolute; top: 10px; width: 42px; min-height: 28px; display: grid; place-items: center; padding: 4px; border: 2px solid var(--border); border-radius: 999px; background: #111; font-size: 10px; line-height: 1.1; text-align: center; z-index: 1; }
-  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-min { right: -44px; border-color: var(--home-color); }
-  body.ticker-mode.ticker-timeline .event-item[data-team="away"] .event-min { left: -44px; border-color: var(--away-color); }
-  body.ticker-mode.ticker-timeline .event-item.own .event-min { border-color: var(--own); }
-  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-info { align-items: flex-end; }
-  body.ticker-mode.ticker-timeline .event-item[data-team="away"] .event-info { align-items: flex-start; }
-  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-scorer { justify-content: flex-end; }
-  body.ticker-mode.ticker-timeline .event-score { order: 3; }
-  body.ticker-mode.ticker-timeline .event-item[data-team="home"] .event-score { text-align: right; }
-  body.ticker-mode.ticker-timeline .event-item[data-team="away"] .event-score { text-align: left; }
-  body.ticker-mode.ticker-timeline .event-comment-photo { max-height: 120px; }
+  /* Optionale Zuschaueransicht: große Tor-Highlights und kompakte Meldungen. */
+  body.ticker-mode.ticker-feed .events-section { padding-inline: 12px; -webkit-mask-image: none; mask-image: none; }
+  body.ticker-mode.ticker-feed .events-list { gap: 10px; padding-bottom: 18px; }
+  body.ticker-mode.ticker-feed .event-item { position: relative; overflow: hidden; }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] {
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+    min-height: 210px; padding: 16px; gap: 0; border: 0; border-radius: 10px;
+    color: #fff; isolation: isolate;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"][data-team="away"] { background: linear-gradient(135deg, color-mix(in srgb, var(--away-color) 88%, #080808), var(--away-color)); }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"].own { background: linear-gradient(135deg, color-mix(in srgb, var(--own) 88%, #080808), var(--own)); }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"]::before {
+    content: ''; position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0.18), transparent 70%);
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-min {
+    position: relative; z-index: 2; color: #fff; text-align: left; font-size: 12px; opacity: 0.9;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-info {
+    z-index: 2; width: 60%; margin-top: 28px; gap: 4px;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-tag { order: 0; color: rgba(255,255,255,0.8); }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-scorer {
+    order: 1; display: block; overflow: visible; color: #fff; font-size: 14px; font-weight: 700;
+    text-transform: uppercase; white-space: normal;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-info::after {
+    content: 'TOR!'; order: 2; font-size: 34px; line-height: 1; font-weight: 900; letter-spacing: -0.04em;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-score {
+    position: relative; z-index: 2; margin-top: 3px; font-size: 52px; line-height: 1; font-weight: 900;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player { display: block; }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player .event-player-photo {
+    position: absolute; right: -10px; bottom: -4px; z-index: 1;
+    width: 170px; height: 200px; border: 0; border-radius: 0;
+    object-fit: contain; object-position: center bottom; background: transparent;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) {
+    grid-template-columns: 46px minmax(0, 1fr); padding: 14px 12px; gap: 10px;
+    color: #151515; background: #f5f5f2; background-image: none; border: 0; border-right: 4px solid #777; border-radius: 6px;
+  }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"])[data-team="home"] { border-right-color: var(--home-color); }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]).own { border-right-color: var(--own); }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) .event-min { align-self: start; color: #4d4d4d; text-align: left; }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) .event-scorer { color: #151515; font-weight: 700; }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) .event-tag { margin-top: 3px; color: #666; line-height: 1.45; text-transform: none; letter-spacing: 0; }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) .event-score { display: none; }
+  body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
 
   /* Ticker overlay for sharing */
   .ticker-share-overlay {
@@ -775,7 +807,7 @@
   <div class="ticker-clock" id="tickerClock"></div>
   <div class="ticker-layout-toggle" aria-label="Ticker-Darstellung auswählen">
     <button type="button" id="tickerLayoutCards" class="active" aria-pressed="true" onclick="setTickerLayout('cards')">Karten</button>
-    <button type="button" id="tickerLayoutTimeline" aria-pressed="false" onclick="setTickerLayout('timeline')">Zeitstrahl</button>
+    <button type="button" id="tickerLayoutFeed" aria-pressed="false" onclick="setTickerLayout('feed')">Feed</button>
   </div>
 </div>
 
@@ -1182,13 +1214,19 @@ let devViewMode = 'admin';
 let devAdminTab = 'spiel';
 let devTickerClockInterval = null;
 let tickerLayout = 'cards';
-try { tickerLayout = localStorage.getItem('matchtracker_ticker_layout') === 'timeline' ? 'timeline' : 'cards'; } catch (_) {}
+try { tickerLayout = localStorage.getItem('matchtracker_ticker_layout') === 'feed' ? 'feed' : 'cards'; } catch (_) {}
 
 function setTickerLayout(layout) {
-  if (!['cards', 'timeline'].includes(layout)) return;
+  if (!['cards', 'feed'].includes(layout)) return;
+  const changed = tickerLayout !== layout;
   tickerLayout = layout;
-  document.body.classList.toggle('ticker-timeline', layout === 'timeline');
-  for (const [id, active] of [['tickerLayoutCards', layout === 'cards'], ['tickerLayoutTimeline', layout === 'timeline']]) {
+  document.body.classList.remove('ticker-timeline');
+  document.body.classList.toggle('ticker-feed', layout === 'feed');
+  if (changed) {
+    const list = document.getElementById('eventsList');
+    if (list) [...list.querySelectorAll(':scope > .event-item')].reverse().forEach(item => list.appendChild(item));
+  }
+  for (const [id, active] of [['tickerLayoutCards', layout === 'cards'], ['tickerLayoutFeed', layout === 'feed']]) {
     const button = document.getElementById(id);
     if (button) { button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); }
   }
@@ -1760,10 +1798,11 @@ function renderEvents() {
   const homeName = parts[0]?.trim() || 'Heim';
   const awayName = parts[1]?.trim() || 'Gast';
   list.innerHTML = '';
-  [...events].sort((a,b) => a.id - b.id).forEach(e => {
+  [...events].sort((a,b) => tickerLayout === 'feed' ? b.id - a.id : a.id - b.id).forEach(e => {
     const item = document.createElement('div');
     item.className = `event-item ${eventCssClass(e)}`;
     item.dataset.team = e.team === 'away' ? 'away' : 'home';
+    item.dataset.type = e.typ || 'tor';
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide() });
     list.appendChild(item);
   });
@@ -3449,10 +3488,11 @@ function updateTickerUI(data, lastScore) {
     list.innerHTML = '';
     const homeName = data.homeTeam || 'Heim';
     const awayName = data.awayTeam || 'Gast';
-    [...evts].sort((a,b) => a.id - b.id).forEach(e => {
+    [...evts].sort((a,b) => tickerLayout === 'feed' ? b.id - a.id : a.id - b.id).forEach(e => {
       const item = document.createElement('div');
       item.className = 'event-item ' + eventCssClass(e);
       item.dataset.team = e.team === 'away' ? 'away' : 'home';
+      item.dataset.type = e.typ || 'tor';
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home' });
       list.appendChild(item);
     });

@@ -152,11 +152,12 @@ test('dev mode switches locally between entry and spectator views',()=>{
   assert.match(tracker,/Lokale Testansicht · nichts wird veröffentlicht/);
 });
 
-test('spectator ticker offers cards and an optional timeline layout',()=>{
+test('spectator ticker offers cards and an optional highlight feed layout',()=>{
   const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
   assert.match(tracker,/id="tickerLayoutCards"[^>]*onclick="setTickerLayout\('cards'\)"[^>]*>Karten</);
-  assert.match(tracker,/id="tickerLayoutTimeline"[^>]*onclick="setTickerLayout\('timeline'\)"[^>]*>Zeitstrahl</);
-  assert.match(tracker,/function setTickerLayout\(layout\)[\s\S]*?classList\.toggle\('ticker-timeline', layout === 'timeline'\)/);
-  assert.match(tracker,/body\.ticker-mode\.ticker-timeline \.events-list::before/);
+  assert.match(tracker,/id="tickerLayoutFeed"[^>]*onclick="setTickerLayout\('feed'\)"[^>]*>Feed</);
+  assert.match(tracker,/function setTickerLayout\(layout\)[\s\S]*?classList\.toggle\('ticker-feed', layout === 'feed'\)/);
+  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\]/);
   assert.match(tracker,/item\.dataset\.team = e\.team === 'away' \? 'away' : 'home'/);
+  assert.match(tracker,/item\.dataset\.type = e\.typ \|\| 'tor'/);
 });
