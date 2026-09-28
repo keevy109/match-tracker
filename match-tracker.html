@@ -704,13 +704,39 @@
   body.ticker-mode .events-section { padding-top: 8px; }
   body.ticker-mode .event-item { cursor: default; }
 
-  /* Optionale Zuschaueransicht: große Tor-Highlights und kompakte Meldungen. */
-  body.ticker-mode.ticker-feed .events-section { padding-inline: 12px; -webkit-mask-image: none; mask-image: none; }
-  body.ticker-mode.ticker-feed .events-list { gap: 10px; padding-bottom: 18px; }
+  .feed-result-header { display: none; }
+
+  /* Eigenständige Feedansicht: eigener Ergebnis-Kopf und randloser Nachrichtenstrom. */
+  body.ticker-mode.ticker-feed { background: #eef0f2; }
+  body.ticker-mode.ticker-feed .ticker-header { padding: 8px; background: #fff; }
+  body.ticker-mode.ticker-feed .ticker-live-badge,
+  body.ticker-mode.ticker-feed .ticker-date,
+  body.ticker-mode.ticker-feed .ticker-clock { display: none; }
+  body.ticker-mode.ticker-feed .ticker-layout-toggle { margin-top: 0; border-color: #d8dce0; background: #eef0f2; }
+  body.ticker-mode.ticker-feed .ticker-layout-toggle button { color: #555; }
+  body.ticker-mode.ticker-feed .ticker-layout-toggle button.active { color: #101010; }
+  body.ticker-mode.ticker-feed #tabSpiel { background: #eef0f2; }
+  body.ticker-mode.ticker-feed .scoreboard { display: none; }
+  body.ticker-mode.ticker-feed .divider { display: none; }
+  body.ticker-mode.ticker-feed .ticker-updated { color: #666; }
+  body.ticker-mode.ticker-feed .feed-result-header {
+    display: grid; grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+    align-items: center; gap: 12px; width: 100%; padding: 11px 16px;
+    color: #111; background: #fff; border-top: 1px solid #eceff1; border-bottom: 1px solid #d9dde0;
+  }
+  .feed-result-team { display: flex; align-items: center; min-width: 0; }
+  .feed-result-team.home { justify-content: flex-end; }
+  .feed-result-team.away { justify-content: flex-start; }
+  .feed-result-logo { display: none; width: 38px; height: 38px; object-fit: contain; }
+  .feed-result-score { display: flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 25px; font-weight: 900; }
+  .feed-result-score span:not(.feed-result-separator) { display: grid; place-items: center; min-width: 34px; height: 38px; padding: 0 7px; background: #e5eaed; }
+  .feed-result-separator { padding-inline: 2px; }
+  body.ticker-mode.ticker-feed .events-section { width: 100%; padding: 0; -webkit-mask-image: none; mask-image: none; }
+  body.ticker-mode.ticker-feed .events-list { width: 100%; gap: 10px; padding: 8px 0 18px; }
   body.ticker-mode.ticker-feed .event-item { position: relative; overflow: hidden; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] {
     display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-    min-height: 210px; padding: 16px; gap: 0; border: 0; border-radius: 10px;
+    width: 100%; min-height: 210px; padding: 16px; gap: 0; border: 0; border-radius: 0;
     color: #fff; isolation: isolate;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
@@ -726,7 +752,7 @@
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-info {
     z-index: 2; width: 60%; margin-top: 28px; gap: 4px;
   }
-  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-tag { order: 0; color: rgba(255,255,255,0.8); }
+  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-tag { display: none; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-scorer {
     order: 1; display: block; overflow: visible; color: #fff; font-size: 14px; font-weight: 700;
     text-transform: uppercase; white-space: normal;
@@ -745,8 +771,8 @@
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) {
-    grid-template-columns: 46px minmax(0, 1fr); padding: 14px 12px; gap: 10px;
-    color: #151515; background: #f5f5f2; background-image: none; border: 0; border-right: 4px solid #777; border-radius: 6px;
+    grid-template-columns: 46px minmax(0, 1fr); width: 100%; padding: 14px 12px; gap: 10px;
+    color: #151515; background: #fff; background-image: none; border: 0; border-right: 4px solid #777; border-radius: 0;
   }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"])[data-team="home"] { border-right-color: var(--home-color); }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
@@ -828,6 +854,14 @@
 
 <!-- ═══ TAB: SPIEL ═══ -->
 <section class="tab-content active" id="tabSpiel">
+
+  <div class="feed-result-header" aria-label="Aktueller Spielstand">
+    <div class="feed-result-team home"><img class="feed-result-logo" id="feedLogoHome" src="" alt=""></div>
+    <div class="feed-result-score">
+      <span id="feedScoreHome">0</span><span class="feed-result-separator">:</span><span id="feedScoreAway">0</span>
+    </div>
+    <div class="feed-result-team away"><img class="feed-result-logo" id="feedLogoAway" src="" alt=""></div>
+  </div>
 
   <div class="scoreboard">
     <div class="scoreboard-top">
@@ -3456,12 +3490,28 @@ function updateTickerUI(data, lastScore) {
   const la = document.getElementById('logoAway');
   if (lh) { lh.src = data.homeLogo || ''; lh.style.display = data.homeLogo ? '' : 'none'; }
   if (la) { la.src = data.awayLogo || ''; la.style.display = data.awayLogo ? '' : 'none'; }
+  const feedLh = document.getElementById('feedLogoHome');
+  const feedLa = document.getElementById('feedLogoAway');
+  if (feedLh) {
+    feedLh.src = data.homeLogo || '';
+    feedLh.alt = data.homeTeam || 'Heim';
+    feedLh.style.display = data.homeLogo ? 'block' : 'none';
+  }
+  if (feedLa) {
+    feedLa.src = data.awayLogo || '';
+    feedLa.alt = data.awayTeam || 'Gast';
+    feedLa.style.display = data.awayLogo ? 'block' : 'none';
+  }
 
   // Score
   const scoreH = document.getElementById('scoreHome');
   const scoreA = document.getElementById('scoreAway');
   if (scoreH) scoreH.textContent = data.homeScore ?? 0;
   if (scoreA) scoreA.textContent = data.awayScore ?? 0;
+  const feedScoreH = document.getElementById('feedScoreHome');
+  const feedScoreA = document.getElementById('feedScoreAway');
+  if (feedScoreH) feedScoreH.textContent = data.homeScore ?? 0;
+  if (feedScoreA) feedScoreA.textContent = data.awayScore ?? 0;
 
   // Animate + Goal Overlay if score changed
   if (lastScore && scoreH && scoreA &&

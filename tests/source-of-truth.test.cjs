@@ -157,7 +157,11 @@ test('spectator ticker offers cards and an optional highlight feed layout',()=>{
   assert.match(tracker,/id="tickerLayoutCards"[^>]*onclick="setTickerLayout\('cards'\)"[^>]*>Karten</);
   assert.match(tracker,/id="tickerLayoutFeed"[^>]*onclick="setTickerLayout\('feed'\)"[^>]*>Feed</);
   assert.match(tracker,/function setTickerLayout\(layout\)[\s\S]*?classList\.toggle\('ticker-feed', layout === 'feed'\)/);
+  assert.match(tracker,/class="feed-result-header"[^>]*>[\s\S]*?id="feedScoreHome"[\s\S]*?id="feedScoreAway"/);
+  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.scoreboard \{ display: none; \}/);
+  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.events-section \{ width: 100%; padding: 0;/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\]/);
+  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
   assert.match(tracker,/item\.dataset\.team = e\.team === 'away' \? 'away' : 'home'/);
   assert.match(tracker,/item\.dataset\.type = e\.typ \|\| 'tor'/);
 });
