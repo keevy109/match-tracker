@@ -137,8 +137,10 @@ test('transparent overlay portraits extend above their smaller avatar circles',(
   const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
   assert.match(tracker,/\.goal-overlay-card\.has-photo::before\s*\{[^}]*width:\s*132px[^}]*border-radius:\s*50%/);
   assert.match(tracker,/\.goal-overlay-player-photo\s*\{[^}]*object-fit:\s*contain[^}]*transform:\s*translate\(-50%,\s*-100%\)/);
+  assert.match(tracker,/\.goal-overlay-player-photo\s*\{[^}]*mask-image:[^;]*ellipse 64px 78px[^;]*circle 66px/);
   assert.match(tracker,/\.substitution-avatar\s*\{[^}]*overflow:\s*visible/);
   assert.match(tracker,/\.substitution-avatar::before\s*\{[^}]*width:\s*78%[^}]*border-radius:\s*50%/);
+  assert.match(tracker,/\.substitution-avatar img\s*\{[^}]*mask-image:[^;]*ellipse 36px 44px[^;]*circle 38px/);
 });
 
 test('dev mode switches locally between entry and spectator views',()=>{
