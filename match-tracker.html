@@ -799,6 +799,28 @@
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) .event-score { display: none; }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
 
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] {
+    display: flex; flex-direction: column; gap: 8px; padding: 16px 12px 0;
+    background: linear-gradient(90deg, #16733e 0%, #354b38 50%, #a32e37 100%); border: 0;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-min { color: #fff; }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-info { width: 100%; min-width: 0; }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-scorer {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; color: #fff;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-substitution-player {
+    display: flex; flex-direction: column; gap: 8px; color: #fff; text-align: center;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-substitution-player > span:last-child {
+    order: -1; width: 100%; min-height: 40px; overflow-wrap: anywhere;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-photo,
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-placeholder {
+    width: 100%; height: 200px; flex: none; border: 0; border-radius: 0;
+    object-fit: contain; object-position: center bottom; background: transparent;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-tag { display: none; }
+
   /* Ticker overlay for sharing */
   .ticker-share-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300;
@@ -1839,8 +1861,8 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     const crest = logo ? `<img class="event-team-crest" src="${esc(logo)}" alt="${esc(teamName)}" loading="lazy">` : '';
     main = `<span class="event-goal-player">${crest}<span><span class="event-scorer-name">${esc(teamName)}</span></span></span>`;
   } else if (typ === 'wechsel' && ourEvent) {
-    main = `<span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>
-      <span class="event-substitution-player event-player-in">${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>`;
+    main = `<span class="event-substitution-player event-player-in">${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>
+      <span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>`;
   }
   let scoreHtml = '<div class="event-score"></div>';
   if (typ === 'tor') {
