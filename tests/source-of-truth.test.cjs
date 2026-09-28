@@ -164,10 +164,9 @@ test('spectator ticker offers cards and an optional highlight feed layout',()=>{
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item \.event-icon \{ display: none; \}/);
   assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-score-current \{ font-weight: 900; \}/);
-  assert.match(tracker,/function activateFeedGoalVideo\(list = document\.getElementById\('eventsList'\)\)/);
-  assert.match(tracker,/function replayFeedGoalVideo\(item\)/);
-  assert.match(tracker,/item\.addEventListener\('click', \(\) => replayFeedGoalVideo\(item\)\)/);
-  assert.match(tracker,/\.event-player-video\.finished \{ display: none; \}/);
+  assert.match(tracker,/width: 100%; min-height: 230px;/);
+  assert.match(tracker,/position: absolute; right: 14px; bottom: -4px;/);
+  assert.doesNotMatch(tracker,/event-player-video/);
   assert.match(tracker,/item\.dataset\.team = e\.team === 'away' \? 'away' : 'home'/);
   assert.match(tracker,/item\.dataset\.type = e\.typ \|\| 'tor'/);
 });

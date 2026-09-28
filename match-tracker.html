@@ -203,7 +203,6 @@
   .event-item.kommentar .event-scorer { display: block; white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; }
   .event-scorer { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: baseline; gap: 6px; }
   .event-player-photo, .event-player-placeholder { width:36px; height:36px; flex:0 0 36px; border-radius:50%; object-fit:cover; background:var(--surface2); }
-  .event-player-video { display: none; }
   .event-player-placeholder { display:grid; place-items:center; font-size:20px; }
   .event-goal-player, .event-substitution-player { display:flex; align-items:center; gap:8px; min-width:0; }
   .event-goal-player > span:last-child, .event-substitution-player > span:last-child { white-space:normal; overflow-wrap:anywhere; min-width:0; }
@@ -737,7 +736,7 @@
   body.ticker-mode.ticker-feed .event-item { position: relative; overflow: hidden; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] {
     display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-    width: 100%; min-height: 210px; padding: 16px; gap: 0; border: 0; border-radius: 0;
+    width: 100%; min-height: 230px; padding: 16px; gap: 0; border: 0; border-radius: 0;
     color: #fff; isolation: isolate;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
@@ -767,20 +766,10 @@
   body.ticker-mode.ticker-feed .event-score-current { font-weight: 900; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player { display: block; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player .event-player-photo {
-    position: absolute; right: -10px; bottom: -4px; z-index: 1;
+    position: absolute; right: 14px; bottom: -4px; z-index: 1;
     width: 170px; height: 200px; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent;
   }
-  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-player-video {
-    display: block; position: absolute; right: -4px; bottom: -4px; z-index: 1;
-    width: 180px; height: 204px; border: 0; object-fit: cover; object-position: 58% 24%;
-    background: transparent; transform: scale(1.65); transform-origin: 78% 30%;
-    -webkit-mask-image: linear-gradient(to right, transparent 0, rgba(0,0,0,0.72) 18%, #000 38%);
-    mask-image: linear-gradient(to right, transparent 0, rgba(0,0,0,0.72) 18%, #000 38%);
-  }
-  body.ticker-mode.ticker-feed .event-goal-player:has(.event-player-video:not(.finished)) .event-player-photo { opacity: 0; }
-  body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-player-video.finished { display: none; }
-  body.ticker-mode.ticker-feed .event-item[data-type="tor"]:has(.event-player-video) { cursor: pointer; }
   body.ticker-mode.ticker-feed .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
   body.ticker-mode.ticker-feed .event-item:not([data-type="tor"]) {
     grid-template-columns: 46px minmax(0, 1fr); width: 100%; padding: 14px 12px; gap: 10px;
@@ -1261,52 +1250,7 @@ let devViewMode = 'admin';
 let devAdminTab = 'spiel';
 let devTickerClockInterval = null;
 let tickerLayout = 'cards';
-const playedFeedGoalVideos = new Set();
 try { tickerLayout = localStorage.getItem('matchtracker_ticker_layout') === 'feed' ? 'feed' : 'cards'; } catch (_) {}
-
-function activateFeedGoalVideo(list = document.getElementById('eventsList')) {
-  if (tickerLayout !== 'feed' || !document.body.classList.contains('ticker-feed') || !list) return;
-  const videos = [...list.querySelectorAll('.event-player-video')];
-  const current = videos.find(video => !playedFeedGoalVideos.has(video.dataset.eventId));
-  for (const video of videos) {
-    const id = video.dataset.eventId;
-    if (video !== current || !id) {
-      video.classList.add('finished');
-      if (id) playedFeedGoalVideos.add(id);
-    }
-  }
-  if (!current) return;
-  if (!current.paused && !current.ended) return;
-  current.classList.remove('finished');
-  current.muted = true;
-  current.currentTime = 0;
-  const restorePortrait = () => {
-    playedFeedGoalVideos.add(current.dataset.eventId);
-    current.classList.add('finished');
-  };
-  current.addEventListener('ended', restorePortrait, { once: true });
-  current.addEventListener('error', restorePortrait, { once: true });
-  current.play().catch(restorePortrait);
-}
-
-function replayFeedGoalVideo(item) {
-  if (tickerLayout !== 'feed' || !document.body.classList.contains('ticker-mode') || !item) return;
-  const video = item.querySelector('.event-player-video');
-  if (!video) return;
-  const id = video.dataset.eventId;
-  if (id) playedFeedGoalVideos.delete(id);
-  video.pause();
-  video.currentTime = 0;
-  video.classList.remove('finished');
-  video.muted = true;
-  const restorePortrait = () => {
-    if (id) playedFeedGoalVideos.add(id);
-    video.classList.add('finished');
-  };
-  video.addEventListener('ended', restorePortrait, { once: true });
-  video.addEventListener('error', restorePortrait, { once: true });
-  video.play().catch(restorePortrait);
-}
 
 function setTickerLayout(layout) {
   if (!['cards', 'feed'].includes(layout)) return;
@@ -1322,7 +1266,6 @@ function setTickerLayout(layout) {
     const button = document.getElementById(id);
     if (button) { button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); }
   }
-  setTimeout(() => activateFeedGoalVideo(), 0);
   try { localStorage.setItem('matchtracker_ticker_layout', layout); } catch (_) {}
 }
 
@@ -1843,35 +1786,6 @@ function eventPlayerPortrait(event, prefix, members) {
     : '<span class="event-player-placeholder" aria-hidden="true">👤</span>';
 }
 
-function eventPlayerVideo(event, prefix, members) {
-  const player = members.find(member => member && event[prefix + 'Id'] != null && String(member.id) === String(event[prefix + 'Id']));
-  const fallbackMedia = globalThis.MatchTrackerDetailMedia;
-  const eventName = event[prefix === 'scorer' ? 'scorer' : prefix + 'Name'] || player?.name || '';
-  const video = player?.detailPhoto
-    || fallbackMedia?.get('id:' + String(event[prefix + 'Id']))
-    || fallbackMedia?.get('name:' + String(eventName).trim().toLocaleLowerCase('de-DE'))
-    || '';
-  if (!/\.(?:mp4|webm|ogg)(?:[?#].*)?$/i.test(video)) return '';
-  const photo = player?.photo || event[prefix + 'Photo'] || '';
-  const name = event[prefix === 'scorer' ? 'scorer' : prefix + 'Name'] || player?.name || 'Spieler';
-  return `<video class="event-player-video" src="${esc(video)}"${photo ? ` poster="${esc(photo)}"` : ''} autoplay muted playsinline preload="auto" data-event-id="${esc(event.id)}" aria-label="Torjubel von ${esc(name)}"></video>`;
-}
-
-async function loadPlayerDetailMedia() {
-  try {
-    const response = await fetch('./data/kader.json', { cache: 'no-store' });
-    if (!response.ok) return;
-    const players = await response.json();
-    const media = new Map();
-    for (const player of Array.isArray(players) ? players : []) {
-      if (!player?.detailPhoto) continue;
-      media.set('id:' + String(player.id), player.detailPhoto);
-      media.set('name:' + String(player.name || '').trim().toLocaleLowerCase('de-DE'), player.detailPhoto);
-    }
-    globalThis.MatchTrackerDetailMedia = media;
-  } catch (_) {}
-}
-
 function currentMatchSquad(data = {}) {
   const current = Array.isArray(squad) ? squad.filter(Boolean) : Object.values(squad || {}).filter(Boolean);
   if (current.length) return current;
@@ -1888,7 +1802,7 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
   const members = Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad);
   const ourEvent = context.ownSide && (e.team || (typ === 'wechsel' ? context.ownSide : null)) === context.ownSide;
   if (typ === 'tor' && ourEvent && !e.isOwnGoal) {
-    main = `<span class="event-goal-player">${eventPlayerPortrait(e, 'scorer', members)}${eventPlayerVideo(e, 'scorer', members)}<span>${main}</span></span>`;
+    main = `<span class="event-goal-player">${eventPlayerPortrait(e, 'scorer', members)}<span>${main}</span></span>`;
   } else if (typ === 'wechsel' && ourEvent) {
     main = `<span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>
       <span class="event-substitution-player event-player-in">${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>`;
@@ -1936,10 +1850,8 @@ function renderEvents() {
     item.dataset.team = e.team === 'away' ? 'away' : 'home';
     item.dataset.type = e.typ || 'tor';
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide() });
-    item.addEventListener('click', () => replayFeedGoalVideo(item));
     list.appendChild(item);
   });
-  activateFeedGoalVideo(list);
 }
 
 // ─── EXPORT ───────────────────────────────────────────────────────────────────
@@ -3644,10 +3556,8 @@ function updateTickerUI(data, lastScore) {
       item.dataset.team = e.team === 'away' ? 'away' : 'home';
       item.dataset.type = e.typ || 'tor';
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home' });
-      item.addEventListener('click', () => replayFeedGoalVideo(item));
       list.appendChild(item);
     });
-    activateFeedGoalVideo(list);
   }
 
   // Updated timestamp
@@ -3735,9 +3645,8 @@ function checkAccess() {
 
 // ─── STARTUP: Check ticker mode or init Firebase ─────────────────────────────
 // Läuft NACH dem Firebase SDK → firebase ist jetzt definiert
-(async function() {
+(function() {
   if (!checkAccess()) return;
-  await loadPlayerDetailMedia();
   const params = new URLSearchParams(window.location.search);
   const tickerId = params.get('ticker');
   if (tickerId) {
