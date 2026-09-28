@@ -810,24 +810,37 @@
   }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-substitution-player {
     display: flex; flex-direction: column; gap: 8px; color: #151515; text-align: center;
-    position: relative; isolation: isolate;
+    position: relative; isolation: isolate; --arrow-color: #34b66a; --arrow-glow: rgba(52,182,106,0.28);
   }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-substitution-player::before {
-    content: ''; position: absolute; left: 8%; bottom: 0; width: 84%; height: 200px;
+    content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 200px;
     z-index: -1; pointer-events: none;
-    background: #34b66a;
-    clip-path: polygon(50% 0, 100% 35%, 77% 35%, 77% 100%, 23% 100%, 23% 35%, 0 35%);
+    background: linear-gradient(to bottom, var(--arrow-color) 0%, var(--arrow-color) 40%, transparent 100%);
+    clip-path: polygon(50% 0, 100% 35%, 83% 35%, 83% 100%, 17% 100%, 17% 35%, 0 35%);
   }
-  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out::before {
-    background: #e34b55; transform: rotate(180deg);
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-substitution-player::after {
+    content: ''; position: absolute; inset: auto -8px 0; height: 210px; z-index: -2;
+    background: radial-gradient(ellipse at 50% 35%, var(--arrow-glow), transparent 70%);
+    filter: blur(8px); pointer-events: none;
   }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out {
+    --arrow-color: #e34b55; --arrow-glow: rgba(227,75,85,0.28);
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out::before,
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out::after { transform: rotate(180deg); }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-substitution-player > span:last-child {
-    order: -1; width: 100%; min-height: 40px; overflow-wrap: anywhere;
+    order: -1; width: 100%; min-height: 40px; overflow-wrap: anywhere; position: relative; z-index: 2;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-photo,
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-placeholder {
     width: 100%; height: 200px; flex: none; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent;
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-photo { position: relative; z-index: 1; }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-side-photo {
+    display: block; position: absolute; right: 20%; bottom: 0; z-index: 0;
+    width: 108.333%; height: 216.667px; object-fit: contain; object-position: center bottom;
+    opacity: 0.3; pointer-events: none;
   }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-tag { display: none; }
 
@@ -1834,13 +1847,13 @@ function eventPlayerPortrait(event, prefix, members) {
     : '<span class="event-player-placeholder" aria-hidden="true">👤</span>';
 }
 
-function eventPlayerSidePortrait(event, members) {
-  const player = members.find(member => member && event.scorerId != null && String(member.id) === String(event.scorerId));
-  const name = String(player?.name || event.scorer || '').trim().toLowerCase();
+function eventPlayerSidePortrait(event, members, prefix = 'scorer') {
+  const player = members.find(member => member && event[prefix + 'Id'] != null && String(member.id) === String(event[prefix + 'Id']));
+  const name = String(player?.name || event[prefix === 'scorer' ? 'scorer' : prefix + 'Name'] || '').trim().toLowerCase();
   const available = ['aleciano', 'emil', 'grigorios', 'jonah', 'leo', 'max', 'pan', 'paul', 'till', 'tom'];
   const bundledPhoto = available.includes(name) ? `uploads/kader/side-portraits/${name}.png` : '';
-  const photo = player?.sidePhoto || event.scorerSidePhoto || bundledPhoto;
-  if (!photo || !(player?.photo || event.scorerPhoto)) return '';
+  const photo = player?.sidePhoto || event[prefix + 'SidePhoto'] || bundledPhoto;
+  if (!photo || !(player?.photo || event[prefix + 'Photo'])) return '';
   return `<img class="event-player-side-photo" src="${esc(photo)}" alt="" aria-hidden="true" loading="lazy">`;
 }
 
@@ -1871,8 +1884,8 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     const crest = logo ? `<img class="event-team-crest" src="${esc(logo)}" alt="${esc(teamName)}" loading="lazy">` : '';
     main = `<span class="event-goal-player">${crest}<span><span class="event-scorer-name">${esc(teamName)}</span></span></span>`;
   } else if (typ === 'wechsel' && ourEvent) {
-    main = `<span class="event-substitution-player event-player-in">${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>
-      <span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>`;
+    main = `<span class="event-substitution-player event-player-in">${eventPlayerSidePortrait(e, members, 'rein')}${eventPlayerPortrait(e, 'rein', members)}<span>↑ Rein: ${esc(e.reinName || '–')}</span></span>
+      <span class="event-substitution-player event-player-out">${eventPlayerSidePortrait(e, members, 'raus')}${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>`;
   }
   let scoreHtml = '<div class="event-score"></div>';
   if (typ === 'tor') {
