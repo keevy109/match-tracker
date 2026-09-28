@@ -94,3 +94,14 @@ test('roster portraits keep their top spacing and sit flush on the row bottom',(
   assert.match(css,/#kaderRows \.kl-avatar\s*\{[^}]*height:\s*46px[^}]*margin-bottom:\s*-10px/s);
   assert.match(css,/#kaderRows \.kl-avatar img\s*\{[^}]*object-fit:\s*contain[^}]*object-position:\s*center bottom/s);
 });
+
+test('supplied transparent roster portraits are assigned by player name',()=>{
+  const roster=JSON.parse(fs.readFileSync(path.join(__dirname,'../public/data/kader.json'),'utf8'));
+  const names=['Aleciano','Emil','Grigorios','Jonah','Leo','Max','Pan','Paul','Till','Tom'];
+  for(const name of names){
+    const player=roster.find(item=>item.name===name);
+    const expected=`uploads/kader/portraits/${name.toLowerCase()}.png`;
+    assert.equal(player?.photo,expected);
+    assert.equal(fs.existsSync(path.join(__dirname,'../public',expected)),true);
+  }
+});
