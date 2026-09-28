@@ -140,3 +140,12 @@ test('transparent overlay portraits extend above their smaller avatar circles',(
   assert.match(tracker,/\.substitution-avatar\s*\{[^}]*overflow:\s*visible/);
   assert.match(tracker,/\.substitution-avatar::before\s*\{[^}]*width:\s*78%[^}]*border-radius:\s*50%/);
 });
+
+test('dev mode switches locally between entry and spectator views',()=>{
+  const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
+  assert.match(tracker,/id="devViewAdmin"[^>]*onclick="setDevView\('admin'\)"[^>]*>Eintragen</);
+  assert.match(tracker,/id="devViewTicker"[^>]*onclick="setDevView\('ticker'\)"[^>]*>Zuschauer</);
+  assert.match(tracker,/function setDevView\(mode\)[\s\S]*?classList\.toggle\('ticker-mode', spectator\)/);
+  assert.match(tracker,/function refreshDevSpectatorView\(\)[\s\S]*?matchSnapshot\(\)[\s\S]*?updateTickerUI\(data, null\)/);
+  assert.match(tracker,/Lokale Testansicht · nichts wird veröffentlicht/);
+});

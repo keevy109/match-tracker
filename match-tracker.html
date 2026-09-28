@@ -57,16 +57,21 @@
   }
 
   .dev-banner {
-    display: none; align-items: center; justify-content: space-between; gap: 12px;
+    display: none; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
     padding: 9px 14px; background: #c8f542; color: #101010;
     font-family: var(--mono); font-size: 11px; font-weight: 800;
     letter-spacing: 0.06em; text-transform: uppercase;
   }
   .dev-mode .dev-banner { display: flex; }
+  .dev-banner-copy { width: 100%; }
+  .dev-banner-controls { width: 100%; display: flex; align-items: center; gap: 6px; }
+  .dev-view-toggle { display: grid; grid-template-columns: 1fr 1fr; flex: 1; padding: 2px; border: 1px solid #101010; border-radius: 7px; }
   .dev-banner button {
     border: 1px solid #101010; border-radius: 5px; background: transparent;
     color: #101010; padding: 5px 7px; font: inherit; cursor: pointer;
   }
+  .dev-view-toggle button { border: 0; padding: 5px 8px; }
+  .dev-view-toggle button.active { background: #101010; color: #c8f542; }
   .dev-mode .admin-edit-link { display: none !important; }
 
   header {
@@ -723,8 +728,14 @@
 <body>
 <canvas id="stadium-bg" aria-hidden="true"></canvas>
 <div class="dev-banner" id="devBanner">
-  <span>Testmodus · nichts wird veröffentlicht</span>
-  <button type="button" onclick="resetDevMode()">Zurücksetzen</button>
+  <span class="dev-banner-copy">Testmodus · nichts wird veröffentlicht</span>
+  <div class="dev-banner-controls">
+    <div class="dev-view-toggle" aria-label="Testansicht auswählen">
+      <button type="button" id="devViewAdmin" class="active" aria-pressed="true" onclick="setDevView('admin')">Eintragen</button>
+      <button type="button" id="devViewTicker" aria-pressed="false" onclick="setDevView('ticker')">Zuschauer</button>
+    </div>
+    <button type="button" onclick="resetDevMode()">Zurücksetzen</button>
+  </div>
 </div>
 
 <!-- Ticker header (only visible in ticker mode) -->
@@ -1133,6 +1144,61 @@ function resetDevMode() {
   window.location.reload();
 }
 
+let devViewMode = 'admin';
+let devAdminTab = 'spiel';
+let devTickerClockInterval = null;
+
+function updateDevTickerClock() {
+  if (!DEV_MODE || devViewMode !== 'ticker') return;
+  const clockEl = document.getElementById('tickerClock');
+  if (!clockEl) return;
+  const secs = elapsedSeconds();
+  if (secs <= 0 && timerBase === null) { clockEl.textContent = ''; return; }
+  const minutes = Math.floor(secs / 60);
+  const seconds = String(secs % 60).padStart(2, '0');
+  clockEl.textContent = timerBase !== null ? `${minutes}:${seconds}` : `${minutes}:${seconds} – Pause`;
+}
+
+function refreshDevSpectatorView() {
+  if (!DEV_MODE || devViewMode !== 'ticker') return;
+  const data = { ...matchSnapshot(), squad, updatedAt: Date.now() };
+  updateTickerUI(data, null);
+  const badge = document.getElementById('tickerLiveBadge');
+  if (badge && !activeMatchId) badge.innerHTML = '<div class="ticker-live-dot"></div> VORSCHAU';
+  document.getElementById('tickerDate').textContent = data.matchDate || '';
+  document.getElementById('tickerUpdated').textContent = 'Lokale Testansicht · nichts wird veröffentlicht';
+  updateDevTickerClock();
+}
+
+function setDevView(mode) {
+  if (!DEV_MODE || !['admin', 'ticker'].includes(mode)) return;
+  if (mode === 'ticker' && devViewMode !== 'ticker') {
+    const activeTab = document.querySelector('.tab-content.active');
+    devAdminTab = activeTab?.id?.replace(/^tab/, '').toLowerCase() || 'spiel';
+  }
+  devViewMode = mode;
+  localStorage.setItem('matchtracker_dev_view', mode);
+  const spectator = mode === 'ticker';
+  document.body.classList.toggle('ticker-mode', spectator);
+  document.body.classList.toggle('dev-spectator-mode', spectator);
+  for (const [id, active] of [['devViewAdmin', !spectator], ['devViewTicker', spectator]]) {
+    const button = document.getElementById(id);
+    if (button) { button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); }
+  }
+  clearInterval(devTickerClockInterval);
+  devTickerClockInterval = null;
+  if (spectator) {
+    switchTab('spiel');
+    refreshDevSpectatorView();
+    devTickerClockInterval = setInterval(updateDevTickerClock, 1000);
+  } else {
+    document.title = 'Match Tracker';
+    document.getElementById('tickerUpdated').textContent = '';
+    switchTab(devAdminTab);
+    updateScoreLabels(); updateGoalButtons(); updateScore(false); renderEvents(); updateTimerDisplay();
+  }
+}
+
 // Timer: wall-clock approach
 let timerBase   = null;
 let timerOffset = 0;
@@ -1292,6 +1358,11 @@ function applyMatchSnapshot(id, data) {
   renderTeamsList();
   updateSpielplanGegnerSelect();
   updateEndMatchBtn();
+
+  if (DEV_MODE) {
+    const preferredView = localStorage.getItem('matchtracker_dev_view') === 'ticker' ? 'ticker' : 'admin';
+    requestAnimationFrame(() => setDevView(preferredView));
+  }
 
   // Auto-start erfolgt nach Firebase-Load (Phase 2 im Startup-Block)
 })();
@@ -3439,6 +3510,7 @@ function checkAccess() {
           storageReady = true;
           document.getElementById('storageLoading').style.display = 'none';
           storageStatus('Testmodus: Alles bleibt auf diesem Gerät und wird nicht veröffentlicht.');
+          refreshDevSpectatorView();
           return;
         }
         const all = (await readStoredValue(firebase.database().ref('matches'))).val() || {};
