@@ -4,3 +4,11 @@ function setup(fail,dev=false){let callback,written;const status={textContent:''
 test('appearance edit on completed match changes only participation and recalculates games',async()=>{const x=setup(false);await x.save();assert.equal(x.written().path,'matchParticipants/10');assert.deepEqual(Array.from(x.c.squad,p=>p.games),[1,1]);assert.equal(x.c.schedule[0].result.away,5);assert.equal(x.c.schedule[0].result.events.length,1);});
 test('failed appearance save retains existing selections and shows an error',async()=>{const x=setup(true);await x.save();assert.equal(x.c.schedule[0].participantIds,undefined);assert.match(x.status.textContent,/Nicht gespeichert/);});
 test('dev appearances remain local and never write to Firebase',async()=>{const x=setup(false,true);await x.save();assert.deepEqual(Array.from(x.c.schedule[0].participantIds),[1,2]);assert.equal(x.written(),undefined);});
+test('archived fixtures and stale active matches do not add season goals or appearances',()=>{
+ const {c}=setup(false);
+ c.schedule.push({id:11,archived:true,isHome:true,participantIds:[1],result:{events:[{team:'home',scorerId:1}]}});
+ c.activeMatchId=11;c.isHomeTeam=true;c.events=[{team:'home',scorerId:1}];
+ c.recalculatePlayerStats();assert.equal(c.squad[0].goals,1);assert.equal(c.squad[0].games,0);
+ c.activeMatchId=10;c.isHomeTeam=false;c.events=[{team:'away',scorerId:1},{team:'away',scorerId:1}];
+ c.recalculatePlayerStats();assert.equal(c.squad[0].goals,2);
+});

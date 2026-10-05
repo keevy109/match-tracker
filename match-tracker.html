@@ -2302,10 +2302,13 @@ function recalculatePlayerStats() {
   const records = {};
   const participants = {};
   schedule.forEach(m => {
+    if (m.archived) return;
     if (m.result) records[m.id] = {isHomeTeam:m.isHome ?? m.home ?? true, events:m.result.events || []};
     participants[m.id] = {playerIds:m.participantIds || []};
   });
-  if (activeMatchId) records[activeMatchId] = {isHomeTeam, events};
+  if (activeMatchId && schedule.some(m => String(m.id) === String(activeMatchId) && !m.archived)) {
+    records[activeMatchId] = {isHomeTeam, events};
+  }
   squad = MatchTrackerStats.calculate(squad, records, participants, trainingSessions);
 }
 
