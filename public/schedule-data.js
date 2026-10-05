@@ -77,7 +77,7 @@
         time:item.time || null,
         isHome:item.home !== false,
         venue:item.venue || null,
-        type:item.type || old.type || null,
+        type:Object.prototype.hasOwnProperty.call(item, 'type') ? (item.type || null) : (old.type || null),
         archived:false,
       };
       delete merged.home;

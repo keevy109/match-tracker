@@ -516,6 +516,7 @@ function openMatchForm(id) {
   document.getElementById('fMatchDate').value  = m ? m.date : '';
   document.getElementById('fMatchTime').value  = m ? m.time : '';
   document.getElementById('fMatchHome').value  = m ? (m.home ? 'home' : 'away') : 'home';
+  document.getElementById('fMatchType').value = m?.type === 'Testspiel' ? 'Testspiel' : '';
   document.getElementById('fMatchVenue').value = m ? (m.venue || '') : 'Sportplatz Berghausen';
 
   document.getElementById('fDeleteBtn').style.display = m ? 'block' : 'none';
@@ -529,12 +530,13 @@ async function saveMatchForm() {
   const time  = document.getElementById('fMatchTime').value;
   const home  = document.getElementById('fMatchHome').value === 'home';
   const venue = document.getElementById('fMatchVenue').value.trim();
+  const type = document.getElementById('fMatchType').value;
 
   if (editingId) {
     const m = spielplan.find(x => x.id === editingId);
-    if (m) Object.assign(m, { opponent, date, time, home, venue });
+    if (m) Object.assign(m, { opponent, date, time, home, venue, type });
   } else {
-    spielplan.push({ id: nextId(), opponent, date, time, home, venue, result: null, status: 'future' });
+    spielplan.push({ id: nextId(), opponent, date, time, home, venue, type, result: null, status: 'future' });
   }
   await saveSpielplan();
   renderSpielplan();
@@ -713,6 +715,13 @@ function buildBasePanel() {
           <label class="form-label">Uhrzeit</label>
           <input class="form-input" id="fMatchTime" type="time">
         </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Spieltyp</label>
+        <select class="form-select" id="fMatchType">
+          <option value="">Ohne Kennzeichnung</option>
+          <option value="Testspiel">Testspiel</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="form-field">

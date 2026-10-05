@@ -2554,7 +2554,7 @@ function renderSpielplan() {
 
     actionsHTML += `<div class="spielplan-actions"><button class="btn-row-edit" onclick="editParticipants(${m.id})">Einsätze auswählen</button><span>${(m.participantIds || []).length} Spieler</span></div>`;
     const meta = [];
-    if (m.type) meta.push(esc(m.type));
+    if (m.type && m.type.trim().toLowerCase() !== 'kreisklasse') meta.push(esc(m.type));
     if (m.date) {
       const d = new Date(m.date + 'T00:00:00');
       meta.push(d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}));

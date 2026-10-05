@@ -56,7 +56,10 @@ function render(matches, clubs = []) {
       ? `<span class="badge ${m.home ? 'badge-home' : 'badge-away'}">${m.home ? 'Heim' : 'Auswärts'}</span>`
       : '';
 
-    const venue = m.home ? (m.venue || 'Sportplatz Berghausen') : 'Auswärtsspiel';
+    const homeVenue = (m.venue || '').trim();
+    const venue = m.home
+      ? (!homeVenue || ['Sportplatz Berghausen', 'Sportplatz Baumberger Straße (Kleinfeld)'].includes(homeVenue) ? 'Heimspiel' : homeVenue)
+      : 'Auswärtsspiel';
     const meta  = [venue, m.time ? m.time + ' Uhr' : ''].filter(Boolean).join(' · ');
 
     let rightCol = '';
