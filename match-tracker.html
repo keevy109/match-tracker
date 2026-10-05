@@ -594,6 +594,9 @@
     font-family: var(--mono); font-size: 12px; color: var(--accent);
     margin-bottom: 2px;
   }
+  body:not(.dev-mode) .ticker-layout-toggle,
+  body:not(.dev-mode) .kader-tab,
+  body:not(.dev-mode) #tabKader { display: none !important; }
   .ticker-layout-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 10px; padding: 2px; border: 1px solid rgba(255,255,255,0.28); border-radius: 8px; background: rgba(0,0,0,0.3); }
   .ticker-layout-toggle button { border: 0; border-radius: 5px; padding: 6px 10px; background: transparent; color: var(--muted); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; }
   .ticker-layout-toggle button.active { background: var(--accent); color: #101010; }
@@ -826,8 +829,42 @@
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out {
     --arrow-color: #e34b55; --arrow-glow: rgba(227,75,85,0.28);
   }
-  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out::before,
-  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out::after { transform: rotate(180deg); }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out::before {
+    background: linear-gradient(to top, var(--arrow-color) 0%, var(--arrow-color) 40%, transparent 100%);
+    clip-path: polygon(50% 100%, 100% 65%, 83% 65%, 83% 0, 17% 0, 17% 65%, 0 65%);
+  }
+  body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-out::after {
+    background: radial-gradient(ellipse at 50% 65%, var(--arrow-glow), transparent 70%);
+  }
+  @keyframes feed-sub-player-enter {
+    from { opacity: 0; transform: translateY(80px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes feed-sub-arrow-grow {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+  body.ticker-mode.ticker-feed .feed-sub-pending .event-player-photo,
+  body.ticker-mode.ticker-feed .feed-sub-pending .event-player-placeholder,
+  body.ticker-mode.ticker-feed .feed-sub-pending .event-substitution-player::before,
+  body.ticker-mode.ticker-feed .feed-sub-pending .event-substitution-player::after { visibility: hidden; }
+  body.ticker-mode.ticker-feed .feed-sub-animate .event-player-photo,
+  body.ticker-mode.ticker-feed .feed-sub-animate .event-player-placeholder {
+    animation: feed-sub-player-enter 1500ms ease-out both;
+  }
+  body.ticker-mode.ticker-feed .feed-sub-animate .event-substitution-player::before,
+  body.ticker-mode.ticker-feed .feed-sub-animate .event-substitution-player::after {
+    transform-origin: center bottom;
+    animation: feed-sub-arrow-grow 1500ms ease-out both;
+  }
+  body.ticker-mode.ticker-feed .feed-sub-animate .event-player-out::before,
+  body.ticker-mode.ticker-feed .feed-sub-animate .event-player-out::after { transform-origin: center top; }
+  @media (prefers-reduced-motion: reduce) {
+    body.ticker-mode.ticker-feed .feed-sub-animate .event-player-photo,
+    body.ticker-mode.ticker-feed .feed-sub-animate .event-player-placeholder,
+    body.ticker-mode.ticker-feed .feed-sub-animate .event-substitution-player::before,
+    body.ticker-mode.ticker-feed .feed-sub-animate .event-substitution-player::after { animation: none; }
+  }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-substitution-player > span:last-child {
     order: -1; width: 100%; min-height: 40px; overflow-wrap: anywhere; position: relative; z-index: 2;
   }
@@ -943,7 +980,7 @@
 
 <nav class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('spiel')">Spiel</button>
-  <button class="tab-btn" onclick="switchTab('kader')">Kader</button>
+  <button class="tab-btn kader-tab" onclick="switchTab('kader')">Kader</button>
   <button class="tab-btn" onclick="switchTab('spielplan')">Spielplan</button>
 </nav>
 
@@ -1065,7 +1102,7 @@
     <div class="player-grid" id="playerGrid"></div>
     <div class="sheet-no-players" id="sheetEmpty" style="display:none">
       Kein Kader hinterlegt.<br>
-      <a onclick="closePicker();switchTab('kader')">Jetzt Spieler anlegen</a>
+      <a href="admin.html" target="_blank" rel="noopener">Spieler im Adminbereich anlegen</a>
     </div>
   </div>
   <div class="sheet-footer">
@@ -1344,10 +1381,13 @@ function resetDevMode() {
 let devViewMode = 'admin';
 let devAdminTab = 'spiel';
 let devTickerClockInterval = null;
-let tickerLayout = 'cards';
-try { tickerLayout = localStorage.getItem('matchtracker_ticker_layout') === 'feed' ? 'feed' : 'cards'; } catch (_) {}
+let tickerLayout = 'feed';
+if (DEV_MODE) {
+  try { tickerLayout = localStorage.getItem('matchtracker_ticker_layout') === 'cards' ? 'cards' : 'feed'; } catch (_) {}
+}
 
 function setTickerLayout(layout) {
+  if (!DEV_MODE) layout = 'feed';
   if (!['cards', 'feed'].includes(layout)) return;
   const changed = tickerLayout !== layout;
   tickerLayout = layout;
@@ -1361,7 +1401,9 @@ function setTickerLayout(layout) {
     const button = document.getElementById(id);
     if (button) { button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); }
   }
-  try { localStorage.setItem('matchtracker_ticker_layout', layout); } catch (_) {}
+  if (DEV_MODE) {
+    try { localStorage.setItem('matchtracker_ticker_layout', layout); } catch (_) {}
+  }
 }
 
 function updateDevTickerClock() {
@@ -1447,6 +1489,7 @@ function getOurTeamSide() {
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
 function switchTab(name) {
+  if (!DEV_MODE && name === 'kader') name = 'spiel';
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
     b.classList.toggle('active', b.textContent.toLowerCase().replace('ü','u') === name.replace('ü','u') ||
       ['spiel','kader','spielplan','teams'][i] === name);
@@ -3460,6 +3503,7 @@ function createTickerEventDetector() {
 }
 const tickerOverlayQueue = [];
 const pendingFeedGoals = new Set();
+const pendingFeedSubs = new Set();
 let tickerOverlayActive = false;
 function enqueueTickerOverlay(event, data) {
   if ((event.typ || 'tor') === 'tor') {
@@ -3467,6 +3511,12 @@ function enqueueTickerOverlay(event, data) {
     const list = document.getElementById('eventsList');
     const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
     card?.classList.add('feed-goal-pending');
+  }
+  if (event.typ === 'wechsel') {
+    pendingFeedSubs.add(String(event.id));
+    const list = document.getElementById('eventsList');
+    const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
+    card?.classList.add('feed-sub-pending');
   }
   tickerOverlayQueue.push({ event, data });
   playNextTickerOverlay();
@@ -3485,15 +3535,17 @@ function playNextTickerOverlay() {
 
 function animateFeedGoalCard(event) {
   pendingFeedGoals.delete(String(event.id));
+  pendingFeedSubs.delete(String(event.id));
   const list = document.getElementById('eventsList');
   const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
-  card?.classList.remove('feed-goal-pending');
-  if ((event.typ || 'tor') !== 'tor' || !document.body?.classList.contains('ticker-feed')) return false;
+  card?.classList.remove('feed-goal-pending', 'feed-sub-pending');
+  if (!['tor', 'wechsel'].includes(event.typ || 'tor') || !document.body?.classList.contains('ticker-feed')) return false;
   if (!card) return false;
   card.scrollIntoView({block: 'nearest', behavior: 'instant'});
-  card.classList.remove('feed-goal-animate');
+  const animationClass = event.typ === 'wechsel' ? 'feed-sub-animate' : 'feed-goal-animate';
+  card.classList.remove(animationClass);
   void card.offsetWidth;
-  card.classList.add('feed-goal-animate');
+  card.classList.add(animationClass);
   return true;
 }
 
@@ -3698,6 +3750,7 @@ function updateTickerUI(data, lastScore) {
       item.dataset.type = e.typ || 'tor';
       item.dataset.eventId = String(e.id);
       if (pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
+      if (pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home', homeLogo: data.homeLogo, awayLogo: data.awayLogo });
       list.appendChild(item);
     });
