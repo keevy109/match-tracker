@@ -2,7 +2,7 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../match-tracker.html'),'utf8');
 const source=html.slice(html.indexOf('let _eventModalType ='),html.indexOf('// ─── FIREBASE CONFIG'));
 function setup(){
- const fields={'em-text':{value:'Großchance!',focus(){}},'em-team':{value:'away',focus(){}},'em-photo':{files:[]},'em-status':{textContent:''}};
+ const fields={'em-player':{value:''},'em-player-field':{hidden:true},'em-text':{value:'Großchance!',focus(){}},'em-team':{value:'away',focus(){}},'em-photo':{files:[]},'em-status':{textContent:''}};
  const c=vm.createContext({activeMatchId:1,showToast(){},previewDevTickerOverlay(){},URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
  vm.runInContext(source,c);vm.runInContext("_eventModalType='kommentar'",c);return {c,fields};
 }
@@ -47,4 +47,22 @@ test('substitutions reject unrelated matches, missing players and identical play
  for(const [side,rein,raus] of [[null,'1','2'],['home','1','1'],['away','99','2']]){
  const {c,fields}=setup();c.getOurTeamSide=()=>side;c.showToast=()=>{};c.squad=[{id:1,name:'A'},{id:2,name:'B'}];fields['em-rein']={value:rein};fields['em-raus']={value:raus};vm.runInContext("_eventModalType='wechsel'",c);await c.saveEventModal();assert.equal(c.events.length,0);
  }
+});
+
+test('roster dropdown fills and changes the template player while retaining text edits',()=>{
+ const {c,fields}=setup();c.squad=[{id:1,name:'Mika'},{id:2,name:'Linus'}];
+ fields['em-text'].setSelectionRange=()=>{};
+ c.applyCommentTemplate('0');assert.equal(fields['em-player-field'].hidden,false);
+ fields['em-player'].value='1';c.applyCommentPlayer();assert.equal(fields['em-text'].value,'Großchance! Mika verfehlt das Tor nur knapp.');
+ fields['em-text'].value+=' Weiter so!';
+ fields['em-player'].value='2';c.applyCommentPlayer();assert.equal(fields['em-text'].value,'Großchance! Linus verfehlt das Tor nur knapp. Weiter so!');
+ c.applyCommentTemplate('1');assert.equal(fields['em-text'].value,'Starke Parade von Linus!');
+ c.applyCommentTemplate('6');assert.equal(fields['em-player-field'].hidden,false);assert.equal(fields['em-text'].value,'Ecke! Jetzt wird es gefährlich.');
+});
+
+test('selected comment player is saved with portrait snapshots without requiring a team',async()=>{
+ const {c,fields}=setup();c.squad=[{id:7,name:'Mika',photo:'front.png',sidePhoto:'side.png'}];
+ fields['em-player'].value='7';fields['em-team'].value='';await c.saveEventModal();
+ assert.equal(c.events[0].playerId,7);assert.equal(c.events[0].playerName,'Mika');
+ assert.equal(c.events[0].playerPhoto,'front.png');assert.equal(c.events[0].playerSidePhoto,'side.png');assert.equal(c.events[0].team,'');
 });
