@@ -839,6 +839,13 @@
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-player-photo { position: relative; z-index: 1; }
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] .event-tag { display: none; }
 
+  body.dev-mode.dev-spectator-mode.ticker-mode .goal-section { display: block !important; }
+  body.dev-mode.dev-spectator-mode.ticker-mode .event-btns-row,
+  body.dev-mode.dev-spectator-mode.ticker-mode .timer-row { display: flex !important; }
+  body.dev-mode.dev-spectator-mode.ticker-feed .goal-section,
+  body.dev-mode.dev-spectator-mode.ticker-feed .event-btns-row,
+  body.dev-mode.dev-spectator-mode.ticker-feed .timer-row { background: #101820; }
+
   /* Ticker overlay for sharing */
   .ticker-share-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300;
@@ -1565,6 +1572,7 @@ function save(matchReady) {
   } catch(e) { localStorageFailed = true; storageStatus('Gerätespeicher voll oder gesperrt! Bitte Sicherung herunterladen und Tab offen lassen.', true); }
   if (DEV_MODE) {
     storageStatus('Testmodus: Änderungen sind nur auf diesem Gerät gespeichert.');
+    refreshDevSpectatorView();
     return;
   }
   syncToFirebase();
