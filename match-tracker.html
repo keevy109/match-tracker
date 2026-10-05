@@ -794,11 +794,11 @@
   body.ticker-mode.ticker-feed .event-item[data-type="wechsel"] { min-height: 260px; }
   .event-comment-player { display: none; }
   body.ticker-mode.ticker-feed .event-item[data-type="kommentar"] {
-    min-height: 130px; background: #fff; background-image: none;
+    min-height: 130px; background: #fff; background-image: none; border-right: 0;
   }
-  body.ticker-mode.ticker-feed .event-item[data-type="kommentar"][data-team="home"] { border-right: 4px solid var(--home-color); }
-  body.ticker-mode.ticker-feed .event-item[data-type="kommentar"][data-team="away"] { border-right: 4px solid var(--away-color); }
-  body.ticker-mode.ticker-feed .event-item[data-type="kommentar"]:not([data-team="home"]):not([data-team="away"]) { border-right: 0; }
+  body.ticker-mode.ticker-feed .event-item[data-type="kommentar"][data-team="home"] { border-left: 4px solid var(--home-color); }
+  body.ticker-mode.ticker-feed .event-item[data-type="kommentar"][data-team="away"] { border-left: 4px solid var(--away-color); }
+  body.ticker-mode.ticker-feed .event-item[data-type="kommentar"]:not([data-team="home"]):not([data-team="away"]) { border-left: 0; }
   body.ticker-mode.ticker-feed .event-item[data-type="kommentar"] .event-scorer {
     font-size: 18px; line-height: 1.4;
   }
