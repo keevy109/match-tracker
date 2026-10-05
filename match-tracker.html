@@ -846,6 +846,35 @@
   body.dev-mode.dev-spectator-mode.ticker-feed .event-btns-row,
   body.dev-mode.dev-spectator-mode.ticker-feed .timer-row { background: #101820; }
 
+  @keyframes feed-goal-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.16); }
+  }
+  @keyframes feed-player-enter {
+    from { opacity: 0; transform: translateX(65px); }
+    to { opacity: var(--feed-image-opacity, 1); transform: translateX(0); }
+  }
+  @keyframes feed-crest-enter {
+    from { opacity: 0; transform: translateY(80px); }
+    to { opacity: 0.4; transform: translateY(0); }
+  }
+  body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-info::after {
+    transform-origin: left center; animation: feed-goal-pulse 600ms ease-in-out 3;
+  }
+  body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-goal-player .event-player-side-photo {
+    --feed-image-opacity: 0.3; animation: feed-player-enter 850ms ease-out both;
+  }
+  body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-goal-player .event-player-photo {
+    animation: feed-player-enter 850ms ease-out 180ms both;
+  }
+  body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-team-crest {
+    animation: feed-crest-enter 950ms ease-out both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-info::after,
+    body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-goal-player img { animation: none; }
+  }
+
   /* Ticker overlay for sharing */
   .ticker-share-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300;
@@ -3437,9 +3466,23 @@ function playNextTickerOverlay() {
   tickerOverlayActive = true;
   const { event, data } = tickerOverlayQueue.shift();
   showGoalOverlay(event, data, () => {
-    tickerOverlayActive = false;
-    playNextTickerOverlay();
+    const animated = animateFeedGoalCard(event);
+    const finish = () => { tickerOverlayActive = false; playNextTickerOverlay(); };
+    if (animated) setTimeout(finish, 1800);
+    else finish();
   });
+}
+
+function animateFeedGoalCard(event) {
+  if ((event.typ || 'tor') !== 'tor' || !document.body?.classList.contains('ticker-feed')) return false;
+  const list = document.getElementById('eventsList');
+  const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
+  if (!card) return false;
+  card.scrollIntoView({block: 'nearest', behavior: 'instant'});
+  card.classList.remove('feed-goal-animate');
+  void card.offsetWidth;
+  card.classList.add('feed-goal-animate');
+  return true;
 }
 
 let goalOverlayTimeout = null;
@@ -3641,6 +3684,7 @@ function updateTickerUI(data, lastScore) {
       item.className = 'event-item ' + eventCssClass(e);
       item.dataset.team = e.team === 'away' ? 'away' : 'home';
       item.dataset.type = e.typ || 'tor';
+      item.dataset.eventId = String(e.id);
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home', homeLogo: data.homeLogo, awayLogo: data.awayLogo });
       list.appendChild(item);
     });
