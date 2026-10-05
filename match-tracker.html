@@ -3258,16 +3258,54 @@ const COMMENT_TEMPLATES = [
   'Ecke! Jetzt wird es gefährlich.',
   'Freistoß aus aussichtsreicher Position.',
   'Kurze Verletzungsunterbrechung. Gute Besserung!',
-  'Spannende Schlussphase – beide Teams geben alles!'
+  'Spannende Schlussphase – beide Teams geben alles!',
+  '[Spieler] setzt sich auf dem Flügel durch und bringt den Ball vor das Tor.',
+  'Starker Abschluss von [Spieler] – der Ball geht knapp über die Latte.',
+  '[Spieler] startet einen schnellen Gegenangriff.',
+  'Schöne Kombination! [Spieler] kommt im Strafraum zum Abschluss.',
+  '[Spieler] blockt den Schuss und verhindert eine gefährliche Chance.',
+  '[Spieler] fängt den Pass ab und leitet den nächsten Angriff ein.',
+  'Stark verteidigt! [Spieler] drängt den Angreifer nach außen.',
+  '[Spieler] kommt heraus und fängt die Flanke sicher ab.',
+  'Stark im Eins gegen Eins! [Spieler] verhindert den Treffer.',
+  '[Spieler] lenkt den Ball mit den Fingerspitzen über die Latte.'
 ];
 
+function buildCommentTemplateOptions() {
+  const groups = [
+    ['Offensiv', [0, 2, 4, 6, 7, 10, 11, 12, 13]],
+    ['Defensiv', [3, 5, 14, 15, 16]],
+    ['Torwart', [1, 17, 18, 19]],
+    ['Allgemein', [8, 9]]
+  ];
+  return groups.map(([label, indices]) => `<optgroup label="${label}">${indices.map(index =>
+    `<option value="${index}">${esc(COMMENT_TEMPLATES[index])}</option>`).join('')}</optgroup>`).join('');
+}
+
 let commentPlayerSlot = null;
+
+function isOpponentComment() {
+  const team = document.getElementById('em-team').value;
+  return ['home', 'away'].includes(team) && team !== getOurTeamSide();
+}
+
+function updateCommentTeam() {
+  const opponent = isOpponentComment();
+  const select = document.getElementById('em-player');
+  document.getElementById('em-player-field').hidden = opponent;
+  select.disabled = opponent;
+  if (opponent) {
+    select.value = '';
+    applyCommentPlayer();
+  }
+}
 
 function applyCommentPlayer() {
   const field = document.getElementById('em-text');
   const selectedId = document.getElementById('em-player').value;
-  const player = squad.find(p => String(p.id) === selectedId);
-  const name = player ? player.name : '[Spieler]';
+  const opponent = isOpponentComment();
+  const player = opponent ? null : squad.find(p => String(p.id) === selectedId);
+  let name = player ? player.name : '[Spieler]';
   let start = field.value.indexOf('[Spieler]');
   let length = '[Spieler]'.length;
   if (start < 0 && commentPlayerSlot &&
@@ -3276,6 +3314,7 @@ function applyCommentPlayer() {
     length = commentPlayerSlot.text.length;
   }
   if (start < 0) return;
+  if (opponent) name = /von $/.test(field.value.slice(0, start)) ? 'einem Gegenspieler' : start === 0 ? 'Ein Gegenspieler' : 'ein Gegenspieler';
   field.value = field.value.slice(0, start) + name + field.value.slice(start + length);
   commentPlayerSlot = { start, text: name };
 }
@@ -3288,7 +3327,7 @@ function applyCommentTemplate(value) {
   field.value = template;
   commentPlayerSlot = null;
   const hasPlayer = template.includes('[Spieler]');
-  document.getElementById('em-player-field').hidden = false;
+  document.getElementById('em-player-field').hidden = isOpponentComment();
   if (hasPlayer) applyCommentPlayer();
   field.focus();
   const start = field.value.indexOf('[Spieler]');
@@ -3316,7 +3355,7 @@ function openEventModal(typ) {
   } else if (typ === 'kommentar') {
     const { home, away } = getMatchTeams();
     body = `<label class="em-label" for="em-team">Mannschaft (optional)</label>
-      <select class="em-select" id="em-team">
+      <select class="em-select" id="em-team" onchange="updateCommentTeam()">
         <option value="">Ohne Mannschaft</option>
         <option value="home">${esc(home)}</option>
         <option value="away">${esc(away)}</option>
@@ -3324,7 +3363,7 @@ function openEventModal(typ) {
       <label class="em-label" for="em-template">Textbaustein (optional)</label>
       <select class="em-select" id="em-template" onchange="applyCommentTemplate(this.value)">
         <option value="">Eigenen Text schreiben</option>
-        ${COMMENT_TEMPLATES.map((text, index) => `<option value="${index}">${esc(text)}</option>`).join('')}
+        ${buildCommentTemplateOptions()}
       </select>
       <div id="em-player-field">
         <label class="em-label" for="em-player">Spieler aus dem Kader (optional)</label>
@@ -3387,7 +3426,7 @@ async function saveEventModal() {
     if (eventModalSaving) return;
     const file = document.getElementById('em-photo').files[0];
     const selectedPlayerId = document.getElementById('em-player').value;
-    const selectedPlayer = squad.find(p => String(p.id) === selectedPlayerId);
+    const selectedPlayer = isOpponentComment() ? null : squad.find(p => String(p.id) === selectedPlayerId);
     const generation = eventModalGeneration;
     const status = document.getElementById('em-status');
     eventModalSaving = true;

@@ -3,7 +3,7 @@ const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../m
 const source=html.slice(html.indexOf('let _eventModalType ='),html.indexOf('// ─── FIREBASE CONFIG'));
 function setup(){
  const fields={'em-player':{value:''},'em-player-field':{hidden:true},'em-text':{value:'Großchance!',focus(){}},'em-team':{value:'away',focus(){}},'em-photo':{files:[]},'em-status':{textContent:''}};
- const c=vm.createContext({activeMatchId:1,showToast(){},previewDevTickerOverlay(){},URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
+ const c=vm.createContext({activeMatchId:1,getOurTeamSide:()=> 'away',showToast(){},previewDevTickerOverlay(){},URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
  vm.runInContext(source,c);vm.runInContext("_eventModalType='kommentar'",c);return {c,fields};
 }
 test('text can be saved without a team',async()=>{
@@ -13,8 +13,8 @@ test('text can be saved without a team',async()=>{
 test('text retains an explicitly selected team',async()=>{
  const {c}=setup();await c.saveEventModal();assert.equal(c.events[0].team,'away');
 });
-test('ten editable templates select player placeholders and prevent accidental publication',async()=>{
- const {c,fields}=setup();assert.equal(vm.runInContext('COMMENT_TEMPLATES.length',c),10);
+test('twenty editable templates select player placeholders and prevent accidental publication',async()=>{
+ const {c,fields}=setup();assert.equal(vm.runInContext('COMMENT_TEMPLATES.length',c),20);
  let selection;fields['em-text'].setSelectionRange=(start,end)=>selection=[start,end];
  c.applyCommentTemplate('0');assert.match(fields['em-text'].value,/Großchance/);
  assert.equal(fields['em-text'].value.slice(...selection),'[Spieler]');
@@ -65,4 +65,26 @@ test('selected comment player is saved with portrait snapshots without requiring
  fields['em-player'].value='7';fields['em-team'].value='';await c.saveEventModal();
  assert.equal(c.events[0].playerId,7);assert.equal(c.events[0].playerName,'Mika');
  assert.equal(c.events[0].playerPhoto,'front.png');assert.equal(c.events[0].playerSidePhoto,'side.png');assert.equal(c.events[0].team,'');
+});
+
+test('template groups include every template exactly once',()=>{
+ const {c}=setup();c.esc=text=>text;
+ const options=c.buildCommentTemplateOptions();
+ for(const label of ['Offensiv','Defensiv','Torwart','Allgemein']) assert.ok(options.includes(`label="${label}"`));
+ const indices=[...options.matchAll(/value="(\d+)"/g)].map(match=>Number(match[1]));
+ assert.equal(indices.length,20);assert.equal(new Set(indices).size,20);
+ assert.deepEqual(indices.sort((a,b)=>a-b),Array.from({length:20},(_,i)=>i));
+});
+
+test('opponent comments clear and disable roster selection and never store player data',async()=>{
+ const {c,fields}=setup();c.squad=[{id:1,name:'Mika',photo:'front.png'}];
+ fields['em-player'].value='1';fields['em-text'].setSelectionRange=()=>{};
+ c.applyCommentTemplate('1');assert.equal(fields['em-text'].value,'Starke Parade von Mika!');
+ fields['em-team'].value='home';c.updateCommentTeam();
+ assert.equal(fields['em-player'].value,'');assert.equal(fields['em-player'].disabled,true);
+ assert.equal(fields['em-player-field'].hidden,true);
+ assert.equal(fields['em-text'].value,'Starke Parade von einem Gegenspieler!');
+ c.applyCommentTemplate('2');assert.equal(fields['em-text'].value,'Ein Gegenspieler trifft den Pfosten! Das war knapp.');
+ fields['em-player'].value='1';await c.saveEventModal();assert.equal(c.events[0].playerId,undefined);
+ fields['em-team'].value='';c.updateCommentTeam();assert.equal(fields['em-player'].disabled,false);assert.equal(fields['em-player-field'].hidden,false);
 });
