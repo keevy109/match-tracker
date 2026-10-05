@@ -846,6 +846,9 @@
   body.dev-mode.dev-spectator-mode.ticker-feed .event-btns-row,
   body.dev-mode.dev-spectator-mode.ticker-feed .timer-row { background: #101820; }
 
+  body.ticker-mode.ticker-feed .event-item.feed-goal-pending .event-goal-player img {
+    visibility: hidden;
+  }
   @keyframes feed-goal-pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.16); }
@@ -859,16 +862,16 @@
     to { opacity: 0.4; transform: translateY(0); }
   }
   body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-info::after {
-    transform-origin: left center; animation: feed-goal-pulse 600ms ease-in-out 3;
+    transform-origin: left center; animation: feed-goal-pulse 1000ms ease-in-out 3;
   }
   body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-goal-player .event-player-side-photo {
-    --feed-image-opacity: 0.3; animation: feed-player-enter 850ms ease-out both;
+    --feed-image-opacity: 0.3; animation: feed-player-enter 1500ms ease-out both;
   }
   body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-goal-player .event-player-photo {
-    animation: feed-player-enter 850ms ease-out 180ms both;
+    animation: feed-player-enter 1500ms ease-out 300ms both;
   }
   body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-team-crest {
-    animation: feed-crest-enter 950ms ease-out both;
+    animation: feed-crest-enter 1600ms ease-out both;
   }
   @media (prefers-reduced-motion: reduce) {
     body.ticker-mode.ticker-feed .event-item.feed-goal-animate .event-info::after,
@@ -3456,8 +3459,15 @@ function createTickerEventDetector() {
   };
 }
 const tickerOverlayQueue = [];
+const pendingFeedGoals = new Set();
 let tickerOverlayActive = false;
 function enqueueTickerOverlay(event, data) {
+  if ((event.typ || 'tor') === 'tor') {
+    pendingFeedGoals.add(String(event.id));
+    const list = document.getElementById('eventsList');
+    const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
+    card?.classList.add('feed-goal-pending');
+  }
   tickerOverlayQueue.push({ event, data });
   playNextTickerOverlay();
 }
@@ -3468,15 +3478,17 @@ function playNextTickerOverlay() {
   showGoalOverlay(event, data, () => {
     const animated = animateFeedGoalCard(event);
     const finish = () => { tickerOverlayActive = false; playNextTickerOverlay(); };
-    if (animated) setTimeout(finish, 1800);
+    if (animated) setTimeout(finish, 3000);
     else finish();
   });
 }
 
 function animateFeedGoalCard(event) {
-  if ((event.typ || 'tor') !== 'tor' || !document.body?.classList.contains('ticker-feed')) return false;
+  pendingFeedGoals.delete(String(event.id));
   const list = document.getElementById('eventsList');
   const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
+  card?.classList.remove('feed-goal-pending');
+  if ((event.typ || 'tor') !== 'tor' || !document.body?.classList.contains('ticker-feed')) return false;
   if (!card) return false;
   card.scrollIntoView({block: 'nearest', behavior: 'instant'});
   card.classList.remove('feed-goal-animate');
@@ -3685,6 +3697,7 @@ function updateTickerUI(data, lastScore) {
       item.dataset.team = e.team === 'away' ? 'away' : 'home';
       item.dataset.type = e.typ || 'tor';
       item.dataset.eventId = String(e.id);
+      if (pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home', homeLogo: data.homeLogo, awayLogo: data.awayLogo });
       list.appendChild(item);
     });
