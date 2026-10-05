@@ -6,9 +6,21 @@ function setup(){
  const c=vm.createContext({activeMatchId:1,showToast(){},previewDevTickerOverlay(){},URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
  vm.runInContext(source,c);vm.runInContext("_eventModalType='kommentar'",c);return {c,fields};
 }
-test('text requires an explicit team and is saved with it',async()=>{
- const {c,fields}=setup();fields['em-team'].value='';await c.saveEventModal();assert.equal(c.events.length,0);
- fields['em-team'].value='away';await c.saveEventModal();assert.equal(c.events[0].team,'away');assert.equal(c.events[0].text,'Großchance!');assert.equal(c.events[0].photo,'');
+test('text can be saved without a team',async()=>{
+ const {c,fields}=setup();fields['em-team'].value='';await c.saveEventModal();
+ assert.equal(c.events.length,1);assert.equal(c.events[0].team,'');assert.equal(c.events[0].text,'Großchance!');
+});
+test('text retains an explicitly selected team',async()=>{
+ const {c}=setup();await c.saveEventModal();assert.equal(c.events[0].team,'away');
+});
+test('ten editable templates select player placeholders and prevent accidental publication',async()=>{
+ const {c,fields}=setup();assert.equal(vm.runInContext('COMMENT_TEMPLATES.length',c),10);
+ let selection;fields['em-text'].setSelectionRange=(start,end)=>selection=[start,end];
+ c.applyCommentTemplate('0');assert.match(fields['em-text'].value,/Großchance/);
+ assert.equal(fields['em-text'].value.slice(...selection),'[Spieler]');
+ await c.saveEventModal();assert.equal(c.events.length,0);
+ fields['em-text'].value=fields['em-text'].value.replace('[Spieler]','Mika');
+ await c.saveEventModal();assert.equal(c.events.length,1);
 });
 test('optional photo is prepared and stored with the comment',async()=>{
  const {c,fields}=setup();fields['em-photo'].files=[{}];c.prepareCommentPhoto=async()=> 'data:image/webp;base64,aGVsbG8=';

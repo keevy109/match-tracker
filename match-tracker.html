@@ -2005,7 +2005,7 @@ function renderEvents() {
   [...events].sort((a,b) => tickerLayout === 'feed' ? b.id - a.id : a.id - b.id).forEach(e => {
     const item = document.createElement('div');
     item.className = `event-item ${eventCssClass(e)}`;
-    item.dataset.team = e.team === 'away' ? 'away' : 'home';
+    item.dataset.team = e.typ === 'kommentar' && !['home', 'away'].includes(e.team) ? '' : e.team === 'away' ? 'away' : 'home';
     item.dataset.type = e.typ || 'tor';
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide(), homeLogo, awayLogo });
     list.appendChild(item);
@@ -3223,6 +3223,30 @@ function buildPlayerOptions() {
       .join('');
 }
 
+const COMMENT_TEMPLATES = [
+  'Großchance! [Spieler] verfehlt das Tor nur knapp.',
+  'Starke Parade von [Spieler]!',
+  '[Spieler] trifft den Pfosten! Das war knapp.',
+  'Toller Einsatz von [Spieler] – Ball zurückerobert!',
+  'Schöner Pass von [Spieler] in die Tiefe.',
+  '[Spieler] klärt in letzter Sekunde.',
+  'Ecke! Jetzt wird es gefährlich.',
+  'Freistoß aus aussichtsreicher Position.',
+  'Kurze Verletzungsunterbrechung. Gute Besserung!',
+  'Spannende Schlussphase – beide Teams geben alles!'
+];
+
+function applyCommentTemplate(value) {
+  if (value === '') return;
+  const template = COMMENT_TEMPLATES[Number(value)];
+  if (!template) return;
+  const field = document.getElementById('em-text');
+  field.value = template;
+  field.focus();
+  const start = template.indexOf('[Spieler]');
+  if (start >= 0) field.setSelectionRange(start, start + '[Spieler]'.length);
+}
+
 function openEventModal(typ) {
   if (!activeMatchId) { showToast('Bitte zuerst ein Spiel im Spielplan starten.'); return; }
   if (new URLSearchParams(window.location.search).has('ticker')) return;
@@ -3242,12 +3266,18 @@ function openEventModal(typ) {
       <select class="em-select" id="em-raus">${opts}</select>`;
   } else if (typ === 'kommentar') {
     const { home, away } = getMatchTeams();
-    body = `<label class="em-label" for="em-team">Mannschaft</label>
-      <select class="em-select" id="em-team" required>
-        <option value="">Mannschaft auswählen</option>
+    body = `<label class="em-label" for="em-team">Mannschaft (optional)</label>
+      <select class="em-select" id="em-team">
+        <option value="">Ohne Mannschaft</option>
         <option value="home">${esc(home)}</option>
         <option value="away">${esc(away)}</option>
       </select>
+      <label class="em-label" for="em-template">Textbaustein (optional)</label>
+      <select class="em-select" id="em-template" onchange="applyCommentTemplate(this.value)">
+        <option value="">Eigenen Text schreiben</option>
+        ${COMMENT_TEMPLATES.map((text, index) => `<option value="${index}">${esc(text)}</option>`).join('')}
+      </select>
+      <p style="font-size:12px;line-height:1.5">[Spieler] durch den Namen ersetzen. Alle Texte sind frei bearbeitbar.</p>
       <label class="em-label" for="em-text">Text</label>
       <textarea class="em-textarea" id="em-text" rows="4" placeholder="Zum Beispiel: Großchance!" maxlength="200"></textarea>
       <label class="em-label" for="em-photo">Foto (optional)</label>
@@ -3293,8 +3323,13 @@ async function saveEventModal() {
 
   } else if (_eventModalType === 'kommentar') {
     const text = document.getElementById('em-text').value.trim();
-    const team = document.getElementById('em-team').value;
-    if (team !== 'home' && team !== 'away') { document.getElementById('em-team').focus(); return; }
+    const selectedTeam = document.getElementById('em-team').value;
+    const team = ['home', 'away'].includes(selectedTeam) ? selectedTeam : '';
+    if (text.includes('[Spieler]')) {
+      showToast('Bitte den Platzhalter [Spieler] durch einen Namen ersetzen.');
+      document.getElementById('em-text').focus();
+      return;
+    }
     if (!text) { document.getElementById('em-text').focus(); return; }
     if (eventModalSaving) return;
     const file = document.getElementById('em-photo').files[0];
@@ -3746,7 +3781,7 @@ function updateTickerUI(data, lastScore) {
     [...evts].sort((a,b) => tickerLayout === 'feed' ? b.id - a.id : a.id - b.id).forEach(e => {
       const item = document.createElement('div');
       item.className = 'event-item ' + eventCssClass(e);
-      item.dataset.team = e.team === 'away' ? 'away' : 'home';
+      item.dataset.team = e.typ === 'kommentar' && !['home', 'away'].includes(e.team) ? '' : e.team === 'away' ? 'away' : 'home';
       item.dataset.type = e.typ || 'tor';
       item.dataset.eventId = String(e.id);
       if (pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
