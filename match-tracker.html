@@ -1845,7 +1845,7 @@ function eventPlayerPortrait(event, prefix, members) {
 function eventPlayerSidePortrait(event, members, prefix = 'scorer') {
   const player = members.find(member => member && event[prefix + 'Id'] != null && String(member.id) === String(event[prefix + 'Id']));
   const name = String(player?.name || event[prefix === 'scorer' ? 'scorer' : prefix + 'Name'] || '').trim().toLowerCase();
-  const available = ['aleciano', 'caspar', 'emil', 'grigorios', 'jonah', 'leo', 'linus', 'marlon', 'max', 'mika', 'pan', 'paul', 'till', 'tom'];
+  const available = ['aleciano', 'caspar', 'emil', 'grigorios', 'jonah', 'leo', 'linus', 'marlon', 'mats', 'max', 'mika', 'pan', 'paul', 'till', 'tom'];
   const bundledPhoto = available.includes(name) ? `uploads/kader/side-portraits/${name}.png` : '';
   const photo = player?.sidePhoto || event[prefix + 'SidePhoto'] || bundledPhoto;
   if (!photo || !(player?.photo || event[prefix + 'Photo'])) return '';
