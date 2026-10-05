@@ -1990,7 +1990,7 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
       <span class="event-substitution-player event-player-out">${eventPlayerPortrait(e, 'raus', members)}<span>↓ Raus: ${esc(e.rausName || '–')}</span></span>`;
   }
   if (typ === 'kommentar' && e.playerId != null) {
-    main = `<span class="event-comment-player">${eventPlayerSidePortrait(e, members, 'player')}${eventPlayerPortrait(e, 'player', members)}</span><span class="event-comment-text">${main}</span>`;
+    main = `<span class="event-comment-player">${eventPlayerPortrait(e, 'player', members)}</span><span class="event-comment-text">${main}</span>`;
   }
   let scoreHtml = '<div class="event-score"></div>';
   if (typ === 'tor') {
