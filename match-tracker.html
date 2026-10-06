@@ -2472,15 +2472,29 @@ function lineupIds(playerIds = [], coachIds = []) {
   return [...Object.values(playerIds || []), ...Object.values(coachIds || []).map(id => 'coach:' + id)];
 }
 
+function updateParticipantSelectAll() {
+  const all = document.getElementById('participantSelectAll');
+  if (!all) return;
+  const boxes = Array.from(document.querySelectorAll('.participant-check'));
+  const count = boxes.filter(box => box.checked).length;
+  all.checked = boxes.length > 0 && count === boxes.length;
+  all.indeterminate = count > 0 && count < boxes.length;
+  all.disabled = boxes.length === 0;
+}
+function selectAllParticipants(checked) {
+  document.querySelectorAll('.participant-check').forEach(box => { box.checked = checked; });
+  updateParticipantSelectAll();
+}
+
 function editParticipants(id) {
   const match = schedule.find(m => String(m.id) === String(id));
   if (!match) return;
   const selected = new Set(lineupIds(match.participantIds, match.coachIds).map(String));
-  openEditSheet('Einsätze auswählen', `<p>Eingesetzte Spieler und anwesende Trainer auswählen.</p>${lineupMembers([...squad].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}))).map((p, index) => {
+  openEditSheet('Einsätze auswählen', `<p>Eingesetzte Spieler und anwesende Trainer auswählen.</p><label class="kader-player-item" style="cursor:pointer"><input id="participantSelectAll" type="checkbox" style="width:20px;height:20px;padding:0;flex-shrink:0" onchange="selectAllParticipants(this.checked)"><strong>Alle Spieler und Trainer auswählen</strong></label>${lineupMembers([...squad].sort((a,b) => (a.name || '').localeCompare(b.name || '', 'de', {sensitivity:'base'}))).map((p, index) => {
     const portrait = p.photo
       ? `<img class="player-avatar" src="${esc(p.photo)}" alt="${esc(p.name)}">`
       : '<span class="player-avatar-placeholder">👤</span>';
-    return `${index === squad.length ? '<h3>Trainer</h3>' : ''}<label class="kader-player-item" style="cursor:pointer"><input type="checkbox" style="width:20px;height:20px;padding:0;flex-shrink:0" class="participant-check" value="${p.id}" ${selected.has(String(p.id)) ? 'checked' : ''}>${portrait}<span class="kader-player-name">${esc(p.name)}</span></label>`;
+    return `${index === squad.length ? '<h3>Trainer</h3>' : ''}<label class="kader-player-item" style="cursor:pointer"><input type="checkbox" style="width:20px;height:20px;padding:0;flex-shrink:0" class="participant-check" onchange="updateParticipantSelectAll()" value="${p.id}" ${selected.has(String(p.id)) ? 'checked' : ''}>${portrait}<span class="kader-player-name">${esc(p.name)}</span></label>`;
   }).join('')}<p id="participantStatus" role="status"></p>`, async () => {
     const selectedIds = Array.from(document.querySelectorAll('.participant-check:checked'), el => el.value);
     const playerIds = selectedIds.filter(id => !id.startsWith('coach:')).map(Number);
@@ -2509,6 +2523,7 @@ function editParticipants(id) {
       showToast('Einsätze gespeichert.');
     } catch(e) { status.textContent = 'Nicht gespeichert. Bitte Verbindung prüfen und erneut versuchen.'; }
   });
+  updateParticipantSelectAll();
 }
 
 function renderKaderList() {
