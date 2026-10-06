@@ -1,12 +1,13 @@
 (function(root) {
   const list = value => Array.isArray(value) ? value.filter(Boolean) : Object.values(value || {}).filter(Boolean);
   function position(player) {
+    if (player.isCoach) return 'Trainer';
     const value = String(player.position || '').trim().toUpperCase();
     return ({TW:'TW',TORWART:'TW',AB:'ABW',ABW:'ABW',ABWEHR:'ABW',MF:'MIT',MIT:'MIT',MITTELFELD:'MIT',ST:'ST',STURM:'ST'})[value] || 'Ohne Position';
   }
   function selectedPlayers(members, ids) {
     const selected = new Set(list(ids).map(String));
-    const order = ['TW','ABW','MIT','ST','Ohne Position'];
+    const order = ['TW','ABW','MIT','ST','Ohne Position','Trainer'];
     return list(members).filter(player => selected.has(String(player.id))).sort((a,b) =>
       order.indexOf(position(a)) - order.indexOf(position(b)) || String(a.name || '').localeCompare(String(b.name || ''), 'de'));
   }

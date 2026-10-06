@@ -43,3 +43,8 @@ test('published lineup is placed chronologically among events, never before sele
  mount(list,players,[],200,1);assert.equal(list.children.length,3);
  delete globalThis.document;
 });
+
+test('selected coaches follow all players including players without a position',()=>{
+ const members=[{id:'coach:1',name:'Alex',isCoach:true,position:'TW'},{id:1,name:'Spieler'},{id:2,name:'Torwart',position:'TW'},{id:'coach:2',name:'Nicht ausgewählt',isCoach:true}];
+ assert.deepEqual(selectedPlayers(members,['coach:1',1,2]).map(p=>p.id),[2,1,'coach:1']);
+});
