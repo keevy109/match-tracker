@@ -21,8 +21,10 @@
     card.hidden = !players.length;
     card.innerHTML = '';
     if (!players.length) return;
+    const labels = {TW:'TOR', ABW:'ABWEHR', MIT:'MITTELFELD', ST:'STURM', Trainer:'TRAINER', 'Ohne Position':'OHNE POSITION'};
+    const groupCount = new Set(players.map(position)).size;
     const arrow = '<svg viewBox="0 0 52 24" aria-hidden="true"><path d="M14 4 6 12 14 20 M30 4 22 12 30 20 M46 4 38 12 46 20"/></svg>';
-    card.innerHTML = `<div class="lineup-heading"><h2>Aufstellung</h2><div class="lineup-navigation" hidden><button type="button" class="lineup-prev" aria-label="Vorherige Spieler">${arrow}</button><button type="button" class="lineup-next" aria-label="Weitere Spieler">${arrow}</button></div></div><div class="lineup-viewport" tabindex="0" aria-label="Aufstellung – Spieler durch Wischen ansehen"><div class="lineup-track lineup-intro" style="--lineup-duration:${Math.max(14,players.length * 3 + 6)}s">${players.map(player => `<figure class="lineup-player"><figcaption><strong>${escape(player.name)}</strong></figcaption>${player.photo ? `<img src="${escape(player.photo)}" alt="" loading="eager">` : '<span class="lineup-placeholder" aria-hidden="true">👤</span>'}</figure>`).join('')}</div></div>`;
+    card.innerHTML = `<div class="lineup-heading"><h2>Aufstellung</h2><div class="lineup-navigation" hidden><button type="button" class="lineup-prev" aria-label="Vorherige Spieler">${arrow}</button><button type="button" class="lineup-next" aria-label="Weitere Spieler">${arrow}</button></div></div><div class="lineup-viewport" tabindex="0" aria-label="Aufstellung – Spieler durch Wischen ansehen"><div class="lineup-track lineup-intro" style="--lineup-duration:${Math.max(14,players.length * 3 + groupCount + 6)}s">${players.map((player, index) => `${index === 0 || position(players[index - 1]) !== position(player) ? `<h3 class="lineup-position"><span>${labels[position(player)]}</span></h3>` : ''}<figure class="lineup-player"><figcaption><strong>${escape(player.name)}</strong></figcaption>${player.photo ? `<img src="${escape(player.photo)}" alt="" loading="eager">` : '<span class="lineup-placeholder" aria-hidden="true">👤</span>'}</figure>`).join('')}</div></div>`;
     const viewport = card.querySelector('.lineup-viewport');
     const track = card.querySelector('.lineup-track');
     const navigation = card.querySelector('.lineup-navigation');
