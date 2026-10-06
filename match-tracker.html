@@ -503,7 +503,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 
   /* Event-Typen in der Ereignisliste */
   .event-item.wechsel:not(.home):not(.away) { border-left-color: #4a9eff; background-image: linear-gradient(to right, rgba(74,158,255,0.18) -30%, var(--surface) 30%); }
-  .event-item.kommentar:not(.home):not(.away) { border-left-color: #555; background: #fff; background-image: none; }
+  .event-item.kommentar:not(.home):not(.away) { border-left: 0; background: var(--feed-surface); color: var(--feed-text); background-image: none; }
   .em-select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 8px; color: var(--text); font-size: 15px; padding: 10px 12px;
