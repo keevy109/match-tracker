@@ -153,27 +153,25 @@ test('dev mode switches locally between entry and spectator views',()=>{
   assert.match(tracker,/function resetDevMode\(\)[\s\S]*?storageReady = false;[\s\S]*?localStorage\.removeItem\(STATE_KEY\);[\s\S]*?window\.location\.reload\(\)/);
 });
 
-test('spectator ticker offers cards and an optional highlight feed layout',()=>{
+test('spectator ticker uses only the feed layout in live and dev mode',()=>{
   const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
-  assert.match(tracker,/id="tickerLayoutCards"[^>]*onclick="setTickerLayout\('cards'\)"[^>]*>Karten</);
-  assert.match(tracker,/id="tickerLayoutFeed"[^>]*onclick="setTickerLayout\('feed'\)"[^>]*>Feed</);
-  assert.match(tracker,/function setTickerLayout\(layout\)[\s\S]*?classList\.toggle\('ticker-feed', layout === 'feed'\)/);
+  assert.doesNotMatch(tracker,/tickerLayout|setTickerLayout|ticker-layout-toggle|matchtracker_ticker_layout|ticker-feed|ticker-timeline/);
   assert.match(tracker,/class="feed-result-header"[^>]*>[\s\S]*?id="feedScoreHome"[\s\S]*?id="feedScoreAway"/);
-  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.scoreboard \{ display: none; \}/);
-  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.events-section \{ width: 100%; padding: 0;/);
-  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\]/);
+  assert.match(tracker,/body\.ticker-mode \.scoreboard \{ display: none; \}/);
+  assert.match(tracker,/body\.ticker-mode \.events-section \{ width: 100%; padding: 0;/);
+  assert.match(tracker,/body\.ticker-mode \.event-item\[data-type="tor"\]/);
   assert.match(tracker,/align-items: flex-start; justify-content: space-between;/);
-  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
-  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-item \.event-icon \{ display: none; \}/);
+  assert.match(tracker,/body\.ticker-mode \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
+  assert.match(tracker,/body\.ticker-mode \.event-item \.event-icon \{ display: none; \}/);
   assert.match(tracker,/font-size: 18px; font-weight: 800;/);
   assert.match(tracker,/font-size: 52px; line-height: 1; font-weight: 800;/);
-  assert.match(tracker,/body\.ticker-mode\.ticker-feed \.event-score-previous \{ opacity: 0\.7; \}/);
+  assert.match(tracker,/body\.ticker-mode \.event-score-previous \{ opacity: 0\.4; \}/);
   assert.match(tracker,/\.event-season-goals \{ display: block; margin-top: 3px; font-size: 13px; font-weight: 300; \}/);
   assert.match(tracker,/width: 100%; min-height: 260px;/);
   assert.match(tracker,/\.event-item\[data-type="wechsel"\] \{ min-height: 260px; \}/);
   assert.match(tracker,/position: absolute; right: 0; bottom: -4px;/);
   assert.match(tracker,/width: 240px; height: 240px;/);
   assert.doesNotMatch(tracker,/event-player-video/);
-  assert.match(tracker,/item\.dataset\.team = e\.team === 'away' \? 'away' : 'home'/);
+  assert.match(tracker,/item\.dataset\.team = .*e\.team === 'away' \? 'away' : 'home'/);
   assert.match(tracker,/item\.dataset\.type = e\.typ \|\| 'tor'/);
 });
