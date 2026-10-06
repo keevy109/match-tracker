@@ -984,6 +984,25 @@
     body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player img { animation: none; }
   }
 
+  .lineup-card { background: #fff; color: #111; margin: 8px 0 10px; padding: 16px 0 0; overflow: hidden; }
+  .lineup-card[hidden] { display: none; }
+  .lineup-card h2 { margin: 0 16px 12px; font-size: 22px; font-weight: 900; }
+  .lineup-card small { font-size: 12px; font-weight: 500; color: #666; }
+  .lineup-viewport { container-type: inline-size; overflow: hidden; }
+  .lineup-track { display: flex; width: max-content; gap: 12px; animation: lineup-parade var(--lineup-duration) linear infinite; }
+  .lineup-player { width: 140px; flex: 0 0 140px; margin: 0; text-align: center; }
+  .lineup-player img, .lineup-placeholder { display: block; width: 140px; height: 170px; object-fit: contain; object-position: center bottom; }
+  .lineup-placeholder { font-size: 80px; }
+  .lineup-player figcaption { padding: 8px 4px 12px; }
+  .lineup-player strong, .lineup-player figcaption span { display: block; }
+  .lineup-player figcaption span { color: #666; font-size: 12px; margin-top: 3px; }
+  @keyframes lineup-parade { from { transform: translateX(100cqw); } to { transform: translateX(-100%); } }
+  .lineup-viewport:hover .lineup-track, .lineup-viewport:focus-within .lineup-track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .lineup-viewport { overflow-x: auto; }
+    .lineup-track { animation: none; transform: none; }
+  }
+
   /* Ticker overlay for sharing */
   .ticker-share-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300;
@@ -1124,6 +1143,7 @@
       <span>Ticker</span>
       <button class="btn-clear" onclick="confirmAction('tore')">Alle löschen</button>
     </div>
+    <section class="lineup-card" id="lineupCard" aria-label="Aufstellung" hidden></section>
     <div class="events-list" id="eventsList">
       <div class="empty-state" id="emptyState">Noch keine Ereignisse</div>
     </div>
@@ -1316,6 +1336,7 @@
 
 <script src="./team-data.js"></script>
 <script src="./player-stats.js"></script>
+<script src="./lineup-card.js"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
 (function() {
@@ -1987,6 +2008,8 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
 }
 
 function renderEvents() {
+  globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), squad,
+    schedule.find(match => String(match.id) === String(activeMatchId))?.participantIds || []);
   const list = document.getElementById('eventsList');
   if (!list) return;
   if (events.length === 0) {
@@ -2408,6 +2431,7 @@ function editParticipants(id) {
     const status = document.getElementById('participantStatus');
     if (DEV_MODE) {
       match.participantIds = playerIds;
+      if (String(id) === String(activeMatchId)) globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), squad, playerIds);
       recalculatePlayerStats(); renderKaderList(); save();
       document.getElementById('editSheet').classList.remove('active');
       showToast('Test-Einsätze nur lokal gespeichert.');
@@ -2417,6 +2441,7 @@ function editParticipants(id) {
     try {
       await withStorageTimeout(firebase.database().ref('matchParticipants/' + id).set({playerIds, complete:true, updatedAt:Date.now()}));
       match.participantIds = playerIds;
+      if (String(id) === String(activeMatchId)) globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), squad, playerIds);
       recalculatePlayerStats(); renderKaderList(); save();
       document.getElementById('editSheet').classList.remove('active');
       showToast('Einsätze gespeichert.');
@@ -3550,6 +3575,15 @@ function initTickerMode(matchId) {
   const detectNewEvents = createTickerEventDetector();
   let tickerData = null;
   let tickerDataReceivedAt = null;
+  let liveParticipantIds = null;
+  firebase.database().ref('matchParticipants/' + matchId).on('value', snapshot => {
+    const entry = snapshot.val();
+    liveParticipantIds = entry ? Object.values(entry.playerIds || []) : null;
+    if (tickerData) {
+      tickerData.participantIds = liveParticipantIds ?? tickerData.fixture?.participantIds ?? [];
+      updateTickerUI(tickerData, lastScore);
+    }
+  });
 
   // Der öffentliche Ticker verwendet immer den aktuellen Admin-Kader. So
   // erscheinen neue Portraits auch bei bereits gespeicherten Ereignissen.
@@ -3587,6 +3621,7 @@ function initTickerMode(matchId) {
       document.getElementById('tickerUpdated').textContent = 'Kein Spiel gefunden';
       return;
     }
+    data.participantIds = liveParticipantIds ?? data.fixture?.participantIds ?? [];
     tickerData = data;
     tickerDataReceivedAt = Date.now();
     updateTickerUI(data, lastScore);
@@ -3795,6 +3830,7 @@ function updateFeedScrollState() {
 }
 
 function updateTickerUI(data, lastScore) {
+  globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), currentMatchSquad(data), data.participantIds ?? data.fixture?.participantIds ?? []);
   updateFeedMatchTime(data);
   updateFeedScrollState();
   for (const side of ['home', 'away']) {
