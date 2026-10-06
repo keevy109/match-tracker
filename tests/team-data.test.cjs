@@ -49,3 +49,11 @@ test('club lookup does not confuse unrelated similarly named clubs', () => {
   const teams = [{name:'FC Monheim', logo:'monheim.png'}];
   assert.equal(find(teams, 'Inter Monheim E1'), undefined);
 });
+
+test('header colors accept RGB and clamp legacy out-of-range channels', () => {
+  const {color} = context.MatchTrackerTeams;
+  assert.equal(color('rgb(256,128,0)'), '#ff8000');
+  assert.equal(color('rgb(0, 20, 40)'), '#001428');
+  assert.equal(color('#123456'), '#123456');
+  assert.equal(color(undefined), '#333333');
+});

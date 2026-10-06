@@ -17,7 +17,15 @@ export async function load(collection) {
   if (collection === 'trainer' || collection === 'news') {
     try {
       const shared = await remote(`app/${collection}`);
-      if (shared) return Array.isArray(shared) ? shared : Object.values(shared);
+      if (shared) {
+        const items = Array.isArray(shared) ? shared : Object.values(shared);
+        if (collection === 'trainer') {
+          return items.map(item => item.id === 1783854243021 && item.detailPhoto === 'uploads/trainer/detail/1783854338780_ri2k28s98yq.png'
+            ? {...item, detailPhoto: 'uploads/trainer/detail/geo-viggle-5a0ec2b1.mp4'}
+            : item);
+        }
+        return items;
+      }
     } catch (error) { console.warn(`${collection}: statische Version wird verwendet.`, error); }
   }
   const res = await fetch(`${import.meta.env.BASE_URL}data/${collection}.json`);

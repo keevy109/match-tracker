@@ -728,13 +728,15 @@
     background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%); }
   body.ticker-mode .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
     position: absolute; inset: 0 0 auto; min-height: 42px; padding: 8px 12px;
-    background: #101820; color: #fff; text-align: center; font-size: 13px; font-weight: 800; }
+    background: #fff; color: #111; text-align: center; font-size: 13px; font-weight: 800; }
   body.ticker-mode .feed-result-names > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  body.ticker-mode #feedNameHome { text-align: right; }
+  body.ticker-mode #feedNameAway { text-align: left; }
   body.ticker-mode .feed-result-team { justify-content: center; }
   body.ticker-mode .feed-result-logo { width: clamp(60px, 18vw, 105px); height: 105px; }
   body.ticker-mode .feed-result-score { gap: 2px; }
   body.ticker-mode .feed-result-score > .feed-result-value { position: relative; height: 70px; min-width: 54px;
-    padding: 20px 8px 0; color: #fff; background: #101820; font-size: 36px; }
+    padding: 20px 8px 0; color: #111; background: #fff; font-size: 36px; }
   body.ticker-mode .feed-result-short { display: block; position: absolute; top: 7px; left: 0; width: 100%;
     font-size: 12px; text-align: center; font-style: normal; }
   body.ticker-mode .feed-result-separator { display: none; }
@@ -746,7 +748,7 @@
   body.ticker-mode.feed-scrolled .feed-result-team.home { justify-content: flex-end; }
   body.ticker-mode.feed-scrolled .feed-result-team.away { justify-content: flex-start; }
   body.ticker-mode.feed-scrolled .feed-result-value { height: 38px; min-width: 34px; padding: 0 7px;
-    color: #111; background: #e5eaed; font-size: 25px; }
+    color: #111; background: #fff; font-size: 25px; }
   body.ticker-mode.feed-scrolled .feed-result-separator { display: block; }
 
   body.ticker-mode .events-section { width: 100%; padding: 0; -webkit-mask-image: none; mask-image: none; }
@@ -3799,7 +3801,7 @@ function updateTickerUI(data, lastScore) {
     document.getElementById('feedName' + suffix).textContent = name;
     document.getElementById('feedShort' + suffix).textContent = club?.short || data[side + 'Short'] || name.slice(0, 3).toUpperCase();
     const color = club?.color1 || club?.color || data[side + 'Color'];
-    document.documentElement.style.setProperty('--feed-' + side + '-color', /^#[0-9a-f]{6}$/i.test(color || '') ? color : '#333333');
+    document.documentElement.style.setProperty('--feed-' + side + '-color', globalThis.MatchTrackerTeams.color(color));
   }
 
   const liveBadge = document.getElementById('tickerLiveBadge');

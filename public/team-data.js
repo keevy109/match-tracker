@@ -73,5 +73,5 @@
     return [...ownTeams, ...opponents];
   }
 
-  root.MatchTrackerTeams = {normalize, merge, canonicalName, find};
+  root.MatchTrackerTeams = {normalize, merge, canonicalName, find, color};
 })(globalThis);

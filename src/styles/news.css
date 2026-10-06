@@ -64,7 +64,7 @@
 .news-modal-body { padding: 24px 28px 32px; overflow-y: auto; }
 .news-modal-date { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
 .news-modal-title { font-family: var(--serif); font-size: clamp(20px, 4vw, 26px); font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 18px; text-wrap: balance; }
-.news-modal-text { font-size: 14px; color: var(--muted); line-height: 1.8; }
+.news-modal-text { font-size: 14px; color: #fff; line-height: 1.8; }
 .news-modal-text p { margin-bottom: 14px; }
 .news-modal-close {
   position: absolute; top: 14px; right: 14px; z-index: 2;
