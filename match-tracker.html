@@ -34,6 +34,8 @@
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
   html, body { height: 100%; color: var(--text); font-family: var(--sans); overscroll-behavior: none; }
+  /* Keep horizontal gestures inside explicitly scrollable cards. */
+  html, body { overflow-x: clip; }
   body { background: transparent; }
 
   #stadium-bg {
@@ -787,10 +789,10 @@
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { padding: var(--feed-separator-padding, 16px) 2px 0; background: transparent; }
 
   body:is(.ticker-mode, .dev-mode) { height: auto; min-height: 100svh; }
-  body:is(.ticker-mode, .dev-mode) #tabSpiel { flex: none; overflow: visible; }
+  body:is(.ticker-mode, .dev-mode) #tabSpiel { flex: none; overflow: visible; min-width: 0; max-width: 100%; }
   body:is(.ticker-mode, .dev-mode) .feed-result-space { flex-shrink: 0; }
   body:is(.ticker-mode, .dev-mode) .events-section { width: 100%; padding: 0; flex: none; overflow: visible; -webkit-mask-image: none; mask-image: none; }
-  body:is(.ticker-mode, .dev-mode) .events-list { width: 100%; gap: 10px; padding: 8px 0 18px; }
+  body:is(.ticker-mode, .dev-mode) .events-list { width: 100%; min-width: 0; max-width: 100%; gap: 10px; padding: 8px 0 18px; }
   body:is(.ticker-mode, .dev-mode) .event-item { position: relative; overflow: hidden; }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] {
     display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
@@ -985,7 +987,7 @@
     body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player img { animation: none; }
   }
 
-  .lineup-card { background: #fff; color: #111; margin: 8px 0 10px; padding: 16px 0 0; overflow: hidden; }
+  .lineup-card { width: 100%; max-width: 100%; min-width: 0; background: #fff; color: #111; margin: 8px 0 10px; padding: 16px 0 0; overflow: hidden; }
   .lineup-card[hidden] { display: none; }
   .lineup-card h2 { margin: 0 16px 12px; font-size: 22px; font-weight: 900; }
   .lineup-heading { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 8px; }
@@ -996,7 +998,7 @@
   .lineup-navigation button:focus-visible { outline: 2px solid #111; outline-offset: 1px; }
   .lineup-navigation svg { width: 40px; height: 24px; fill: none; stroke: currentColor; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
   .lineup-next svg { transform: rotate(180deg); }
-  .lineup-viewport { container-type: inline-size; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .lineup-viewport { width: 100%; max-width: 100%; min-width: 0; overscroll-behavior-x: contain; container-type: inline-size; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .lineup-viewport::-webkit-scrollbar { display: none; }
   .lineup-track { display: flex; width: max-content; gap: 12px; }
   .lineup-track.lineup-intro { animation: lineup-parade var(--lineup-duration) linear 1; }
