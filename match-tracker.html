@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no, address=no, email=no">
 <title>Match Tracker</title>
+<link rel="icon" type="image/png" href="./ssvlogo.png">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1585,77 +1586,7 @@ function applyMatchSnapshot(id, data) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-(function init() {
-  // Skip normal init in ticker mode
-  if (PAGE_PARAMS.get('ticker')) return;
-  if (DEV_MODE) document.body.classList.add('dev-mode');
-  try {
-    const d = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
-    // Kader + Spielplan aus Admin-Keys laden (ssv_kader / ssv_spielplan)
-    if (!DEV_MODE) {
-      try { const k = JSON.parse(localStorage.getItem('ssv_kader') || '[]'); if (k.length) squad = k; } catch {}
-      try { const sp = JSON.parse(localStorage.getItem('ssv_spielplan') || '[]'); if (sp.length) schedule = sp; } catch {}
-    }
 
-    if (d) {
-      homeScore     = d.homeScore     || 0;
-      awayScore     = d.awayScore     || 0;
-      events        = d.events        || [];
-      // squad und schedule nur aus matchtracker_v3 als Fallback, wenn Admin-Keys leer
-      if (!squad.length)    squad    = d.squad    || [];
-      schedule = [...new Map([...(schedule || []), ...(d.schedule || [])].map(m => [String(m.id), m])).values()];
-      teams         = d.teams         || [];
-      homeLogo      = d.homeLogo      || '';
-      awayLogo      = d.awayLogo      || '';
-      homeColor     = d.homeColor     || '';
-      awayColor     = d.awayColor     || '';
-      applyTeamColors();
-      if (!teams.find(t => t.isOurTeam)) {
-        teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
-      }
-      timerOffset   = d.timerOffset   || 0;
-      timerBase     = d.timerBase     || null;
-      isHomeTeam    = d.isHomeTeam    !== undefined ? d.isHomeTeam : true;
-      activeMatchId = d.activeMatchId || null;
-      document.getElementById('matchTitle').value  = d.matchTitle || '';
-
-      updateScoreLabels();
-      updateGoalButtons();
-      closeSetup();
-    } else {
-      teams = [{ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true }];
-      closeSetup();
-    }
-  } catch(e) {
-    closeSetup();
-  }
-
-  document.getElementById('matchDate').textContent =
-    new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
-
-  if (timerBase !== null) {
-    startTimerLoop();
-    document.getElementById('timerDisplay').classList.add('running');
-    document.getElementById('btnPause').classList.add('active');
-  } else {
-    updateTimerDisplay();
-  }
-
-  updateScore(false);
-  renderEvents();
-  renderKaderList();
-  renderSpielplan();
-  renderTeamsList();
-  updateSpielplanGegnerSelect();
-  updateEndMatchBtn();
-
-  if (DEV_MODE) {
-    const preferredView = localStorage.getItem('matchtracker_dev_view') === 'ticker' ? 'ticker' : 'admin';
-    requestAnimationFrame(() => setDevView(preferredView));
-  }
-
-  // Auto-start erfolgt nach Firebase-Load (Phase 2 im Startup-Block)
-})();
 
 // ─── PERSIST ──────────────────────────────────────────────────────────────────
 function save(matchReady) {
@@ -3978,6 +3909,79 @@ function generateQR(canvas, text, size) {
   };
   img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&bgcolor=ffffff&color=000000&format=png`;
 }
+
+// Restore saved state only after all runtime state has been initialized.
+(function init() {
+  // Skip normal init in ticker mode
+  if (PAGE_PARAMS.get('ticker')) return;
+  if (DEV_MODE) document.body.classList.add('dev-mode');
+  try {
+    const d = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+    // Kader + Spielplan aus Admin-Keys laden (ssv_kader / ssv_spielplan)
+    if (!DEV_MODE) {
+      try { const k = JSON.parse(localStorage.getItem('ssv_kader') || '[]'); if (k.length) squad = k; } catch {}
+      try { const sp = JSON.parse(localStorage.getItem('ssv_spielplan') || '[]'); if (sp.length) schedule = sp; } catch {}
+    }
+
+    if (d) {
+      homeScore     = d.homeScore     || 0;
+      awayScore     = d.awayScore     || 0;
+      events        = d.events        || [];
+      // squad und schedule nur aus matchtracker_v3 als Fallback, wenn Admin-Keys leer
+      if (!squad.length)    squad    = d.squad    || [];
+      schedule = [...new Map([...(schedule || []), ...(d.schedule || [])].map(m => [String(m.id), m])).values()];
+      teams         = d.teams         || [];
+      homeLogo      = d.homeLogo      || '';
+      awayLogo      = d.awayLogo      || '';
+      homeColor     = d.homeColor     || '';
+      awayColor     = d.awayColor     || '';
+      applyTeamColors();
+      if (!teams.find(t => t.isOurTeam)) {
+        teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
+      }
+      timerOffset   = d.timerOffset   || 0;
+      timerBase     = d.timerBase     || null;
+      isHomeTeam    = d.isHomeTeam    !== undefined ? d.isHomeTeam : true;
+      activeMatchId = d.activeMatchId || null;
+      document.getElementById('matchTitle').value  = d.matchTitle || '';
+
+      updateScoreLabels();
+      updateGoalButtons();
+      closeSetup();
+    } else {
+      teams = [{ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true }];
+      closeSetup();
+    }
+  } catch(e) {
+    closeSetup();
+  }
+
+  document.getElementById('matchDate').textContent =
+    new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  if (timerBase !== null) {
+    startTimerLoop();
+    document.getElementById('timerDisplay').classList.add('running');
+    document.getElementById('btnPause').classList.add('active');
+  } else {
+    updateTimerDisplay();
+  }
+
+  updateScore(false);
+  renderEvents();
+  renderKaderList();
+  renderSpielplan();
+  renderTeamsList();
+  updateSpielplanGegnerSelect();
+  updateEndMatchBtn();
+
+  if (DEV_MODE) {
+    const preferredView = localStorage.getItem('matchtracker_dev_view') === 'ticker' ? 'ticker' : 'admin';
+    requestAnimationFrame(() => setDevView(preferredView));
+  }
+
+  // Auto-start erfolgt nach Firebase-Load (Phase 2 im Startup-Block)
+})();
 
 </script>
 
