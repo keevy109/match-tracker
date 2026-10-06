@@ -141,23 +141,15 @@
   @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
   .score-sep { font-family: var(--mono); font-size: 40px; color: #fff; line-height: 1; padding: 0 2px; }
 
-  .timer-row { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 20px 14px; }
-  .timer-display { font-family: var(--mono); font-size: 28px; color: var(--text); letter-spacing: 0.05em; min-width: 80px; text-align: center; }
-  .timer-display.running { color: var(--accent); }
-
+  .timer-row { display: flex; width: 100%; padding: 0 0 14px; }
   .btn-timer {
-    background: var(--surface); border: 1px solid var(--border); color: var(--text);
-    font-family: var(--sans); font-size: 13px; font-weight: 600;
-    width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.15s, background 0.15s;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; min-height: 48px; padding: 12px; border: 0; border-radius: 0;
+    background: #fff; color: #d71920; font-family: var(--sans); font-size: 16px; font-weight: 800; cursor: pointer;
   }
-  .btn-timer:active { background: #222; }
-  #btnStart  { border-color: var(--accent); color: var(--accent); }
-  #btnPause  { border-color: #555; color: #888; }
-  #btnPause.active { border-color: var(--own); color: var(--own); }
-  #btnReset  { border-color: #2a2a2a; color: #444; font-size: 15px; }
+  .btn-timer:active { background: #f4f4f4; }
+  .btn-timer:focus-visible { outline: 2px solid #d71920; outline-offset: -3px; }
+
 
   .minute-input-row { display: none; }
   .minute-input-row input[type=number] {
@@ -1113,10 +1105,7 @@
   </div>
 
   <div class="timer-row">
-    <button class="btn-timer" id="btnStart" onclick="startTimer()" title="Start">▶</button>
-    <button class="btn-timer" id="btnPause" onclick="pauseTimer()" title="Pause">⏸</button>
-    <div class="timer-display" id="timerDisplay">00:00</div>
-    <button class="btn-timer" id="btnReset" onclick="resetTimer()" title="Reset">↺</button>
+    <button type="button" class="btn-timer" id="btnToggleTimer" onclick="toggleTimer()" aria-label="Spielzeit starten">▶ Start</button>
   </div>
 
   <div class="minute-input-row">
@@ -1701,8 +1690,7 @@ function startTimer() {
   if (timerBase !== null) return;
   timerBase = Date.now();
   startTimerLoop();
-  document.getElementById('timerDisplay').classList.add('running');
-  document.getElementById('btnPause').classList.add('active');
+  updateTimerDisplay();
   save();
 }
 
@@ -1712,8 +1700,6 @@ function pauseTimer() {
   timerBase   = null;
   stopTimerLoop();
   updateTimerDisplay();
-  document.getElementById('timerDisplay').classList.remove('running');
-  document.getElementById('btnPause').classList.remove('active');
   save();
 }
 
@@ -1722,16 +1708,22 @@ function resetTimer() {
   timerOffset = 0;
   stopTimerLoop();
   updateTimerDisplay();
-  document.getElementById('timerDisplay').classList.remove('running');
-  document.getElementById('btnPause').classList.remove('active');
   save();
 }
 
+function toggleTimer() {
+  if (timerBase === null) startTimer();
+  else pauseTimer();
+}
+
 function updateTimerDisplay() {
-  const sec = elapsedSeconds();
-  const m = Math.floor(sec / 60), s = sec % 60;
-  document.getElementById('timerDisplay').textContent =
-    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const button = document.getElementById('btnToggleTimer');
+  const running = timerBase !== null;
+  if (button) {
+    button.textContent = running ? '⏸ Pause' : '▶ Start';
+    button.setAttribute('aria-label', running ? 'Spielzeit pausieren' : 'Spielzeit starten');
+  }
+  updateFeedMatchTime({timerBase, timerOffset});
 }
 
 document.addEventListener('visibilitychange', () => { save(); });
@@ -4072,13 +4064,8 @@ function generateQR(canvas, text, size) {
   document.getElementById('matchDate').textContent =
     new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
 
-  if (timerBase !== null) {
-    startTimerLoop();
-    document.getElementById('timerDisplay').classList.add('running');
-    document.getElementById('btnPause').classList.add('active');
-  } else {
-    updateTimerDisplay();
-  }
+  if (timerBase !== null) startTimerLoop();
+  updateTimerDisplay();
 
   updateScore(false);
   renderEvents();
