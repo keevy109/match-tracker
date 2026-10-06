@@ -5,11 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no, address=no, email=no">
 <title>Match Tracker</title>
+<script>
+try { document.documentElement.dataset.theme = localStorage.getItem('matchtracker_theme') === 'dark' ? 'dark' : 'light'; } catch (_) { document.documentElement.dataset.theme = 'light'; }
+</script>
+<script src="./ticker-theme.js" defer></script>
 <link rel="icon" type="image/png" href="./ssvlogo.png">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
+    --feed-page: #eef0f2;
+    --feed-surface: #fff;
+    --feed-text: #111;
+    --feed-muted: #666;
+    --feed-border: #d9dde0;
+    --feed-score-collapsed: #e5eaed;
     --bg: #0f0f0f;
     --surface: #191919;
     --surface2: #222;
@@ -27,6 +37,18 @@
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }
 
+  html[data-theme="dark"] {
+    --feed-page: #101214; --feed-surface: #1c2024; --feed-text: #f5f5f5;
+    --feed-muted: #b8bec6; --feed-border: #343a40; --feed-score-collapsed: #343a40;
+  }
+  .ticker-footer { display: flex; justify-content: center; padding: 12px 16px 24px; background: var(--feed-page); }
+  .theme-toggle { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--feed-border); border-radius: 50%; background: var(--feed-surface); color: var(--feed-text); cursor: pointer; }
+  .theme-toggle svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .theme-toggle:focus-visible { outline: 2px solid var(--feed-text); outline-offset: 3px; }
+  .theme-sun { display: none; }
+  html[data-theme="dark"] .theme-sun { display: block; }
+  html[data-theme="dark"] .theme-moon { display: none; }
+  html[data-theme="dark"] .btn-timer { background: var(--feed-surface); color: #ff686e; }
   html { background: #060808; color-scheme: dark; }
   * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -700,19 +722,19 @@
   .feed-result-header { display: none; }
 
   /* Eigenständige Feedansicht: eigener Ergebnis-Kopf und randloser Nachrichtenstrom. */
-  body:is(.ticker-mode, .dev-mode) { width: 100%; max-width: none; margin: 0; background: #eef0f2; }
-  body:is(.ticker-mode, .dev-mode) .ticker-header { padding: 0; background: #fff; }
+  body:is(.ticker-mode, .dev-mode) { width: 100%; max-width: none; margin: 0; background: var(--feed-page); }
+  body:is(.ticker-mode, .dev-mode) .ticker-header { padding: 0; background: var(--feed-surface); }
   body:is(.ticker-mode, .dev-mode) .ticker-live-badge,
   body:is(.ticker-mode, .dev-mode) .ticker-date,
   body:is(.ticker-mode, .dev-mode) .ticker-clock { display: none; }
-  body:is(.ticker-mode, .dev-mode) #tabSpiel { background: #eef0f2; }
+  body:is(.ticker-mode, .dev-mode) #tabSpiel { background: var(--feed-page); }
   body:is(.ticker-mode, .dev-mode) .scoreboard { display: none; }
   body:is(.ticker-mode, .dev-mode) .divider { display: none; }
-  body:is(.ticker-mode, .dev-mode) .ticker-updated { color: #666; }
+  body:is(.ticker-mode, .dev-mode) .ticker-updated { color: var(--feed-muted); }
   body:is(.ticker-mode, .dev-mode) .feed-result-header {
     display: grid; grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
     align-items: center; gap: 12px; width: 100%; padding: 11px 16px;
-    color: #111; background: #fff; border-top: 1px solid #eceff1; border-bottom: 1px solid #d9dde0;
+    color: var(--feed-text); background: var(--feed-surface); border-top: 1px solid var(--feed-border); border-bottom: 1px solid var(--feed-border);
   }
   .feed-result-team { display: flex; align-items: center; min-width: 0; }
   .feed-result-team.home { justify-content: flex-end; }
@@ -727,7 +749,7 @@
     background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%); }
   body:is(.ticker-mode, .dev-mode) .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
     position: absolute; inset: 0 0 auto; min-height: 30px; padding: 8px 12px;
-    background: #fff; color: #111; text-align: center; font-size: 14px; font-weight: 900; text-transform: uppercase; }
+    background: var(--feed-surface); color: var(--feed-text); text-align: center; font-size: 14px; font-weight: 900; text-transform: uppercase; }
   body:is(.ticker-mode, .dev-mode) .feed-result-names > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   body:is(.ticker-mode, .dev-mode) #feedNameHome { text-align: right; }
   body:is(.ticker-mode, .dev-mode) #feedNameAway { text-align: left; }
@@ -735,12 +757,12 @@
   body:is(.ticker-mode, .dev-mode) .feed-result-logo { width: clamp(60px, 18vw, 105px); height: 105px; }
   body:is(.ticker-mode, .dev-mode) .feed-result-score { gap: 2px; }
   body:is(.ticker-mode, .dev-mode) .feed-result-score > .feed-result-value { position: relative; height: 70px; min-width: 54px;
-    padding: 20px 8px 0; color: #111; background: #fff; font-size: 36px; }
+    padding: 20px 8px 0; color: var(--feed-text); background: var(--feed-surface); font-size: 36px; }
   body:is(.ticker-mode, .dev-mode) .feed-result-short { display: block; position: absolute; top: 7px; left: 0; width: 100%;
     font-size: 12px; text-align: center; font-style: normal; }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: none; }
 
-  .feed-result-score-panel { background: #fff; color: #111; min-width: 120px; }
+  .feed-result-score-panel { background: var(--feed-surface); color: var(--feed-text); min-width: 120px; }
   body:is(.ticker-mode, .dev-mode) .feed-result-score { justify-content: center; gap: 0; }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: block; padding: 16px 2px 0; font-size: 36px; }
   .feed-result-time { background: #000; color: #fff; text-align: center; font-family: var(--mono);
@@ -754,7 +776,7 @@
   @media (prefers-reduced-motion: reduce) { .feed-result-time.is-live::before { animation: none; } }
   body:is(.ticker-mode, .dev-mode) .feed-result-header {
     height: var(--feed-height, 200px); padding-top: var(--feed-padding, 52px);
-    padding-bottom: 10px; isolation: isolate; background: #fff;
+    padding-bottom: 10px; isolation: isolate; background: var(--feed-surface);
   }
   body:is(.ticker-mode, .dev-mode) .feed-result-header::before {
     content: ''; position: absolute; inset: 0; z-index: -1; opacity: var(--feed-color-opacity, 1);
@@ -775,7 +797,7 @@
   body:is(.ticker-mode, .dev-mode) .feed-result-score { gap: var(--feed-score-gap, 0px); }
   body:is(.ticker-mode, .dev-mode) .feed-result-score > .feed-result-value {
     height: var(--feed-value-height, 70px); min-width: var(--feed-value-width, 54px);
-    padding: var(--feed-value-padding, 20px) 8px 0; background: var(--feed-value-color, #fff);
+    padding: var(--feed-value-padding, 20px) 8px 0; background: color-mix(in srgb, var(--feed-score-collapsed) var(--feed-collapse-percent, 0%), var(--feed-surface));
   }
   body:is(.ticker-mode, .dev-mode) .feed-result-time { margin-top: var(--feed-time-margin, 0px); }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { padding: var(--feed-separator-padding, 16px) 2px 0; background: transparent; }
@@ -836,12 +858,12 @@
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
   body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) {
     grid-template-columns: 46px minmax(0, 1fr); width: 100%; padding: 14px 12px; gap: 10px;
-    color: #151515; background: #fff; background-image: none; border: 0; border-right: 4px solid #777; border-radius: 0;
+    color: var(--feed-text); background: var(--feed-surface); background-image: none; border: 0; border-right: 4px solid #777; border-radius: 0;
   }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] { min-height: 260px; }
   .event-comment-player { display: none; }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"] {
-    min-height: 130px; background: #fff; background-image: none; border-right: 0;
+    min-height: 130px; background: var(--feed-surface); background-image: none; border-right: 0;
   }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"][data-team="home"] { border-left: 4px solid var(--home-color); }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"][data-team="away"] { border-left: 4px solid var(--away-color); }
@@ -867,23 +889,23 @@
   body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
   body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]).own { border-right-color: var(--own); }
   body:is(.ticker-mode, .dev-mode) .event-item .event-icon { display: none; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-min { align-self: start; color: #4d4d4d; text-align: left; font-size: 16px; font-weight: 700; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-scorer { color: #151515; font-weight: 700; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-tag { margin-top: 3px; color: #666; line-height: 1.45; text-transform: none; letter-spacing: 0; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-min { align-self: start; color: var(--feed-muted); text-align: left; font-size: 16px; font-weight: 700; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-scorer { color: var(--feed-text); font-weight: 700; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-tag { margin-top: 3px; color: var(--feed-muted); line-height: 1.45; text-transform: none; letter-spacing: 0; }
   body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-score { display: none; }
   body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
 
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] {
     display: flex; flex-direction: column; gap: 8px; padding: 16px 12px 0;
-    background: #fff; border: 0;
+    background: var(--feed-surface); border: 0;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-min { color: #4d4d4d; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-min { color: var(--feed-muted); }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-info { width: 100%; min-width: 0; }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-scorer {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; color: #151515;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; color: var(--feed-text);
   }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player {
-    display: flex; flex-direction: column; gap: 8px; color: #151515; text-align: center;
+    display: flex; flex-direction: column; gap: 8px; color: var(--feed-text); text-align: center;
     position: relative; isolation: isolate; --arrow-color: #34b66a; --arrow-glow: rgba(52,182,106,0.28);
   }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player::before {
@@ -979,15 +1001,15 @@
     body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player img { animation: none; }
   }
 
-  .lineup-card { width: 100%; max-width: 100%; min-width: 0; background: #fff; color: #111; margin: 8px 0 10px; padding: 16px 0 0; overflow: hidden; }
+  .lineup-card { width: 100%; max-width: 100%; min-width: 0; background: var(--feed-surface); color: var(--feed-text); margin: 8px 0 10px; padding: 16px 0 0; overflow: hidden; }
   .lineup-card[hidden] { display: none; }
   .lineup-card h2 { margin: 0 16px 12px; font-size: 22px; font-weight: 900; }
   .lineup-heading { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 8px; }
   .lineup-heading h2 { margin-bottom: 0; }
   .lineup-navigation { display: flex; gap: 4px; margin-right: 12px; }
   .lineup-navigation[hidden] { display: none; }
-  .lineup-navigation button { display: grid; place-items: center; width: 52px; height: 44px; padding: 6px; border: 0; background: transparent; color: #111; cursor: pointer; }
-  .lineup-navigation button:focus-visible { outline: 2px solid #111; outline-offset: 1px; }
+  .lineup-navigation button { display: grid; place-items: center; width: 52px; height: 44px; padding: 6px; border: 0; background: transparent; color: var(--feed-text); cursor: pointer; }
+  .lineup-navigation button:focus-visible { outline: 2px solid var(--feed-text); outline-offset: 1px; }
   .lineup-navigation svg { width: 20px; height: 12px; fill: none; stroke: currentColor; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
   .lineup-next svg { transform: rotate(180deg); }
   .lineup-viewport { width: 100%; max-width: 100%; min-width: 0; overscroll-behavior-x: contain; container-type: inline-size; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -1276,6 +1298,12 @@
 <div class="toast" id="toast"></div>
 <!-- Ticker: last updated (only visible in ticker mode) -->
 <div class="ticker-updated" id="tickerUpdated"></div>
+<footer class="ticker-footer">
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Darkmode aktivieren" title="Darkmode aktivieren" aria-pressed="false">
+    <svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg>
+    <svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+  </button>
+</footer>
 
 <!-- Tor-Overlay (Ticker) -->
 <div class="goal-overlay" id="goalOverlay">
@@ -3836,8 +3864,7 @@ function updateFeedScrollState() {
   style.setProperty('--feed-label-opacity', String(Math.max(0, 1 - progress * 2)));
   style.setProperty('--feed-home-shift', mix(-25, 0) + '%');
   style.setProperty('--feed-away-shift', mix(25, 0) + '%');
-  const shade = [229, 234, 237].map(channel => Math.round(mix(255, channel)));
-  style.setProperty('--feed-value-color', `rgb(${shade.join(',')})`);
+  style.setProperty('--feed-collapse-percent', progress * 100 + '%');
   const space = document.querySelector('.feed-result-space');
   style.setProperty('--feed-top', Math.max(0, space?.getBoundingClientRect().top || 0) + 'px');
   document.body.classList.toggle('feed-scrolled', scrollTop > 0);
