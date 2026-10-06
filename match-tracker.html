@@ -755,12 +755,15 @@
   .feed-result-score-panel { background: #fff; color: #111; min-width: 120px; }
   body:is(.ticker-mode, .dev-mode) .feed-result-score { justify-content: center; gap: 0; }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: block; padding: 16px 2px 0; font-size: 36px; }
-  .feed-result-time { background: #78bd00; color: #fff; text-align: center; font-family: var(--mono);
+  .feed-result-time { background: #000; color: #fff; text-align: center; font-family: var(--mono);
     font-size: 12px; font-weight: 800; padding: 4px 8px; white-space: nowrap; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header { height: 78px; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { padding: 0 2px; font-size: 25px; }
 
-  body:is(.ticker-mode, .dev-mode) .events-section { width: 100%; padding: 0; -webkit-mask-image: none; mask-image: none; }
+  body:is(.ticker-mode, .dev-mode) { height: auto; min-height: 100svh; }
+  body:is(.ticker-mode, .dev-mode) #tabSpiel { flex: none; overflow: visible; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-space { flex-shrink: 0; }
+  body:is(.ticker-mode, .dev-mode) .events-section { width: 100%; padding: 0; flex: none; overflow: visible; -webkit-mask-image: none; mask-image: none; }
   body:is(.ticker-mode, .dev-mode) .events-list { width: 100%; gap: 10px; padding: 8px 0 18px; }
   body:is(.ticker-mode, .dev-mode) .event-item { position: relative; overflow: hidden; }
   body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] {
@@ -1423,6 +1426,7 @@ function resetDevMode() {
 }
 
 window.addEventListener('scroll', updateFeedScrollState, { passive: true });
+document.addEventListener('scroll', updateFeedScrollState, { passive: true, capture: true });
 window.addEventListener('pageshow', updateFeedScrollState);
 
 let devViewMode = 'admin';
@@ -3737,7 +3741,10 @@ function showGoalOverlay(event, data, onDone = () => {}) {
 }
 
 function updateFeedScrollState() {
-  document.body.classList.toggle('feed-scrolled', window.scrollY > 0);
+  const feed = document.querySelector('#tabSpiel .events-section');
+  const tab = document.getElementById('tabSpiel');
+  const scrollTop = Math.max(window.scrollY || 0, document.scrollingElement?.scrollTop || 0, feed?.scrollTop || 0, tab?.scrollTop || 0);
+  document.body.classList.toggle('feed-scrolled', scrollTop > 0);
 }
 
 function updateTickerUI(data, lastScore) {
