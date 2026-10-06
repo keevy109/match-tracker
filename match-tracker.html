@@ -988,7 +988,14 @@
   .lineup-card { background: #fff; color: #111; margin: 8px 0 10px; padding: 16px 0 0; overflow: hidden; }
   .lineup-card[hidden] { display: none; }
   .lineup-card h2 { margin: 0 16px 12px; font-size: 22px; font-weight: 900; }
-  .lineup-card small { font-size: 12px; font-weight: 500; color: #666; }
+  .lineup-heading { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 8px; }
+  .lineup-heading h2 { margin-bottom: 0; }
+  .lineup-navigation { display: flex; gap: 4px; margin-right: 12px; }
+  .lineup-navigation[hidden] { display: none; }
+  .lineup-navigation button { display: grid; place-items: center; width: 52px; height: 44px; padding: 6px; border: 0; background: transparent; color: #111; cursor: pointer; }
+  .lineup-navigation button:focus-visible { outline: 2px solid #111; outline-offset: 1px; }
+  .lineup-navigation svg { width: 40px; height: 24px; fill: none; stroke: currentColor; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .lineup-next svg { transform: rotate(180deg); }
   .lineup-viewport { container-type: inline-size; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .lineup-viewport::-webkit-scrollbar { display: none; }
   .lineup-track { display: flex; width: max-content; gap: 12px; }

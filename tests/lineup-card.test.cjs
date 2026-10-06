@@ -19,10 +19,14 @@ test('intro runs once then enables scrolling, and touch can interrupt it',()=>{
  const listeners={};let intro=true;
  const viewport={scrollLeft:0,getBoundingClientRect:()=>({left:0}),addEventListener:(name,fn)=>listeners[name]=fn};
  const track={getBoundingClientRect:()=>({left:-120}),classList:{contains:()=>intro,remove:()=>intro=false},addEventListener:(name,fn)=>listeners[name]=fn};
- const card={dataset:{},querySelector:selector=>selector==='.lineup-track'?track:viewport};
+ const navigation={hidden:true};const buttons={};
+ const card={dataset:{},querySelector:selector=>selector==='.lineup-track'?track:selector==='.lineup-viewport'?viewport:selector==='.lineup-navigation'?navigation:{addEventListener:(name,fn)=>buttons[selector]=fn}};
  render(card,[{id:1,name:'Mika'}],[1]);
- listeners.pointerdown();assert.equal(intro,false);assert.equal(viewport.scrollLeft,120);
+ assert.equal(navigation.hidden,true);assert.doesNotMatch(card.innerHTML,/<small>/);
+ listeners.pointerdown();assert.equal(navigation.hidden,false);assert.equal(intro,false);assert.equal(viewport.scrollLeft,120);
  intro=true;listeners.animationend();assert.equal(intro,false);assert.equal(viewport.scrollLeft,0);
+ let move;viewport.clientWidth=400;viewport.scrollBy=value=>move=value.left;
+ buttons['.lineup-next']();assert.equal(move,320);buttons['.lineup-prev']();assert.equal(move,-320);
 });
 
 test('published lineup is placed chronologically among events, never before selection',()=>{
