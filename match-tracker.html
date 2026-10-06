@@ -745,16 +745,6 @@
   body:is(.ticker-mode, .dev-mode) .feed-result-short { display: block; position: absolute; top: 7px; left: 0; width: 100%;
     font-size: 12px; text-align: center; font-style: normal; }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: none; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header { position: fixed; top: 0; left: 0; z-index: 40;
-    height: 70px; padding: 10px 16px; background: #fff; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-names,
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-short { display: none; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-logo { width: 50px; height: 36px; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team.home { justify-content: flex-end; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team.away { justify-content: flex-start; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-score > .feed-result-value { height: 48px; min-width: 40px; padding: 0 8px;
-    color: #111; background: #e5eaed; font-size: 36px; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { display: block; }
 
   .feed-result-score-panel { background: #fff; color: #111; min-width: 120px; }
   body:is(.ticker-mode, .dev-mode) .feed-result-score { justify-content: center; gap: 0; }
@@ -768,10 +758,32 @@
   }
   @keyframes feed-live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
   @media (prefers-reduced-motion: reduce) { .feed-result-time.is-live::before { animation: none; } }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team { padding-bottom: 32px; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-score { gap: 10px; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-time { margin-top: 11px; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { padding: 0 2px; font-size: 36px; background: transparent; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-header {
+    height: var(--feed-height, 200px); padding-top: var(--feed-padding, 52px);
+    padding-bottom: 10px; isolation: isolate; background: #fff;
+  }
+  body:is(.ticker-mode, .dev-mode) .feed-result-header::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; opacity: var(--feed-color-opacity, 1);
+    background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%);
+  }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header {
+    position: fixed; top: var(--feed-top, 0px); left: 0; z-index: 40;
+  }
+  body:is(.ticker-mode, .dev-mode) .feed-result-names,
+  body:is(.ticker-mode, .dev-mode) .feed-result-short { opacity: var(--feed-label-opacity, 1); pointer-events: none; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-logo {
+    width: var(--feed-logo-width, clamp(60px, 18vw, 105px)); height: var(--feed-logo-height, 105px);
+  }
+  body:is(.ticker-mode, .dev-mode) .feed-result-team { padding-bottom: var(--feed-team-padding, 0px); }
+  body:is(.ticker-mode, .dev-mode) .feed-result-team.home { justify-content: flex-end; transform: translateX(var(--feed-home-shift, -25%)); }
+  body:is(.ticker-mode, .dev-mode) .feed-result-team.away { justify-content: flex-start; transform: translateX(var(--feed-away-shift, 25%)); }
+  body:is(.ticker-mode, .dev-mode) .feed-result-score { gap: var(--feed-score-gap, 0px); }
+  body:is(.ticker-mode, .dev-mode) .feed-result-score > .feed-result-value {
+    height: var(--feed-value-height, 70px); min-width: var(--feed-value-width, 54px);
+    padding: var(--feed-value-padding, 20px) 8px 0; background: var(--feed-value-color, #fff);
+  }
+  body:is(.ticker-mode, .dev-mode) .feed-result-time { margin-top: var(--feed-time-margin, 0px); }
+  body:is(.ticker-mode, .dev-mode) .feed-result-separator { padding: var(--feed-separator-padding, 16px) 2px 0; background: transparent; }
 
   body:is(.ticker-mode, .dev-mode) { height: auto; min-height: 100svh; }
   body:is(.ticker-mode, .dev-mode) #tabSpiel { flex: none; overflow: visible; }
@@ -3760,6 +3772,25 @@ function updateFeedScrollState() {
   const feed = document.querySelector('#tabSpiel .events-section');
   const tab = document.getElementById('tabSpiel');
   const scrollTop = Math.max(window.scrollY || 0, document.scrollingElement?.scrollTop || 0, feed?.scrollTop || 0, tab?.scrollTop || 0);
+  const progress = Math.min(1, Math.max(0, scrollTop / 100));
+  const mix = (from, to) => from + (to - from) * progress;
+  const style = document.body.style;
+  const values = {
+    'height': mix(200, 70), 'padding': mix(52, 10),
+    'logo-height': mix(105, 36), 'logo-width': mix(Math.min(105, Math.max(60, window.innerWidth * 0.18)), 50),
+    'team-padding': mix(0, 32), 'score-gap': mix(0, 10),
+    'value-height': mix(70, 48), 'value-width': mix(54, 40), 'value-padding': mix(20, 0),
+    'time-margin': mix(0, 11), 'separator-padding': mix(16, 0)
+  };
+  for (const [key, value] of Object.entries(values)) style.setProperty('--feed-' + key, value + 'px');
+  style.setProperty('--feed-color-opacity', String(1 - progress));
+  style.setProperty('--feed-label-opacity', String(Math.max(0, 1 - progress * 2)));
+  style.setProperty('--feed-home-shift', mix(-25, 0) + '%');
+  style.setProperty('--feed-away-shift', mix(25, 0) + '%');
+  const shade = [229, 234, 237].map(channel => Math.round(mix(255, channel)));
+  style.setProperty('--feed-value-color', `rgb(${shade.join(',')})`);
+  const space = document.querySelector('.feed-result-space');
+  style.setProperty('--feed-top', Math.max(0, space?.getBoundingClientRect().top || 0) + 'px');
   document.body.classList.toggle('feed-scrolled', scrollTop > 0);
 }
 
