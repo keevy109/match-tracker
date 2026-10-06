@@ -12,6 +12,7 @@
       order.indexOf(position(a)) - order.indexOf(position(b)) || String(a.name || '').localeCompare(String(b.name || ''), 'de'));
   }
   const escape = value => String(value || '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const intros = new WeakMap();
   function render(card, members, ids) {
     if (!card) return;
     const players = selectedPlayers(members, ids);
@@ -21,16 +22,20 @@
     card.hidden = !players.length;
     card.innerHTML = '';
     if (!players.length) return;
+    const intro = intros.get(card) || {startedAt:Date.now(), done:false};
+    intros.set(card, intro);
     const labels = {TW:'TOR', ABW:'ABWEHR', MIT:'MITTELFELD', ST:'STURM', Trainer:'TRAINER', 'Ohne Position':'OHNE POSITION'};
     const groupCount = new Set(players.map(position)).size;
     const arrow = '<svg viewBox="0 0 52 24" aria-hidden="true"><path d="M14 4 6 12 14 20 M30 4 22 12 30 20 M46 4 38 12 46 20"/></svg>';
     card.innerHTML = `<div class="lineup-heading"><h2>Aufstellung</h2><div class="lineup-navigation" hidden><button type="button" class="lineup-prev" aria-label="Vorherige Spieler">${arrow}</button><button type="button" class="lineup-next" aria-label="Weitere Spieler">${arrow}</button></div></div><div class="lineup-viewport" tabindex="0" aria-label="Aufstellung – Spieler durch Wischen ansehen"><div class="lineup-track lineup-intro" style="--lineup-duration:${Math.max(14,players.length * 3 + groupCount + 6)}s">${players.map((player, index) => `${index === 0 || position(players[index - 1]) !== position(player) ? `<h3 class="lineup-position"><span>${labels[position(player)]}</span></h3>` : ''}<figure class="lineup-player"><figcaption><strong>${escape(player.name)}</strong></figcaption>${player.photo ? `<img src="${escape(player.photo)}" alt="" loading="eager">` : '<span class="lineup-placeholder" aria-hidden="true">👤</span>'}</figure>`).join('')}</div></div>`;
     const viewport = card.querySelector('.lineup-viewport');
     const track = card.querySelector('.lineup-track');
+    if (track.style) track.style.animationDelay = '-' + Math.max(0, (Date.now() - intro.startedAt) / 1000) + 's';
     const navigation = card.querySelector('.lineup-navigation');
     const enableSwipe = (reset = false) => {
       if (!track.classList.contains('lineup-intro')) return;
       const offset = Math.max(0, viewport.getBoundingClientRect().left - track.getBoundingClientRect().left);
+      intro.done = true;
       track.classList.remove('lineup-intro');
       viewport.scrollLeft = reset ? 0 : offset;
       navigation.hidden = false;
@@ -40,6 +45,7 @@
         viewport.scrollBy({left: direction * Math.max(152, viewport.clientWidth * 0.8), behavior: root.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
       });
     }
+    if (intro.done) enableSwipe(true);
     if (root.matchMedia?.('(prefers-reduced-motion: reduce)').matches) enableSwipe(true);
     track.addEventListener('animationend', () => enableSwipe(true), {once:true});
     viewport.addEventListener('pointerdown', () => enableSwipe(), {passive:true});
@@ -69,7 +75,9 @@
     card.dataset.type = 'aufstellung';
     list.querySelector('.empty-state')?.remove();
     const before = Array.from(list.children).find(item => item !== card && Number(item.dataset.eventId) < Number(publishedAt));
-    list.insertBefore(card, before || null);
+    const children = Array.from(list.children);
+    const index = children.indexOf(card);
+    if (index === -1 || (children[index + 1] || null) !== (before || null)) list.insertBefore(card, before || null);
   }
   root.MatchTrackerLineup = {position, selectedPlayers, render, mount};
 })(globalThis);

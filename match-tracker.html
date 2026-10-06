@@ -2040,11 +2040,25 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     ${trainerBtns}`;
 }
 
+function clearFeedEvents(list, empty = false) {
+  const lineup = list.querySelector('.lineup-card');
+  if (!lineup) {
+    list.innerHTML = empty ? '<div class="empty-state">Noch keine Ereignisse</div>' : '';
+    return;
+  }
+  Array.from(list.children).forEach(item => { if (item !== lineup) item.remove(); });
+}
+function appendFeedEvent(list, item) {
+  const lineup = list.querySelector('.lineup-card');
+  if (lineup && Number(item.dataset.eventId) > Number(lineup.dataset.eventId)) list.insertBefore(item, lineup);
+  else list.appendChild(item);
+}
+
 function renderEvents() {
   const list = document.getElementById('eventsList');
   if (!list) return;
   if (events.length === 0) {
-    list.innerHTML = '<div class="empty-state">Noch keine Ereignisse</div>';
+    clearFeedEvents(list, true);
     renderLocalLineup();
     return;
   }
@@ -2052,7 +2066,7 @@ function renderEvents() {
   const parts = title.split(/\s+vs\.?\s+/i);
   const homeName = parts[0]?.trim() || 'Heim';
   const awayName = parts[1]?.trim() || 'Gast';
-  list.innerHTML = '';
+  clearFeedEvents(list);
   [...events].sort((a,b) => b.id - a.id).forEach(e => {
     const item = document.createElement('div');
     item.className = `event-item ${eventCssClass(e)}`;
@@ -2062,7 +2076,7 @@ function renderEvents() {
     if (DEV_MODE && pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
     if (DEV_MODE && pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide(), homeLogo, awayLogo });
-    list.appendChild(item);
+    appendFeedEvent(list, item);
   });
   renderLocalLineup();
 }
@@ -4012,9 +4026,9 @@ function updateTickerUI(data, lastScore, headerOnly = false) {
     : [];
 
   if (evts.length === 0) {
-    list.innerHTML = '<div class="empty-state">Noch keine Ereignisse</div>';
+    clearFeedEvents(list, true);
   } else {
-    list.innerHTML = '';
+    clearFeedEvents(list);
     const homeName = data.homeTeam || 'Heim';
     const awayName = data.awayTeam || 'Gast';
     [...evts].sort((a,b) => b.id - a.id).forEach(e => {
@@ -4026,7 +4040,7 @@ function updateTickerUI(data, lastScore, headerOnly = false) {
       if (pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
       if (pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
       item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home', homeLogo: data.homeLogo, awayLogo: data.awayLogo });
-      list.appendChild(item);
+      appendFeedEvent(list, item);
     });
   }
 
