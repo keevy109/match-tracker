@@ -20,7 +20,7 @@
     card.hidden = !players.length;
     card.innerHTML = '';
     if (!players.length) return;
-    card.innerHTML = `<h2>Aufstellung <small>${players.length} Spieler</small></h2><div class="lineup-viewport" tabindex="0" aria-label="Aufstellung – Spieler durch Wischen ansehen"><div class="lineup-track lineup-intro" style="--lineup-duration:${Math.max(14,players.length * 3 + 6)}s">${players.map(player => `<figure class="lineup-player">${player.photo ? `<img src="${escape(player.photo)}" alt="" loading="eager">` : '<span class="lineup-placeholder" aria-hidden="true">👤</span>'}<figcaption><strong>${escape(player.name)}</strong><span>${position(player)}</span></figcaption></figure>`).join('')}</div></div>`;
+    card.innerHTML = `<h2>Aufstellung <small>${players.length} Spieler</small></h2><div class="lineup-viewport" tabindex="0" aria-label="Aufstellung – Spieler durch Wischen ansehen"><div class="lineup-track lineup-intro" style="--lineup-duration:${Math.max(14,players.length * 3 + 6)}s">${players.map(player => `<figure class="lineup-player"><figcaption><strong>${escape(player.name)}</strong></figcaption>${player.photo ? `<img src="${escape(player.photo)}" alt="" loading="eager">` : '<span class="lineup-placeholder" aria-hidden="true">👤</span>'}</figure>`).join('')}</div></div>`;
     const viewport = card.querySelector('.lineup-viewport');
     const track = card.querySelector('.lineup-track');
     const enableSwipe = (reset = false) => {
