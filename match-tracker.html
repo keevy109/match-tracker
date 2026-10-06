@@ -752,11 +752,18 @@
     color: #111; background: #fff; font-size: 25px; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { display: block; }
 
-  .feed-result-score-panel { background: #fff; color: #111; min-width: 120px; }
+  .feed-result-score-panel { background: #fff; color: #111; min-width: 120px; border: 1px solid #fff; }
   body:is(.ticker-mode, .dev-mode) .feed-result-score { justify-content: center; gap: 0; }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: block; padding: 16px 2px 0; font-size: 36px; }
   .feed-result-time { background: #000; color: #fff; text-align: center; font-family: var(--mono);
     font-size: 12px; font-weight: 800; padding: 4px 8px; white-space: nowrap; }
+  .feed-result-time.is-live::before {
+    content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 6px;
+    border-radius: 50%; background: #ff3333; vertical-align: middle;
+    animation: feed-live-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes feed-live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+  @media (prefers-reduced-motion: reduce) { .feed-result-time.is-live::before { animation: none; } }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header { height: 78px; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { padding: 0 2px; font-size: 25px; }
 
@@ -1035,7 +1042,7 @@
     <div class="feed-result-score">
       <span class="feed-result-value"><i class="feed-result-short" id="feedShortHome"></i><b id="feedScoreHome">0</b></span><span class="feed-result-separator">:</span><span class="feed-result-value"><i class="feed-result-short" id="feedShortAway"></i><b id="feedScoreAway">0</b></span>
     </div>
-    <div class="feed-result-time" id="feedMatchTime" role="timer">LIVE · 0:00</div>
+    <div class="feed-result-time is-live" id="feedMatchTime" role="timer">LIVE · 0:00</div>
     </div>
     <div class="feed-result-team away"><img class="feed-result-logo" id="feedLogoAway" src="" alt=""></div>
   </div>
@@ -1436,13 +1443,16 @@ function updateFeedMatchTime(data) {
   const clock = document.getElementById('feedMatchTime');
   if (!clock) return;
   if (data.matchFinished || data.abandoned) {
+    clock.classList.remove('is-live');
     clock.textContent = data.abandoned ? 'ABBRUCH' : 'ENDE';
     return;
   }
   const running = data.timerBase != null;
   const seconds = Math.max(0, (Number(data.timerOffset) || 0) + (running ? Math.floor((Date.now() - data.timerBase) / 1000) : 0));
   const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-  clock.textContent = `${running || seconds === 0 ? 'LIVE' : 'PAUSE'} · ${time}`;
+  const live = running || seconds === 0;
+  clock.classList.toggle('is-live', live);
+  clock.textContent = `${live ? 'LIVE' : 'PAUSE'} · ${time}`;
 }
 
 function updateDevTickerClock() {
