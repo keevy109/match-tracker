@@ -742,17 +742,17 @@
     font-size: 12px; text-align: center; font-style: normal; }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: none; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header { position: fixed; top: 0; left: 0; z-index: 40;
-    height: 104px; padding: 10px 16px; background: #fff; }
+    height: 70px; padding: 10px 16px; background: #fff; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-names,
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-short { display: none; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-logo { width: 50px; height: 56px; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-logo { width: 50px; height: 26px; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team.home { justify-content: flex-end; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team.away { justify-content: flex-start; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-score > .feed-result-value { height: 56px; min-width: 50px; padding: 0 8px;
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-score > .feed-result-value { height: 48px; min-width: 40px; padding: 0 8px;
     color: #111; background: #e5eaed; font-size: 36px; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { display: block; }
 
-  .feed-result-score-panel { background: #fff; color: #111; min-width: 120px; border: 1px solid #fff; }
+  .feed-result-score-panel { background: #fff; color: #111; min-width: 120px; }
   body:is(.ticker-mode, .dev-mode) .feed-result-score { justify-content: center; gap: 0; }
   body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: block; padding: 16px 2px 0; font-size: 36px; }
   .feed-result-time { background: #000; color: #fff; text-align: center; font-family: var(--mono);
@@ -764,9 +764,9 @@
   }
   @keyframes feed-live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
   @media (prefers-reduced-motion: reduce) { .feed-result-time.is-live::before { animation: none; } }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team { padding-bottom: 24px; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team { padding-bottom: 32px; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-score { gap: 10px; }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-time { margin-top: 4px; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-time { margin-top: 11px; }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { padding: 0 2px; font-size: 36px; background: transparent; }
 
   body:is(.ticker-mode, .dev-mode) { height: auto; min-height: 100svh; }
