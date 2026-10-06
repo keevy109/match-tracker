@@ -707,7 +707,7 @@
 
   /* Eigenständige Feedansicht: eigener Ergebnis-Kopf und randloser Nachrichtenstrom. */
   body:is(.ticker-mode, .dev-mode) { width: 100%; max-width: none; margin: 0; background: #eef0f2; }
-  body:is(.ticker-mode, .dev-mode) .ticker-header { padding: 8px; background: #fff; }
+  body:is(.ticker-mode, .dev-mode) .ticker-header { padding: 0; background: #fff; }
   body:is(.ticker-mode, .dev-mode) .ticker-live-badge,
   body:is(.ticker-mode, .dev-mode) .ticker-date,
   body:is(.ticker-mode, .dev-mode) .ticker-clock { display: none; }
@@ -732,8 +732,8 @@
   body:is(.ticker-mode, .dev-mode) .feed-result-header { height: 200px; position: relative; padding-top: 52px;
     background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%); }
   body:is(.ticker-mode, .dev-mode) .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
-    position: absolute; inset: 0 0 auto; min-height: 42px; padding: 8px 12px;
-    background: #fff; color: #111; text-align: center; font-size: 13px; font-weight: 800; }
+    position: absolute; inset: 0 0 auto; min-height: 30px; padding: 8px 12px;
+    background: #fff; color: #111; text-align: center; font-size: 14px; font-weight: 900; text-transform: uppercase; }
   body:is(.ticker-mode, .dev-mode) .feed-result-names > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   body:is(.ticker-mode, .dev-mode) #feedNameHome { text-align: right; }
   body:is(.ticker-mode, .dev-mode) #feedNameAway { text-align: left; }
