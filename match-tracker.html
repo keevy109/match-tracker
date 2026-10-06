@@ -741,7 +741,10 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .feed-result-space, .feed-result-names, .feed-result-short { display: none; }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-space { display: block; height: 200px; }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-header { height: 200px; position: relative; padding-top: 52px;
-    background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%); }
+    background:
+      linear-gradient(115deg, #0005, transparent 55%) left / 50% 100% no-repeat,
+      linear-gradient(115deg, #0005, transparent 55%) right / 50% 100% no-repeat,
+      linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%); }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
     position: absolute; inset: 0 0 auto; min-height: 30px; padding: 8px 12px;
     background: var(--feed-surface); color: var(--feed-text); text-align: center; font-size: 14px; font-weight: 900; text-transform: uppercase; }
@@ -775,7 +778,10 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-header::before {
     content: ''; position: absolute; inset: 0; z-index: -1; opacity: var(--feed-color-opacity, 1);
-    background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%);
+    background:
+      linear-gradient(115deg, #0005, transparent 55%) left / 50% 100% no-repeat,
+      linear-gradient(115deg, #0005, transparent 55%) right / 50% 100% no-repeat,
+      linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%);
   }
   body:is(.ticker-mode, .dev-mode, .entry-mode).feed-scrolled .feed-result-header {
     position: fixed; top: var(--feed-top, 0px); left: 0; z-index: 40;
