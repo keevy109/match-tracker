@@ -701,16 +701,16 @@
   .feed-result-header { display: none; }
 
   /* Eigenständige Feedansicht: eigener Ergebnis-Kopf und randloser Nachrichtenstrom. */
-  body.ticker-mode { width: 100%; max-width: none; margin: 0; background: #eef0f2; }
-  body.ticker-mode .ticker-header { padding: 8px; background: #fff; }
-  body.ticker-mode .ticker-live-badge,
-  body.ticker-mode .ticker-date,
-  body.ticker-mode .ticker-clock { display: none; }
-  body.ticker-mode #tabSpiel { background: #eef0f2; }
-  body.ticker-mode .scoreboard { display: none; }
-  body.ticker-mode .divider { display: none; }
-  body.ticker-mode .ticker-updated { color: #666; }
-  body.ticker-mode .feed-result-header {
+  body:is(.ticker-mode, .dev-mode) { width: 100%; max-width: none; margin: 0; background: #eef0f2; }
+  body:is(.ticker-mode, .dev-mode) .ticker-header { padding: 8px; background: #fff; }
+  body:is(.ticker-mode, .dev-mode) .ticker-live-badge,
+  body:is(.ticker-mode, .dev-mode) .ticker-date,
+  body:is(.ticker-mode, .dev-mode) .ticker-clock { display: none; }
+  body:is(.ticker-mode, .dev-mode) #tabSpiel { background: #eef0f2; }
+  body:is(.ticker-mode, .dev-mode) .scoreboard { display: none; }
+  body:is(.ticker-mode, .dev-mode) .divider { display: none; }
+  body:is(.ticker-mode, .dev-mode) .ticker-updated { color: #666; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-header {
     display: grid; grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
     align-items: center; gap: 12px; width: 100%; padding: 11px 16px;
     color: #111; background: #fff; border-top: 1px solid #eceff1; border-bottom: 1px solid #d9dde0;
@@ -723,156 +723,156 @@
   .feed-result-score span:not(.feed-result-separator) { display: grid; place-items: center; min-width: 34px; height: 38px; padding: 0 7px; background: #e5eaed; }
   .feed-result-separator { padding-inline: 2px; }
   .feed-result-space, .feed-result-names, .feed-result-short { display: none; }
-  body.ticker-mode .feed-result-space { display: block; height: 200px; }
-  body.ticker-mode .feed-result-header { height: 200px; position: relative; padding-top: 52px;
+  body:is(.ticker-mode, .dev-mode) .feed-result-space { display: block; height: 200px; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-header { height: 200px; position: relative; padding-top: 52px;
     background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%); }
-  body.ticker-mode .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
+  body:is(.ticker-mode, .dev-mode) .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
     position: absolute; inset: 0 0 auto; min-height: 42px; padding: 8px 12px;
     background: #fff; color: #111; text-align: center; font-size: 13px; font-weight: 800; }
-  body.ticker-mode .feed-result-names > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-  body.ticker-mode #feedNameHome { text-align: right; }
-  body.ticker-mode #feedNameAway { text-align: left; }
-  body.ticker-mode .feed-result-team { justify-content: center; }
-  body.ticker-mode .feed-result-logo { width: clamp(60px, 18vw, 105px); height: 105px; }
-  body.ticker-mode .feed-result-score { gap: 2px; }
-  body.ticker-mode .feed-result-score > .feed-result-value { position: relative; height: 70px; min-width: 54px;
+  body:is(.ticker-mode, .dev-mode) .feed-result-names > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  body:is(.ticker-mode, .dev-mode) #feedNameHome { text-align: right; }
+  body:is(.ticker-mode, .dev-mode) #feedNameAway { text-align: left; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-team { justify-content: center; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-logo { width: clamp(60px, 18vw, 105px); height: 105px; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-score { gap: 2px; }
+  body:is(.ticker-mode, .dev-mode) .feed-result-score > .feed-result-value { position: relative; height: 70px; min-width: 54px;
     padding: 20px 8px 0; color: #111; background: #fff; font-size: 36px; }
-  body.ticker-mode .feed-result-short { display: block; position: absolute; top: 7px; left: 0; width: 100%;
+  body:is(.ticker-mode, .dev-mode) .feed-result-short { display: block; position: absolute; top: 7px; left: 0; width: 100%;
     font-size: 12px; text-align: center; font-style: normal; }
-  body.ticker-mode .feed-result-separator { display: none; }
-  body.ticker-mode.feed-scrolled .feed-result-header { position: fixed; top: 0; left: 0; z-index: 40;
+  body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: none; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header { position: fixed; top: 0; left: 0; z-index: 40;
     height: 62px; padding: 11px 16px; background: #fff; }
-  body.ticker-mode.feed-scrolled .feed-result-names,
-  body.ticker-mode.feed-scrolled .feed-result-short { display: none; }
-  body.ticker-mode.feed-scrolled .feed-result-logo { width: 38px; height: 38px; }
-  body.ticker-mode.feed-scrolled .feed-result-team.home { justify-content: flex-end; }
-  body.ticker-mode.feed-scrolled .feed-result-team.away { justify-content: flex-start; }
-  body.ticker-mode.feed-scrolled .feed-result-value { height: 38px; min-width: 34px; padding: 0 7px;
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-names,
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-short { display: none; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-logo { width: 38px; height: 38px; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team.home { justify-content: flex-end; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-team.away { justify-content: flex-start; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-value { height: 38px; min-width: 34px; padding: 0 7px;
     color: #111; background: #fff; font-size: 25px; }
-  body.ticker-mode.feed-scrolled .feed-result-separator { display: block; }
+  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-separator { display: block; }
 
-  body.ticker-mode .events-section { width: 100%; padding: 0; -webkit-mask-image: none; mask-image: none; }
-  body.ticker-mode .events-list { width: 100%; gap: 10px; padding: 8px 0 18px; }
-  body.ticker-mode .event-item { position: relative; overflow: hidden; }
-  body.ticker-mode .event-item[data-type="tor"] {
+  body:is(.ticker-mode, .dev-mode) .events-section { width: 100%; padding: 0; -webkit-mask-image: none; mask-image: none; }
+  body:is(.ticker-mode, .dev-mode) .events-list { width: 100%; gap: 10px; padding: 8px 0 18px; }
+  body:is(.ticker-mode, .dev-mode) .event-item { position: relative; overflow: hidden; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] {
     display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
     width: 100%; min-height: 260px; padding: 16px; gap: 0; border: 0; border-radius: 0;
     color: #fff; isolation: isolate;
   }
-  body.ticker-mode .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
-  body.ticker-mode .event-item[data-type="tor"][data-team="away"] { background: linear-gradient(135deg, color-mix(in srgb, var(--away-color) 88%, #080808), var(--away-color)); }
-  body.ticker-mode .event-item[data-type="tor"].own { background: linear-gradient(135deg, color-mix(in srgb, var(--own) 88%, #080808), var(--own)); }
-  body.ticker-mode .event-item[data-type="tor"]::before {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"][data-team="away"] { background: linear-gradient(135deg, color-mix(in srgb, var(--away-color) 88%, #080808), var(--away-color)); }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"].own { background: linear-gradient(135deg, color-mix(in srgb, var(--own) 88%, #080808), var(--own)); }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"]::before {
     content: ''; position: absolute; inset: 0; z-index: 0;
     background: linear-gradient(90deg, rgba(0,0,0,0.18), transparent 70%);
   }
-  body.ticker-mode .event-item[data-type="tor"] .event-min {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-min {
     position: relative; z-index: 2; color: #fff; text-align: left; font-size: 16px; font-weight: 700; opacity: 0.9;
   }
-  body.ticker-mode .event-item[data-type="tor"] .event-info {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-info {
     z-index: 2; width: 60%; margin-top: 28px; gap: 4px;
   }
-  body.ticker-mode .event-item[data-type="tor"] .event-tag { display: none; }
-  body.ticker-mode .event-item[data-type="tor"] .event-scorer {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-tag { display: none; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-scorer {
     order: 1; display: block; overflow: visible; color: #fff; font-size: 18px; font-weight: 800;
     text-transform: uppercase; white-space: normal;
   }
-  body.ticker-mode .event-scorer-name { display: block; }
-  body.ticker-mode .event-season-goals { display: block; margin-top: 3px; font-size: 13px; font-weight: 300; }
-  body.ticker-mode .event-item[data-type="tor"] .event-info::after {
+  body:is(.ticker-mode, .dev-mode) .event-scorer-name { display: block; }
+  body:is(.ticker-mode, .dev-mode) .event-season-goals { display: block; margin-top: 3px; font-size: 13px; font-weight: 300; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-info::after {
     content: 'TOR!'; order: 2; font-size: 34px; line-height: 1; font-weight: 900; letter-spacing: -0.04em;
   }
-  body.ticker-mode .event-item[data-type="tor"] .event-score {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-score {
     position: relative; z-index: 2; margin-top: 3px; font-size: 52px; line-height: 1; font-weight: 800;
   }
-  body.ticker-mode .event-score-previous { opacity: 0.4; }
-  body.ticker-mode .event-item[data-type="tor"] .event-goal-player { display: block; }
-  body.ticker-mode .event-item[data-type="tor"] .event-goal-player .event-player-photo {
+  body:is(.ticker-mode, .dev-mode) .event-score-previous { opacity: 0.4; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player { display: block; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player .event-player-photo {
     position: absolute; right: 0; bottom: -4px; z-index: 1;
     width: 240px; height: 240px; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent; opacity: 1;
   }
-  body.ticker-mode .event-item[data-type="tor"] .event-goal-player .event-player-side-photo {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player .event-player-side-photo {
     display: block; position: absolute; right: 50px; bottom: -4px; z-index: 0;
     width: 260px; height: 260px; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; opacity: 0.3; pointer-events: none;
   }
-  body.ticker-mode .event-item[data-type="tor"] .event-team-crest {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-team-crest {
     position: absolute; right: 0; bottom: -120px; z-index: 1;
     width: auto; height: 360px; max-width: none; object-fit: contain; opacity: 0.4;
   }
-  body.ticker-mode .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
-  body.ticker-mode .event-item:not([data-type="tor"]) {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) {
     grid-template-columns: 46px minmax(0, 1fr); width: 100%; padding: 14px 12px; gap: 10px;
     color: #151515; background: #fff; background-image: none; border: 0; border-right: 4px solid #777; border-radius: 0;
   }
-  body.ticker-mode .event-item[data-type="wechsel"] { min-height: 260px; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] { min-height: 260px; }
   .event-comment-player { display: none; }
-  body.ticker-mode .event-item[data-type="kommentar"] {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"] {
     min-height: 130px; background: #fff; background-image: none; border-right: 0;
   }
-  body.ticker-mode .event-item[data-type="kommentar"][data-team="home"] { border-left: 4px solid var(--home-color); }
-  body.ticker-mode .event-item[data-type="kommentar"][data-team="away"] { border-left: 4px solid var(--away-color); }
-  body.ticker-mode .event-item[data-type="kommentar"]:not([data-team="home"]):not([data-team="away"]) { border-left: 0; }
-  body.ticker-mode .event-item[data-type="kommentar"] .event-scorer {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"][data-team="home"] { border-left: 4px solid var(--home-color); }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"][data-team="away"] { border-left: 4px solid var(--away-color); }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"]:not([data-team="home"]):not([data-team="away"]) { border-left: 0; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"] .event-scorer {
     font-size: 18px; line-height: 1.4;
   }
-  body.ticker-mode .event-item.has-comment-player .event-info { padding-right: 108px; }
-  body.ticker-mode .event-comment-player { display: block; }
-  body.ticker-mode .event-comment-player .event-player-photo,
-  body.ticker-mode .event-comment-player .event-player-side-photo,
-  body.ticker-mode .event-comment-player .event-player-placeholder {
+  body:is(.ticker-mode, .dev-mode) .event-item.has-comment-player .event-info { padding-right: 108px; }
+  body:is(.ticker-mode, .dev-mode) .event-comment-player { display: block; }
+  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-photo,
+  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-side-photo,
+  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-placeholder {
     display: block; position: absolute; right: -12px; bottom: 0;
     width: 120px; height: 120px; object-fit: contain; object-position: center bottom;
     border: 0; border-radius: 0; background: transparent; z-index: 1;
   }
-  body.ticker-mode .event-comment-player .event-player-side-photo {
+  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-side-photo {
     right: 18px; width: 130px; height: 130px; opacity: 0.3; z-index: 0;
   }
-  body.ticker-mode .event-comment-text { position: relative; z-index: 2; }
+  body:is(.ticker-mode, .dev-mode) .event-comment-text { position: relative; z-index: 2; }
 
-  body.ticker-mode .event-item:not([data-type="tor"])[data-team="home"] { border-right-color: var(--home-color); }
-  body.ticker-mode .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
-  body.ticker-mode .event-item:not([data-type="tor"]).own { border-right-color: var(--own); }
-  body.ticker-mode .event-item .event-icon { display: none; }
-  body.ticker-mode .event-item:not([data-type="tor"]) .event-min { align-self: start; color: #4d4d4d; text-align: left; font-size: 16px; font-weight: 700; }
-  body.ticker-mode .event-item:not([data-type="tor"]) .event-scorer { color: #151515; font-weight: 700; }
-  body.ticker-mode .event-item:not([data-type="tor"]) .event-tag { margin-top: 3px; color: #666; line-height: 1.45; text-transform: none; letter-spacing: 0; }
-  body.ticker-mode .event-item:not([data-type="tor"]) .event-score { display: none; }
-  body.ticker-mode .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"])[data-team="home"] { border-right-color: var(--home-color); }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]).own { border-right-color: var(--own); }
+  body:is(.ticker-mode, .dev-mode) .event-item .event-icon { display: none; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-min { align-self: start; color: #4d4d4d; text-align: left; font-size: 16px; font-weight: 700; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-scorer { color: #151515; font-weight: 700; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-tag { margin-top: 3px; color: #666; line-height: 1.45; text-transform: none; letter-spacing: 0; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-score { display: none; }
+  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
 
-  body.ticker-mode .event-item[data-type="wechsel"] {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] {
     display: flex; flex-direction: column; gap: 8px; padding: 16px 12px 0;
     background: #fff; border: 0;
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-min { color: #4d4d4d; }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-info { width: 100%; min-width: 0; }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-scorer {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-min { color: #4d4d4d; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-info { width: 100%; min-width: 0; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-scorer {
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; color: #151515;
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-substitution-player {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player {
     display: flex; flex-direction: column; gap: 8px; color: #151515; text-align: center;
     position: relative; isolation: isolate; --arrow-color: #34b66a; --arrow-glow: rgba(52,182,106,0.28);
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-substitution-player::before {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player::before {
     content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 200px;
     z-index: -1; pointer-events: none;
     background: linear-gradient(to bottom, var(--arrow-color) 0%, var(--arrow-color) 40%, transparent 100%);
     clip-path: polygon(50% 0, 100% 35%, 83% 35%, 83% 100%, 17% 100%, 17% 35%, 0 35%);
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-substitution-player::after {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player::after {
     content: ''; position: absolute; inset: auto -8px 0; height: 210px; z-index: -2;
     background: radial-gradient(ellipse at 50% 35%, var(--arrow-glow), transparent 70%);
     filter: blur(8px); pointer-events: none;
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-player-out {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-out {
     --arrow-color: #e34b55; --arrow-glow: rgba(227,75,85,0.28);
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-player-out::before {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-out::before {
     background: linear-gradient(to top, var(--arrow-color) 0%, var(--arrow-color) 40%, transparent 100%);
     clip-path: polygon(50% 100%, 100% 65%, 83% 65%, 83% 0, 17% 0, 17% 65%, 0 65%);
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-player-out::after {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-out::after {
     background: radial-gradient(ellipse at 50% 65%, var(--arrow-glow), transparent 70%);
   }
   @keyframes feed-sub-player-enter {
@@ -883,46 +883,39 @@
     from { transform: scaleY(0); }
     to { transform: scaleY(1); }
   }
-  body.ticker-mode .feed-sub-pending .event-player-photo,
-  body.ticker-mode .feed-sub-pending .event-player-placeholder,
-  body.ticker-mode .feed-sub-pending .event-substitution-player::before,
-  body.ticker-mode .feed-sub-pending .event-substitution-player::after { visibility: hidden; }
-  body.ticker-mode .feed-sub-animate .event-player-photo,
-  body.ticker-mode .feed-sub-animate .event-player-placeholder {
+  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-player-photo,
+  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-player-placeholder,
+  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-substitution-player::before,
+  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-substitution-player::after { visibility: hidden; }
+  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-photo,
+  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-placeholder {
     animation: feed-sub-player-enter 1500ms ease-out both;
   }
-  body.ticker-mode .feed-sub-animate .event-substitution-player::before,
-  body.ticker-mode .feed-sub-animate .event-substitution-player::after {
+  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::before,
+  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::after {
     transform-origin: center bottom;
     animation: feed-sub-arrow-grow 1500ms ease-out both;
   }
-  body.ticker-mode .feed-sub-animate .event-player-out::before,
-  body.ticker-mode .feed-sub-animate .event-player-out::after { transform-origin: center top; }
+  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-out::before,
+  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-out::after { transform-origin: center top; }
   @media (prefers-reduced-motion: reduce) {
-    body.ticker-mode .feed-sub-animate .event-player-photo,
-    body.ticker-mode .feed-sub-animate .event-player-placeholder,
-    body.ticker-mode .feed-sub-animate .event-substitution-player::before,
-    body.ticker-mode .feed-sub-animate .event-substitution-player::after { animation: none; }
+    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-photo,
+    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-placeholder,
+    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::before,
+    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::after { animation: none; }
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-substitution-player > span:last-child {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player > span:last-child {
     order: -1; width: 100%; min-height: 40px; overflow-wrap: anywhere; position: relative; z-index: 2;
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-player-photo,
-  body.ticker-mode .event-item[data-type="wechsel"] .event-player-placeholder {
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-photo,
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-placeholder {
     width: 100%; height: 200px; flex: none; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent;
   }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-player-photo { position: relative; z-index: 1; }
-  body.ticker-mode .event-item[data-type="wechsel"] .event-tag { display: none; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-photo { position: relative; z-index: 1; }
+  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-tag { display: none; }
 
-  body.dev-mode.dev-spectator-mode.ticker-mode .goal-section { display: block !important; }
-  body.dev-mode.dev-spectator-mode.ticker-mode .event-btns-row,
-  body.dev-mode.dev-spectator-mode.ticker-mode .timer-row { display: flex !important; }
-  body.dev-mode.dev-spectator-mode.ticker-mode .goal-section,
-  body.dev-mode.dev-spectator-mode.ticker-mode .event-btns-row,
-  body.dev-mode.dev-spectator-mode.ticker-mode .timer-row { background: #101820; }
-
-  body.ticker-mode .event-item.feed-goal-pending .event-goal-player img {
+  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-pending .event-goal-player img {
     visibility: hidden;
   }
   @keyframes feed-goal-pulse {
@@ -937,21 +930,21 @@
     from { opacity: 0; transform: translateY(80px); }
     to { opacity: 0.4; transform: translateY(0); }
   }
-  body.ticker-mode .event-item.feed-goal-animate .event-info::after {
+  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-info::after {
     transform-origin: left center; animation: feed-goal-pulse 1000ms ease-in-out 3;
   }
-  body.ticker-mode .event-item.feed-goal-animate .event-goal-player .event-player-side-photo {
+  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player .event-player-side-photo {
     --feed-image-opacity: 0.3; animation: feed-player-enter 1500ms ease-out both;
   }
-  body.ticker-mode .event-item.feed-goal-animate .event-goal-player .event-player-photo {
+  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player .event-player-photo {
     animation: feed-player-enter 1500ms ease-out 300ms both;
   }
-  body.ticker-mode .event-item.feed-goal-animate .event-team-crest {
+  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-team-crest {
     animation: feed-crest-enter 1600ms ease-out both;
   }
   @media (prefers-reduced-motion: reduce) {
-    body.ticker-mode .event-item.feed-goal-animate .event-info::after,
-    body.ticker-mode .event-item.feed-goal-animate .event-goal-player img { animation: none; }
+    body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-info::after,
+    body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player img { animation: none; }
   }
 
   /* Ticker overlay for sharing */
@@ -1435,9 +1428,10 @@ function updateDevTickerClock() {
 }
 
 function refreshDevSpectatorView() {
-  if (!DEV_MODE || devViewMode !== 'ticker') return;
+  if (!DEV_MODE) return;
   const data = { ...matchSnapshot(), squad, updatedAt: Date.now() };
   updateTickerUI(data, null);
+  if (devViewMode === 'admin') renderEvents();
   const badge = document.getElementById('tickerLiveBadge');
   if (badge && !activeMatchId) badge.innerHTML = '<div class="ticker-live-dot"></div> VORSCHAU';
   document.getElementById('tickerDate').textContent = data.matchDate || '';
@@ -1472,6 +1466,7 @@ function setDevView(mode) {
     document.getElementById('tickerUpdated').textContent = '';
     switchTab(devAdminTab);
     updateScoreLabels(); updateGoalButtons(); updateScore(false); renderEvents(); updateTimerDisplay();
+    refreshDevSpectatorView();
   }
 }
 
@@ -2027,6 +2022,9 @@ function renderEvents() {
     item.className = `event-item ${eventCssClass(e)}`;
     item.dataset.team = e.typ === 'kommentar' && !['home', 'away'].includes(e.team) ? '' : e.team === 'away' ? 'away' : 'home';
     item.dataset.type = e.typ || 'tor';
+    item.dataset.eventId = String(e.id);
+    if (DEV_MODE && pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
+    if (DEV_MODE && pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide(), homeLogo, awayLogo });
     list.appendChild(item);
   });
@@ -3664,7 +3662,7 @@ function animateFeedGoalCard(event) {
   const list = document.getElementById('eventsList');
   const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
   card?.classList.remove('feed-goal-pending', 'feed-sub-pending');
-  if (!['tor', 'wechsel'].includes(event.typ || 'tor') || !document.body?.classList.contains('ticker-mode')) return false;
+  if (!['tor', 'wechsel'].includes(event.typ || 'tor') || !(document.body?.classList.contains('ticker-mode') || document.body?.classList.contains('dev-mode'))) return false;
   if (!card) return false;
   card.scrollIntoView({block: 'nearest', behavior: 'instant'});
   const animationClass = event.typ === 'wechsel' ? 'feed-sub-animate' : 'feed-goal-animate';
