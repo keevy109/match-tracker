@@ -11,7 +11,7 @@ test('header collapses for page or feed scrolling and expands again at the top',
  c.updateFeedScrollState();assert.equal(collapsed,false);
  for(const target of [feed,tab,root]) {target.scrollTop=30;c.updateFeedScrollState();assert.equal(collapsed,true);target.scrollTop=0;}
  c.window.scrollY=20;c.updateFeedScrollState();assert.equal(collapsed,true);
- c.window.scrollY=50;c.updateFeedScrollState();assert.equal(styles['--feed-height'],'135px');assert.equal(styles['--feed-logo-height'],'70.5px');
- c.window.scrollY=150;c.updateFeedScrollState();assert.equal(styles['--feed-height'],'70px');
- c.window.scrollY=0;c.updateFeedScrollState();assert.equal(collapsed,false);assert.equal(styles['--feed-height'],'200px');
+ c.window.scrollY=50;c.updateFeedScrollState();assert.equal(styles['--feed-height'],'135px');assert.equal(styles['--feed-logo-height'],'70.5px');assert.equal(styles['--feed-shadow-opacity'],'0.5');
+ c.window.scrollY=150;c.updateFeedScrollState();assert.equal(styles['--feed-height'],'70px');assert.equal(styles['--feed-shadow-opacity'],'1');
+ c.window.scrollY=0;c.updateFeedScrollState();assert.equal(collapsed,false);assert.equal(styles['--feed-height'],'200px');assert.equal(styles['--feed-shadow-opacity'],'0');
 });

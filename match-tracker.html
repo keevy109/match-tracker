@@ -768,6 +768,7 @@
   }
   body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header {
     position: fixed; top: var(--feed-top, 0px); left: 0; z-index: 40;
+    box-shadow: 0px -20px 40px 10px rgba(17, 17, 17, var(--feed-shadow-opacity, 0));
   }
   body:is(.ticker-mode, .dev-mode) .feed-result-names,
   body:is(.ticker-mode, .dev-mode) .feed-result-short { opacity: var(--feed-label-opacity, 1); pointer-events: none; }
@@ -3819,6 +3820,7 @@ function updateFeedScrollState() {
   };
   for (const [key, value] of Object.entries(values)) style.setProperty('--feed-' + key, value + 'px');
   style.setProperty('--feed-color-opacity', String(1 - progress));
+  style.setProperty('--feed-shadow-opacity', String(progress));
   style.setProperty('--feed-label-opacity', String(Math.max(0, 1 - progress * 2)));
   style.setProperty('--feed-home-shift', mix(-25, 0) + '%');
   style.setProperty('--feed-away-shift', mix(25, 0) + '%');
