@@ -717,16 +717,16 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .feed-result-header { display: none; }
 
   /* Eigenständige Feedansicht: eigener Ergebnis-Kopf und randloser Nachrichtenstrom. */
-  body:is(.ticker-mode, .dev-mode) { width: 100%; max-width: none; margin: 0; background: var(--feed-page); }
-  body:is(.ticker-mode, .dev-mode) .ticker-header { padding: 0; background: var(--feed-surface); }
-  body:is(.ticker-mode, .dev-mode) .ticker-live-badge,
-  body:is(.ticker-mode, .dev-mode) .ticker-date,
-  body:is(.ticker-mode, .dev-mode) .ticker-clock { display: none; }
-  body:is(.ticker-mode, .dev-mode) #tabSpiel { background: var(--feed-page); }
-  body:is(.ticker-mode, .dev-mode) .scoreboard { display: none; }
-  body:is(.ticker-mode, .dev-mode) .divider { display: none; }
-  body:is(.ticker-mode, .dev-mode) .ticker-updated { color: var(--feed-muted); }
-  body:is(.ticker-mode, .dev-mode) .feed-result-header {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) { width: 100%; max-width: none; margin: 0; background: var(--feed-page); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-header { padding: 0; background: var(--feed-surface); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-live-badge,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-date,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-clock { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) #tabSpiel { background: var(--feed-page); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .scoreboard { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .divider { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-updated { color: var(--feed-muted); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-header {
     display: grid; grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
     align-items: center; gap: 12px; width: 100%; padding: 11px 16px;
     color: var(--feed-text); background: var(--feed-surface); border-top: 1px solid var(--feed-border); border-bottom: 1px solid var(--feed-border);
@@ -739,27 +739,27 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .feed-result-score span:not(.feed-result-separator) { display: grid; place-items: center; min-width: 34px; height: 38px; padding: 0 7px; background: #e5eaed; }
   .feed-result-separator { padding-inline: 2px; }
   .feed-result-space, .feed-result-names, .feed-result-short { display: none; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-space { display: block; height: 200px; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-header { height: 200px; position: relative; padding-top: 52px;
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-space { display: block; height: 200px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-header { height: 200px; position: relative; padding-top: 52px;
     background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%); }
-  body:is(.ticker-mode, .dev-mode) .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-names { display: flex; justify-content: center; align-items: center; gap: 8px;
     position: absolute; inset: 0 0 auto; min-height: 30px; padding: 8px 12px;
     background: var(--feed-surface); color: var(--feed-text); text-align: center; font-size: 14px; font-weight: 900; text-transform: uppercase; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-names > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-  body:is(.ticker-mode, .dev-mode) #feedNameHome { text-align: right; }
-  body:is(.ticker-mode, .dev-mode) #feedNameAway { text-align: left; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-team { justify-content: center; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-logo { width: clamp(60px, 18vw, 105px); height: 105px; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-score { gap: 2px; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-score > .feed-result-value { position: relative; height: 70px; min-width: 54px;
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-names > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) #feedNameHome { text-align: right; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) #feedNameAway { text-align: left; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-team { justify-content: center; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-logo { width: clamp(60px, 18vw, 105px); height: 105px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-score { gap: 2px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-score > .feed-result-value { position: relative; height: 70px; min-width: 54px;
     padding: 20px 8px 0; color: var(--feed-text); background: var(--feed-surface); font-size: 36px; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-short { display: block; position: absolute; top: 7px; left: 0; width: 100%;
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-short { display: block; position: absolute; top: 7px; left: 0; width: 100%;
     font-size: 12px; text-align: center; font-style: normal; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-separator { display: none; }
 
   .feed-result-score-panel { background: var(--feed-surface); color: var(--feed-text); min-width: 120px; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-score { justify-content: center; gap: 0; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-separator { display: block; padding: 16px 2px 0; font-size: 36px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-score { justify-content: center; gap: 0; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-separator { display: block; padding: 16px 2px 0; font-size: 36px; }
   .feed-result-time { background: #000; color: #fff; text-align: center; font-family: var(--mono);
     font-size: 12px; font-weight: 800; padding: 4px 8px; white-space: nowrap; }
   .feed-result-time.is-live::before {
@@ -769,159 +769,159 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   }
   @keyframes feed-live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
   @media (prefers-reduced-motion: reduce) { .feed-result-time.is-live::before { animation: none; } }
-  body:is(.ticker-mode, .dev-mode) .feed-result-header {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-header {
     height: var(--feed-height, 200px); padding-top: var(--feed-padding, 52px);
     padding-bottom: 10px; isolation: isolate; background: var(--feed-surface);
   }
-  body:is(.ticker-mode, .dev-mode) .feed-result-header::before {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-header::before {
     content: ''; position: absolute; inset: 0; z-index: -1; opacity: var(--feed-color-opacity, 1);
     background: linear-gradient(115deg, #0005, transparent 55%), linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%);
   }
-  body:is(.ticker-mode, .dev-mode).feed-scrolled .feed-result-header {
+  body:is(.ticker-mode, .dev-mode, .entry-mode).feed-scrolled .feed-result-header {
     position: fixed; top: var(--feed-top, 0px); left: 0; z-index: 40;
     box-shadow: 0px -20px 40px 10px rgba(17, 17, 17, var(--feed-shadow-opacity, 0));
   }
-  body:is(.ticker-mode, .dev-mode) .feed-result-names,
-  body:is(.ticker-mode, .dev-mode) .feed-result-short { opacity: var(--feed-label-opacity, 1); pointer-events: none; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-logo {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-names,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-short { opacity: var(--feed-label-opacity, 1); pointer-events: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-logo {
     width: var(--feed-logo-width, clamp(60px, 18vw, 105px)); height: var(--feed-logo-height, 105px);
   }
-  body:is(.ticker-mode, .dev-mode) .feed-result-team { padding-bottom: var(--feed-team-padding, 0px); }
-  body:is(.ticker-mode, .dev-mode) .feed-result-team.home { justify-content: flex-end; transform: translateX(var(--feed-home-shift, -25%)); }
-  body:is(.ticker-mode, .dev-mode) .feed-result-team.away { justify-content: flex-start; transform: translateX(var(--feed-away-shift, 25%)); }
-  body:is(.ticker-mode, .dev-mode) .feed-result-score { gap: var(--feed-score-gap, 0px); }
-  body:is(.ticker-mode, .dev-mode) .feed-result-score > .feed-result-value {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-team { padding-bottom: var(--feed-team-padding, 0px); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-team.home { justify-content: flex-end; transform: translateX(var(--feed-home-shift, -25%)); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-team.away { justify-content: flex-start; transform: translateX(var(--feed-away-shift, 25%)); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-score { gap: var(--feed-score-gap, 0px); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-score > .feed-result-value {
     height: var(--feed-value-height, 70px); min-width: var(--feed-value-width, 54px);
     padding: var(--feed-value-padding, 20px) 8px 0; background: color-mix(in srgb, var(--feed-score-collapsed) var(--feed-collapse-percent, 0%), var(--feed-surface));
   }
-  body:is(.ticker-mode, .dev-mode) .feed-result-time { margin-top: var(--feed-time-margin, 0px); }
-  body:is(.ticker-mode, .dev-mode) .feed-result-separator { padding: var(--feed-separator-padding, 16px) 2px 0; background: transparent; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-time { margin-top: var(--feed-time-margin, 0px); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-separator { padding: var(--feed-separator-padding, 16px) 2px 0; background: transparent; }
 
-  body:is(.ticker-mode, .dev-mode) { height: auto; min-height: 100svh; }
-  body:is(.ticker-mode, .dev-mode) #tabSpiel { flex: none; overflow: visible; min-width: 0; max-width: 100%; }
-  body:is(.ticker-mode, .dev-mode) .feed-result-space { flex-shrink: 0; }
-  body:is(.ticker-mode, .dev-mode) .events-section { width: 100%; padding: 0; flex: none; overflow: visible; -webkit-mask-image: none; mask-image: none; }
-  body:is(.ticker-mode, .dev-mode) .events-list { width: 100%; min-width: 0; max-width: 100%; gap: 10px; padding: 8px 0 18px; }
-  body:is(.ticker-mode, .dev-mode) .event-item { position: relative; overflow: hidden; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) { height: auto; min-height: 100svh; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) #tabSpiel { flex: none; overflow: visible; min-width: 0; max-width: 100%; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-space { flex-shrink: 0; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .events-section { width: 100%; padding: 0; flex: none; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .events-list { width: 100%; min-width: 0; max-width: 100%; gap: 10px; padding: 8px 0 18px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item { position: relative; overflow: hidden; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] {
     display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
     width: 100%; min-height: 260px; padding: 16px; gap: 0; border: 0; border-radius: 0;
     color: #fff; isolation: isolate;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"][data-team="away"] { background: linear-gradient(135deg, color-mix(in srgb, var(--away-color) 88%, #080808), var(--away-color)); }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"].own { background: linear-gradient(135deg, color-mix(in srgb, var(--own) 88%, #080808), var(--own)); }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"]::before {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"][data-team="away"] { background: linear-gradient(135deg, color-mix(in srgb, var(--away-color) 88%, #080808), var(--away-color)); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"].own { background: linear-gradient(135deg, color-mix(in srgb, var(--own) 88%, #080808), var(--own)); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"]::before {
     content: ''; position: absolute; inset: 0; z-index: 0;
     background: linear-gradient(90deg, rgba(0,0,0,0.18), transparent 70%);
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-min {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-min {
     position: relative; z-index: 2; color: #fff; text-align: left; font-size: 16px; font-weight: 700; opacity: 0.9;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-info {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-info {
     z-index: 2; width: 60%; margin-top: 28px; gap: 4px;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-tag { display: none; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-scorer {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-tag { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-scorer {
     order: 1; display: block; overflow: visible; color: #fff; font-size: 18px; font-weight: 800;
     text-transform: uppercase; white-space: normal;
   }
-  body:is(.ticker-mode, .dev-mode) .event-scorer-name { display: block; }
-  body:is(.ticker-mode, .dev-mode) .event-season-goals { display: block; margin-top: 3px; font-size: 13px; font-weight: 300; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-info::after {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-scorer-name { display: block; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-season-goals { display: block; margin-top: 3px; font-size: 13px; font-weight: 300; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-info::after {
     content: 'TOR!'; order: 2; font-size: 34px; line-height: 1; font-weight: 900; letter-spacing: -0.04em;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-score {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-score {
     position: relative; z-index: 2; margin-top: 3px; font-size: 52px; line-height: 1; font-weight: 800;
   }
-  body:is(.ticker-mode, .dev-mode) .event-score-previous { opacity: 0.4; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player { display: block; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player .event-player-photo {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-score-previous { opacity: 0.4; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-goal-player { display: block; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-goal-player .event-player-photo {
     position: absolute; right: 0; bottom: -4px; z-index: 1;
     width: 240px; height: 240px; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent; opacity: 1;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player .event-player-side-photo {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-goal-player .event-player-side-photo {
     display: block; position: absolute; right: 50px; bottom: -4px; z-index: 0;
     width: 260px; height: 260px; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; opacity: 0.3; pointer-events: none;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-team-crest {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-team-crest {
     position: absolute; right: 0; bottom: -120px; z-index: 1;
     width: auto; height: 360px; max-width: none; object-fit: contain; opacity: 0.4;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"] .event-goal-player > span:last-child { position: relative; z-index: 2; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) {
     grid-template-columns: 46px minmax(0, 1fr); width: 100%; padding: 14px 12px; gap: 10px;
     color: var(--feed-text); background: var(--feed-surface); background-image: none; border: 0; border-right: 4px solid #777; border-radius: 0;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] { min-height: 260px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] { min-height: 260px; }
   .event-comment-player { display: none; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"] {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"] {
     min-height: 130px; background: var(--feed-surface); background-image: none; border-right: 0;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"][data-team="home"] { border-left: 4px solid var(--home-color); }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"][data-team="away"] { border-left: 4px solid var(--away-color); }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"]:not([data-team="home"]):not([data-team="away"]) { border-left: 0; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="kommentar"] .event-scorer {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"][data-team="home"] { border-left: 4px solid var(--home-color); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"][data-team="away"] { border-left: 4px solid var(--away-color); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"]:not([data-team="home"]):not([data-team="away"]) { border-left: 0; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"] .event-scorer {
     font-size: 18px; line-height: 1.4;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item.has-comment-player .event-info { padding-right: 108px; }
-  body:is(.ticker-mode, .dev-mode) .event-comment-player { display: block; }
-  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-photo,
-  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-side-photo,
-  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-placeholder {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.has-comment-player .event-info { padding-right: 108px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-comment-player { display: block; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-comment-player .event-player-photo,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-comment-player .event-player-side-photo,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-comment-player .event-player-placeholder {
     display: block; position: absolute; right: -12px; bottom: 0;
     width: 120px; height: 120px; object-fit: contain; object-position: center bottom;
     border: 0; border-radius: 0; background: transparent; z-index: 1;
   }
-  body:is(.ticker-mode, .dev-mode) .event-comment-player .event-player-side-photo {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-comment-player .event-player-side-photo {
     right: 18px; width: 130px; height: 130px; opacity: 0.3; z-index: 0;
   }
-  body:is(.ticker-mode, .dev-mode) .event-comment-text { position: relative; z-index: 2; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-comment-text { position: relative; z-index: 2; }
 
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"])[data-team="home"] { border-right-color: var(--home-color); }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]).own { border-right-color: var(--own); }
-  body:is(.ticker-mode, .dev-mode) .event-item .event-icon { display: none; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-min { align-self: start; color: var(--feed-muted); text-align: left; font-size: 16px; font-weight: 700; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-scorer { color: var(--feed-text); font-weight: 700; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-tag { margin-top: 3px; color: var(--feed-muted); line-height: 1.45; text-transform: none; letter-spacing: 0; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-score { display: none; }
-  body:is(.ticker-mode, .dev-mode) .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"])[data-team="home"] { border-right-color: var(--home-color); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"])[data-team="away"] { border-right-color: var(--away-color); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]).own { border-right-color: var(--own); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item .event-icon { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) .event-min { align-self: start; color: var(--feed-muted); text-align: left; font-size: 16px; font-weight: 700; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) .event-scorer { color: var(--feed-text); font-weight: 700; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) .event-tag { margin-top: 3px; color: var(--feed-muted); line-height: 1.45; text-transform: none; letter-spacing: 0; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) .event-score { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
 
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] {
     display: flex; flex-direction: column; gap: 8px; padding: 16px 12px 0;
     background: var(--feed-surface); border: 0;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-min { color: var(--feed-muted); }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-info { width: 100%; min-width: 0; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-scorer {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-min { color: var(--feed-muted); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-info { width: 100%; min-width: 0; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-scorer {
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; color: var(--feed-text);
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-substitution-player {
     display: flex; flex-direction: column; gap: 8px; color: var(--feed-text); text-align: center;
     position: relative; isolation: isolate; --arrow-color: #34b66a; --arrow-glow: rgba(52,182,106,0.28);
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player::before {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-substitution-player::before {
     content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 200px;
     z-index: -1; pointer-events: none;
     background: linear-gradient(to bottom, var(--arrow-color) 0%, var(--arrow-color) 40%, transparent 100%);
     clip-path: polygon(50% 0, 100% 35%, 83% 35%, 83% 100%, 17% 100%, 17% 35%, 0 35%);
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player::after {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-substitution-player::after {
     content: ''; position: absolute; inset: auto -8px 0; height: 210px; z-index: -2;
     background: radial-gradient(ellipse at 50% 35%, var(--arrow-glow), transparent 70%);
     filter: blur(8px); pointer-events: none;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-out {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-player-out {
     --arrow-color: #e34b55; --arrow-glow: rgba(227,75,85,0.28);
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-out::before {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-player-out::before {
     background: linear-gradient(to top, var(--arrow-color) 0%, var(--arrow-color) 40%, transparent 100%);
     clip-path: polygon(50% 100%, 100% 65%, 83% 65%, 83% 0, 17% 0, 17% 65%, 0 65%);
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-out::after {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-player-out::after {
     background: radial-gradient(ellipse at 50% 65%, var(--arrow-glow), transparent 70%);
   }
   @keyframes feed-sub-player-enter {
@@ -932,39 +932,39 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     from { transform: scaleY(0); }
     to { transform: scaleY(1); }
   }
-  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-player-photo,
-  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-player-placeholder,
-  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-substitution-player::before,
-  body:is(.ticker-mode, .dev-mode) .feed-sub-pending .event-substitution-player::after { visibility: hidden; }
-  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-photo,
-  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-placeholder {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-pending .event-player-photo,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-pending .event-player-placeholder,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-pending .event-substitution-player::before,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-pending .event-substitution-player::after { visibility: hidden; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-player-photo,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-player-placeholder {
     animation: feed-sub-player-enter 1500ms ease-out both;
   }
-  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::before,
-  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::after {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-substitution-player::before,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-substitution-player::after {
     transform-origin: center bottom;
     animation: feed-sub-arrow-grow 1500ms ease-out both;
   }
-  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-out::before,
-  body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-out::after { transform-origin: center top; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-player-out::before,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-player-out::after { transform-origin: center top; }
   @media (prefers-reduced-motion: reduce) {
-    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-photo,
-    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-player-placeholder,
-    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::before,
-    body:is(.ticker-mode, .dev-mode) .feed-sub-animate .event-substitution-player::after { animation: none; }
+    body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-player-photo,
+    body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-player-placeholder,
+    body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-substitution-player::before,
+    body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-sub-animate .event-substitution-player::after { animation: none; }
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-substitution-player > span:last-child {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-substitution-player > span:last-child {
     order: -1; width: 100%; min-height: 40px; overflow-wrap: anywhere; position: relative; z-index: 2;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-photo,
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-placeholder {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-player-photo,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-player-placeholder {
     width: 100%; height: 200px; flex: none; border: 0; border-radius: 0;
     object-fit: contain; object-position: center bottom; background: transparent;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-player-photo { position: relative; z-index: 1; }
-  body:is(.ticker-mode, .dev-mode) .event-item[data-type="wechsel"] .event-tag { display: none; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-player-photo { position: relative; z-index: 1; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] .event-tag { display: none; }
 
-  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-pending .event-goal-player img {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.feed-goal-pending .event-goal-player img {
     visibility: hidden;
   }
   @keyframes feed-goal-pulse {
@@ -979,21 +979,21 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     from { opacity: 0; transform: translateY(80px); }
     to { opacity: 0.4; transform: translateY(0); }
   }
-  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-info::after {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.feed-goal-animate .event-info::after {
     transform-origin: left center; animation: feed-goal-pulse 1000ms ease-in-out 3;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player .event-player-side-photo {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.feed-goal-animate .event-goal-player .event-player-side-photo {
     --feed-image-opacity: 0.3; animation: feed-player-enter 1500ms ease-out both;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player .event-player-photo {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.feed-goal-animate .event-goal-player .event-player-photo {
     animation: feed-player-enter 1500ms ease-out 300ms both;
   }
-  body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-team-crest {
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.feed-goal-animate .event-team-crest {
     animation: feed-crest-enter 1600ms ease-out both;
   }
   @media (prefers-reduced-motion: reduce) {
-    body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-info::after,
-    body:is(.ticker-mode, .dev-mode) .event-item.feed-goal-animate .event-goal-player img { animation: none; }
+    body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.feed-goal-animate .event-info::after,
+    body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item.feed-goal-animate .event-goal-player img { animation: none; }
   }
 
   .lineup-card { width: 100%; max-width: 100%; min-width: 0; background: var(--feed-surface); color: var(--feed-text); margin: 8px 0 10px; padding: 16px 0 0; overflow: hidden; }
@@ -1685,6 +1685,7 @@ function save(matchReady) {
     refreshDevSpectatorView();
     return;
   }
+  if (document.body.classList.contains('entry-mode')) updateTickerUI(matchSnapshot(), null, true);
   syncToFirebase();
   saveGlobal();
 }
@@ -3877,7 +3878,7 @@ function updateFeedScrollState() {
   document.body.classList.toggle('feed-scrolled', scrollTop > 0);
 }
 
-function updateTickerUI(data, lastScore) {
+function updateTickerUI(data, lastScore, headerOnly = false) {
   updateFeedMatchTime(data);
   updateFeedScrollState();
   for (const side of ['home', 'away']) {
@@ -3943,6 +3944,8 @@ function updateTickerUI(data, lastScore) {
   const feedScoreA = document.getElementById('feedScoreAway');
   if (feedScoreH) feedScoreH.textContent = data.homeScore ?? 0;
   if (feedScoreA) feedScoreA.textContent = data.awayScore ?? 0;
+
+  if (headerOnly) return;
 
   // Animate + Goal Overlay if score changed
   if (lastScore && scoreH && scoreA &&
@@ -4053,7 +4056,7 @@ function generateQR(canvas, text, size) {
 (function init() {
   // Skip normal init in ticker mode
   if (PAGE_PARAMS.get('ticker')) return;
-  if (DEV_MODE) document.body.classList.add('dev-mode');
+  document.body.classList.add(DEV_MODE ? 'dev-mode' : 'entry-mode');
   try {
     const d = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
     // Kader + Spielplan aus Admin-Keys laden (ssv_kader / ssv_spielplan)
@@ -4113,6 +4116,8 @@ function generateQR(canvas, text, size) {
     const preferredView = localStorage.getItem('matchtracker_dev_view') === 'ticker' ? 'ticker' : 'admin';
     requestAnimationFrame(() => setDevView(preferredView));
   }
+
+  if (!DEV_MODE) updateTickerUI(matchSnapshot(), null, true);
 
   // Auto-start erfolgt nach Firebase-Load (Phase 2 im Startup-Block)
 })();
@@ -4185,6 +4190,7 @@ function checkAccess() {
         renderSpielplan();
         storageReady = true;
         document.getElementById('storageLoading').style.display = 'none';
+        updateTickerUI(matchSnapshot(), null, true);
         storageStatus('Speicher bereit. Live-Spielstände werden direkt übertragen.');
       } catch(e) {
         // A previously tracked game can continue offline; starting a fixture cannot.

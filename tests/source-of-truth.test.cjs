@@ -157,15 +157,15 @@ test('spectator ticker uses only the feed layout in live and dev mode',()=>{
   const tracker=fs.readFileSync(path.join(__dirname,'../match-tracker.html'),'utf8');
   assert.doesNotMatch(tracker,/tickerLayout|setTickerLayout|ticker-layout-toggle|matchtracker_ticker_layout|ticker-feed|ticker-timeline/);
   assert.match(tracker,/class="feed-result-header"[^>]*>[\s\S]*?id="feedScoreHome"[\s\S]*?id="feedScoreAway"/);
-  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode\) \.scoreboard \{ display: none; \}/);
-  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode\) \.events-section \{ width: 100%; padding: 0;/);
-  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode\) \.event-item\[data-type="tor"\]/);
+  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode, \.entry-mode\) \.scoreboard \{ display: none; \}/);
+  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode, \.entry-mode\) \.events-section \{ width: 100%; padding: 0;/);
+  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode, \.entry-mode\) \.event-item\[data-type="tor"\]/);
   assert.match(tracker,/align-items: flex-start; justify-content: space-between;/);
-  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode\) \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
-  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode\) \.event-item \.event-icon \{ display: none; \}/);
+  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode, \.entry-mode\) \.event-item\[data-type="tor"\] \.event-tag \{ display: none; \}/);
+  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode, \.entry-mode\) \.event-item \.event-icon \{ display: none; \}/);
   assert.match(tracker,/font-size: 18px; font-weight: 800;/);
   assert.match(tracker,/font-size: 52px; line-height: 1; font-weight: 800;/);
-  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode\) \.event-score-previous \{ opacity: 0\.4; \}/);
+  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode, \.entry-mode\) \.event-score-previous \{ opacity: 0\.4; \}/);
   assert.match(tracker,/\.event-season-goals \{ display: block; margin-top: 3px; font-size: 13px; font-weight: 300; \}/);
   assert.match(tracker,/width: 100%; min-height: 260px;/);
   assert.match(tracker,/\.event-item\[data-type="wechsel"\] \{ min-height: 260px; \}/);
@@ -177,7 +177,7 @@ test('spectator ticker uses only the feed layout in live and dev mode',()=>{
 });
 
 test('dev entry uses feed styles while spectator controls stay hidden',()=>{
-  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode\) \.event-item\[data-type="tor"\]/);
+  assert.match(tracker,/body:is\(\.ticker-mode, \.dev-mode, \.entry-mode\) \.event-item\[data-type="tor"\]/);
   assert.doesNotMatch(tracker,/body\.dev-mode\.dev-spectator-mode\.ticker-mode \.(goal-section|event-btns-row|timer-row)/);
   assert.match(tracker,/if \(devViewMode === 'admin'\) renderEvents\(\)/);
 });
