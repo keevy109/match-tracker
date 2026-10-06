@@ -12,3 +12,8 @@ test('archived fixtures and stale active matches do not add season goals or appe
  c.activeMatchId=10;c.isHomeTeam=false;c.events=[{team:'away',scorerId:1},{team:'away',scorerId:1}];
  c.recalculatePlayerStats();assert.equal(c.squad[0].goals,2);
 });
+
+test('first saved selection receives a stable publication time',async()=>{
+ const x=setup(false,true);await x.save();const stamp=x.c.schedule[0].participantsPublishedAt;
+ assert.ok(stamp>0);await x.save();assert.equal(x.c.schedule[0].participantsPublishedAt,stamp);
+});

@@ -11,7 +11,7 @@ test('saved dev events render only after animation state and Firebase config are
  const declarations=html.match(/const pendingFeed(?:Goals|Subs) = new Set\(\);/g).join('\n');
  const render=html.slice(html.indexOf('function renderEvents()'),html.indexOf('// ─── EXPORT'));
  const list={innerHTML:'',items:[],appendChild(item){this.items.push(item);}};
- const c=vm.createContext({DEV_MODE:true,events:[{id:42,typ:'tor',team:'home'}],squad:[],homeLogo:'',awayLogo:'',
+ const c=vm.createContext({DEV_MODE:true,schedule:[],activeMatchId:1,events:[{id:42,typ:'tor',team:'home'}],squad:[],homeLogo:'',awayLogo:'',
   eventCssClass:()=> 'home',getOurTeamSide:()=> 'home',buildEventItemHtml:()=> 'saved goal',
   document:{getElementById:id=>id==='eventsList'?list:{value:'Heim vs Gast'},createElement:()=>({dataset:{},classList:{add(){}}})}});
  vm.runInContext(declarations+'\n'+render+'\nrenderEvents();',c);

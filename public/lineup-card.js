@@ -34,5 +34,30 @@
     viewport.addEventListener('wheel', () => enableSwipe(), {passive:true});
     viewport.addEventListener('keydown', () => enableSwipe());
   }
-  root.MatchTrackerLineup = {position, selectedPlayers, render};
+  const cards = new WeakMap();
+  function mount(list, members, ids, publishedAt, matchId) {
+    if (!list) return;
+    let saved = cards.get(list);
+    if (saved && saved.matchId !== String(matchId)) { saved.card.remove(); saved = null; }
+    if (!publishedAt || !selectedPlayers(members, ids).length) {
+      saved?.card.remove();
+      cards.delete(list);
+      return;
+    }
+    if (!saved) {
+      const card = document.createElement('section');
+      card.className = 'lineup-card';
+      card.setAttribute('aria-label', 'Aufstellung');
+      saved = {card, matchId:String(matchId)};
+      cards.set(list, saved);
+    }
+    const card = saved.card;
+    render(card, members, ids);
+    card.dataset.eventId = String(publishedAt);
+    card.dataset.type = 'aufstellung';
+    list.querySelector('.empty-state')?.remove();
+    const before = Array.from(list.children).find(item => item !== card && Number(item.dataset.eventId) < Number(publishedAt));
+    list.insertBefore(card, before || null);
+  }
+  root.MatchTrackerLineup = {position, selectedPlayers, render, mount};
 })(globalThis);

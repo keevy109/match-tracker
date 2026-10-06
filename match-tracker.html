@@ -1144,7 +1144,6 @@
       <span>Ticker</span>
       <button class="btn-clear" onclick="confirmAction('tore')">Alle löschen</button>
     </div>
-    <section class="lineup-card" id="lineupCard" aria-label="Aufstellung" hidden></section>
     <div class="events-list" id="eventsList">
       <div class="empty-state" id="emptyState">Noch keine Ereignisse</div>
     </div>
@@ -2009,12 +2008,11 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
 }
 
 function renderEvents() {
-  globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), squad,
-    schedule.find(match => String(match.id) === String(activeMatchId))?.participantIds || []);
   const list = document.getElementById('eventsList');
   if (!list) return;
   if (events.length === 0) {
     list.innerHTML = '<div class="empty-state">Noch keine Ereignisse</div>';
+    renderLocalLineup();
     return;
   }
   const title = document.getElementById('matchTitle').value;
@@ -2033,6 +2031,12 @@ function renderEvents() {
     item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide(), homeLogo, awayLogo });
     list.appendChild(item);
   });
+  renderLocalLineup();
+}
+
+function renderLocalLineup() {
+  const match = schedule.find(match => String(match.id) === String(activeMatchId));
+  globalThis.MatchTrackerLineup?.mount(document.getElementById('eventsList'), squad, match?.participantIds || [], match?.participantsPublishedAt, activeMatchId);
 }
 
 // ─── EXPORT ───────────────────────────────────────────────────────────────────
@@ -2430,9 +2434,11 @@ function editParticipants(id) {
   }).join('')}<p id="participantStatus" role="status"></p>`, async () => {
     const playerIds = Array.from(document.querySelectorAll('.participant-check:checked'), el => Number(el.value));
     const status = document.getElementById('participantStatus');
+    const publishedAt = match.participantsPublishedAt || (playerIds.length ? Date.now() : null);
     if (DEV_MODE) {
+      match.participantsPublishedAt = publishedAt;
       match.participantIds = playerIds;
-      if (String(id) === String(activeMatchId)) globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), squad, playerIds);
+      if (String(id) === String(activeMatchId)) globalThis.MatchTrackerLineup?.mount(document.getElementById('eventsList'), squad, playerIds, publishedAt, id);
       recalculatePlayerStats(); renderKaderList(); save();
       document.getElementById('editSheet').classList.remove('active');
       showToast('Test-Einsätze nur lokal gespeichert.');
@@ -2440,9 +2446,10 @@ function editParticipants(id) {
     }
     status.textContent = 'Einsätze werden gespeichert …';
     try {
-      await withStorageTimeout(firebase.database().ref('matchParticipants/' + id).set({playerIds, complete:true, updatedAt:Date.now()}));
+      await withStorageTimeout(firebase.database().ref('matchParticipants/' + id).set({playerIds, complete:true, publishedAt, updatedAt:Date.now()}));
+      match.participantsPublishedAt = publishedAt;
       match.participantIds = playerIds;
-      if (String(id) === String(activeMatchId)) globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), squad, playerIds);
+      if (String(id) === String(activeMatchId)) globalThis.MatchTrackerLineup?.mount(document.getElementById('eventsList'), squad, playerIds, publishedAt, id);
       recalculatePlayerStats(); renderKaderList(); save();
       document.getElementById('editSheet').classList.remove('active');
       showToast('Einsätze gespeichert.');
@@ -3533,7 +3540,7 @@ async function loadGlobalFromFirebase(cb) {
         const canonical = club ? {...match, opponent:club.name, opponentId:club.id} : match;
         if (!DEV_MODE) return canonical;
         const local = (devState?.schedule || []).find(item => String(item.id) === String(match.id));
-        return local ? {...canonical, result:local.result || null, abandoned:local.abandoned === true, participantIds:local.participantIds || []} : canonical;
+        return local ? {...canonical, result:local.result || null, abandoned:local.abandoned === true, participantIds:local.participantIds || [], participantsPublishedAt:local.participantsPublishedAt || null} : canonical;
       });
       if (!teams.find(t => t.isOurTeam)) {
         teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
@@ -3577,10 +3584,13 @@ function initTickerMode(matchId) {
   let tickerData = null;
   let tickerDataReceivedAt = null;
   let liveParticipantIds = null;
+  let liveParticipantsPublishedAt = null;
   firebase.database().ref('matchParticipants/' + matchId).on('value', snapshot => {
     const entry = snapshot.val();
+    liveParticipantsPublishedAt = entry?.publishedAt || entry?.updatedAt || null;
     liveParticipantIds = entry ? Object.values(entry.playerIds || []) : null;
     if (tickerData) {
+      tickerData.participantsPublishedAt = liveParticipantsPublishedAt;
       tickerData.participantIds = liveParticipantIds ?? tickerData.fixture?.participantIds ?? [];
       updateTickerUI(tickerData, lastScore);
     }
@@ -3622,6 +3632,7 @@ function initTickerMode(matchId) {
       document.getElementById('tickerUpdated').textContent = 'Kein Spiel gefunden';
       return;
     }
+    data.participantsPublishedAt = liveParticipantsPublishedAt;
     data.participantIds = liveParticipantIds ?? data.fixture?.participantIds ?? [];
     tickerData = data;
     tickerDataReceivedAt = Date.now();
@@ -3832,7 +3843,6 @@ function updateFeedScrollState() {
 }
 
 function updateTickerUI(data, lastScore) {
-  globalThis.MatchTrackerLineup?.render(document.getElementById('lineupCard'), currentMatchSquad(data), data.participantIds ?? data.fixture?.participantIds ?? []);
   updateFeedMatchTime(data);
   updateFeedScrollState();
   for (const side of ['home', 'away']) {
@@ -3936,6 +3946,8 @@ function updateTickerUI(data, lastScore) {
       list.appendChild(item);
     });
   }
+
+  globalThis.MatchTrackerLineup?.mount(list, currentMatchSquad(data), data.participantIds ?? data.fixture?.participantIds ?? [], data.participantsPublishedAt ?? data.fixture?.participantsPublishedAt, data.fixture?.id || PAGE_PARAMS.get('ticker') || activeMatchId);
 
   // Updated timestamp
   if (data.updatedAt) {
@@ -4137,7 +4149,7 @@ function checkAccess() {
           m.result = {home:data.homeScore || 0, away:data.awayScore || 0, ourScore:data.isHomeTeam === false ? data.awayScore : data.homeScore, theirScore:data.isHomeTeam === false ? data.homeScore : data.awayScore, events:Object.values(data.events || {})};
         });
         const appearances = (await readStoredValue(firebase.database().ref('matchParticipants'))).val() || {};
-        schedule.forEach(m => { if (appearances[m.id]) m.participantIds = Object.values(appearances[m.id].playerIds || []); });
+        schedule.forEach(m => { if (appearances[m.id]) { m.participantIds = Object.values(appearances[m.id].playerIds || []); m.participantsPublishedAt = appearances[m.id].publishedAt || appearances[m.id].updatedAt || null; } });
         await loadTrainingForStats();
         recalculatePlayerStats(); renderKaderList();
         renderSpielplan();

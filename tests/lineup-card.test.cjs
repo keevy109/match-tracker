@@ -24,3 +24,18 @@ test('intro runs once then enables scrolling, and touch can interrupt it',()=>{
  listeners.pointerdown();assert.equal(intro,false);assert.equal(viewport.scrollLeft,120);
  intro=true;listeners.animationend();assert.equal(intro,false);assert.equal(viewport.scrollLeft,0);
 });
+
+test('published lineup is placed chronologically among events, never before selection',()=>{
+ const {mount}=globalThis.MatchTrackerLineup;
+ const list={children:[],querySelector:()=>null,insertBefore(card,before){this.children=this.children.filter(item=>item!==card);const at=before?this.children.indexOf(before):this.children.length;this.children.splice(at,0,card);}};
+ globalThis.document={createElement:()=>({dataset:{},setAttribute(){},querySelector:()=>({addEventListener(){}}),remove(){list.children=list.children.filter(item=>item!==this);}})};
+ const players=[{id:1,name:'Mika'}];
+ list.children=[{dataset:{eventId:'300'}},{dataset:{eventId:'100'}}];
+ mount(list,players,[],200,1);assert.equal(list.children.length,2);
+ mount(list,players,[1],null,1);assert.equal(list.children.length,2);
+ mount(list,players,[1],200,1);assert.deepEqual(list.children.map(x=>x.dataset.eventId),['300','200','100']);
+ list.children.unshift({dataset:{eventId:'400'}});
+ mount(list,players,[1],200,1);assert.deepEqual(list.children.map(x=>x.dataset.eventId),['400','300','200','100']);
+ mount(list,players,[],200,1);assert.equal(list.children.length,3);
+ delete globalThis.document;
+});
