@@ -1587,6 +1587,7 @@ function setDevView(mode) {
 // Timer: wall-clock approach
 let timerBase   = null;
 let timerOffset = 0;
+let timerStarted = false;
 let timerRAF    = null;
 
 function elapsedSeconds() {
@@ -1656,6 +1657,7 @@ function matchSnapshot(finished = false, abandoned = false) {
     homeTeam: home, awayTeam: away, homeScore, awayScore, isHomeTeam,
     events: events || [], timerBase,
     timerOffset, timerRunning: timerBase !== null,
+    timerStarted: timerStarted || timerBase !== null || timerOffset > 0,
     matchDate: document.getElementById('matchDate').textContent,
     homeLogo: homeLogo || '', awayLogo: awayLogo || '',
     homeColor: homeColor || '', awayColor: awayColor || '',
@@ -1671,6 +1673,7 @@ function applyMatchSnapshot(id, data) {
   isHomeTeam = data.isHomeTeam !== false;
   timerBase = data.timerRunning ? data.timerBase : null;
   timerOffset = data.timerOffset || 0;
+  timerStarted = data.timerStarted === true || timerBase !== null || timerOffset > 0;
   homeLogo = data.homeLogo || ''; awayLogo = data.awayLogo || '';
   homeColor = data.homeColor || ''; awayColor = data.awayColor || '';
   document.getElementById('matchTitle').value = data.homeTeam + ' vs. ' + data.awayTeam;
@@ -1693,6 +1696,7 @@ function save(matchReady) {
     localStorage.setItem(STATE_KEY, JSON.stringify({
       ...existing,
       homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo, homeColor, awayColor,
+      timerStarted: timerStarted || timerBase !== null || timerOffset > 0,
       timerOffset: elapsedSeconds(),
       timerBase: timerBase !== null ? Date.now() : null,
       isHomeTeam,
@@ -1733,6 +1737,7 @@ function stopTimerLoop() {
 function startTimer() {
   if (!activeMatchId) { showToast('Bitte zuerst ein Spiel im Spielplan starten.'); return; }
   if (timerBase !== null) return;
+  timerStarted = true;
   timerBase = Date.now();
   startTimerLoop();
   updateTimerDisplay();
@@ -1749,6 +1754,7 @@ function pauseTimer() {
 }
 
 function resetTimer() {
+  timerStarted = false;
   timerBase   = null;
   timerOffset = 0;
   stopTimerLoop();
@@ -1891,7 +1897,8 @@ function addGoal(team, isOwnGoal, player) {
   player = !isOwnGoal && team === getOurTeamSide()
     ? squad.find(member => member.id === player?.id) || null
     : null;
-  const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
+  const minute = timerStarted || timerBase !== null || elapsedSeconds() > 0
+    ? Math.max(1, Math.floor(elapsedSeconds() / 60) + 1) : null;
   if (team==='home') homeScore++; else awayScore++;
   const event = {
     id: Date.now(), team, isOwnGoal, minute,
@@ -2050,7 +2057,7 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     ? `${typ==='tor' ? `<button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>` : ''}
        <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`
     : '';
-  return `<div class="event-min"><span class="event-icon" aria-hidden="true">${icon}</span><span class="event-minute">${e.minute||0}'</span></div>
+  return `<div class="event-min"><span class="event-icon" aria-hidden="true">${icon}</span>${e.minute != null && e.minute > 0 ? `<span class="event-minute">${esc(e.minute)}'</span>` : ''}</div>
     <div class="event-info">
       <div class="event-scorer">${main}</div>
       ${sub ? `<div class="event-tag">${esc(sub)}</div>` : ''}
@@ -2119,7 +2126,7 @@ function exportText() {
   const sorted = [...events].sort((a,b) => a.id - b.id);
   sorted.forEach(e => {
     const name = (e.scorer && e.scorer !== '—') ? ` ${e.scorer}` : '';
-    text += `${e.snapshot} ${e.minute}'${name}\n`;
+    text += `${e.snapshot}${e.minute != null && e.minute > 0 ? ` ${e.minute}'` : ''}${name}\n`;
   });
   navigator.clipboard.writeText(text.trim()).then(() => {
     showToast('Kopiert!');
@@ -2235,7 +2242,7 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
       // minute
       ctx.fillStyle = '#999';
       ctx.font = '500 26px monospace';
-      ctx.fillText(`${e.minute}'`, colMinute, y);
+      if (e.minute != null && e.minute > 0) ctx.fillText(`${e.minute}'`, colMinute, y);
 
       // name
       ctx.fillStyle = color;
@@ -3510,7 +3517,8 @@ async function saveEventModal() {
   const targetMatchId = activeMatchId;
   if (!activeMatchId) { showToast('Bitte zuerst ein Spiel im Spielplan starten.'); return; }
   if (new URLSearchParams(window.location.search).has('ticker')) return;
-  const minute = Math.max(1, Math.floor(elapsedSeconds() / 60) + 1);
+  const minute = timerStarted || timerBase !== null || elapsedSeconds() > 0
+    ? Math.max(1, Math.floor(elapsedSeconds() / 60) + 1) : null;
   let ev = null;
 
   if (_eventModalType === 'wechsel') {
@@ -3626,7 +3634,7 @@ async function loadGlobalFromFirebase(cb) {
       if (!DEV_MODE && d.matchResetId && localStorage.getItem('mt_reset_id') !== d.matchResetId) {
         localStorage.setItem('mt_before_reset_' + d.matchResetId, localStorage.getItem('matchtracker_v3') || '{}');
         activeMatchId = null; events = []; homeScore = 0; awayScore = 0;
-        timerBase = null; timerOffset = 0; stopTimerLoop(); schedule = [];
+        timerBase = null; timerOffset = 0; timerStarted = false; stopTimerLoop(); schedule = [];
         const previous = JSON.parse(localStorage.getItem('matchtracker_v3') || '{}');
         localStorage.setItem('matchtracker_v3', JSON.stringify({...previous, activeMatchId:null, events:[], homeScore:0, awayScore:0, timerBase:null, timerOffset:0, schedule:[], matchReady:false}));
         localStorage.setItem('mt_reset_id', d.matchResetId);
@@ -3878,7 +3886,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   document.getElementById('goalOverlayTeam').textContent   = teamName;
   document.getElementById('goalOverlayScore').textContent  = event.snapshot || '';
   document.getElementById('goalOverlayScorer').textContent = scorer ? `${numPrefix}${scorer}` : (event.isOwnGoal ? 'Eigentor' : '');
-  document.getElementById('goalOverlayMinute').textContent = event.minute ? event.minute + '. Minute' : '';
+  document.getElementById('goalOverlayMinute').textContent = !isImageOnlyComment(event) && event.minute ? event.minute + '. Minute' : '';
   const seasonEl = document.getElementById('goalOverlaySeason');
   if (seasonEl) {
     if (isGoal && event.scorerId && !event.isOwnGoal) {
@@ -4163,6 +4171,7 @@ function generateQR(canvas, text, size) {
       }
       timerOffset   = d.timerOffset   || 0;
       timerBase     = d.timerBase     || null;
+      timerStarted  = d.timerStarted === true || timerBase !== null || timerOffset > 0;
       isHomeTeam    = d.isHomeTeam    !== undefined ? d.isHomeTeam : true;
       activeMatchId = d.activeMatchId || null;
       document.getElementById('matchTitle').value  = d.matchTitle || '';

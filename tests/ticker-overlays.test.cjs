@@ -95,3 +95,13 @@ test('photo-only overlay resets its layout for the next text event',()=>{
  toggles.length=0;c.showGoalOverlay({typ:'kommentar',text:'Text'},{});
  assert.deepEqual(toggles.find(([name])=>name==='image-only'),['image-only',false]);assert.equal(nodes.goalOverlayEventPhoto.style.display,'none');
 });
+
+test('photo-only overlays never display a match minute, even after kickoff',()=>{
+ const {c,nodes}=context();
+ for(const minute of [null,1,45,90]) {
+  c.showGoalOverlay({typ:'kommentar',text:'',photo:'data:image/webp;base64,aGVsbG8=',minute},{});
+  assert.equal(nodes.goalOverlayMinute.textContent,'');
+ }
+ c.showGoalOverlay({typ:'kommentar',text:'Weiter!',minute:45},{});
+ assert.equal(nodes.goalOverlayMinute.textContent,'45. Minute');
+});

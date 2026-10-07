@@ -3,7 +3,7 @@ const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../m
 const source=html.slice(html.indexOf('let _eventModalType ='),html.indexOf('// ─── FIREBASE CONFIG'));
 function setup(){
  const fields={'em-player':{value:''},'em-player-field':{hidden:true},'em-text':{value:'Großchance!',focus(){}},'em-team':{value:'away',focus(){}},'em-photo':{files:[]},'em-status':{textContent:''}};
- const c=vm.createContext({activeMatchId:1,getOurTeamSide:()=> 'away',showToast(){},previewDevTickerOverlay(){},URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
+ const c=vm.createContext({activeMatchId:1,timerStarted:true,timerBase:null,getOurTeamSide:()=> 'away',showToast(){},previewDevTickerOverlay(){},URLSearchParams,window:{location:{search:''}},Date,events:[],squad:[],elapsedSeconds:()=>60,renderEvents(){},save(){},document:{getElementById:id=>fields[id]??={classList:{remove(){}}}}});
  vm.runInContext(source,c);vm.runInContext("_eventModalType='kommentar'",c);return {c,fields};
 }
 test('text can be saved without a team',async()=>{
@@ -95,3 +95,14 @@ test('opponent comments clear and disable roster selection and never store playe
  fields['em-photo'].files=[{}];c.prepareCommentPhoto=async()=> 'data:image/webp;base64,aGVsbG8=';
  await c.saveEventModal();assert.equal(c.events.length,1);assert.equal(c.events[0].text,'');assert.equal(c.events[0].photo,'data:image/webp;base64,aGVsbG8=');
  });
+
+test('comments and substitutions have no minute before play and retain minutes while paused',async()=>{
+ for(const type of ['kommentar','wechsel']) {
+  for(const [started,base,seconds,minute] of [[false,null,0,null],[true,1000,0,1],[true,null,0,1],[true,null,125,3]]) {
+   const {c,fields}=setup();c.timerStarted=started;c.timerBase=base;c.elapsedSeconds=()=>seconds;
+   c.squad=[{id:1,name:'A'},{id:2,name:'B'}];fields['em-rein']={value:'1'};fields['em-raus']={value:'2'};
+   vm.runInContext(`_eventModalType='${type}'`,c);await c.saveEventModal();
+   assert.equal(c.events[0].minute,minute);
+  }
+ }
+});

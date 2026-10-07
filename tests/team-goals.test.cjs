@@ -8,7 +8,7 @@ html.slice(html.indexOf('function updateGoalButtons()'),html.indexOf('function d
 function setup(title){
  const nodes={};let pickerCount=0;
  function element(){return {value:'',textContent:'',dataset:{},style:{},classList:{add(){},remove(){}},querySelector(sel){return this[sel]??=(element());},parentElement:{insertBefore(){}}};}
- const c=vm.createContext({activeMatchId:1,DEV_MODE:false,showToast(){},teams:[{id:3,name:'Unser FC',isOurTeam:true},{id:4,name:'Gegner'}],squad:[{id:1,name:'Spieler',goals:0}],isHomeTeam:true,homeScore:0,awayScore:0,events:[],
+ const c=vm.createContext({activeMatchId:1,timerStarted:false,timerBase:null,DEV_MODE:false,showToast(){},teams:[{id:3,name:'Unser FC',isOurTeam:true},{id:4,name:'Gegner'}],squad:[{id:1,name:'Spieler',goals:0}],isHomeTeam:true,homeScore:0,awayScore:0,events:[],
  document:{getElementById:id=>nodes[id]??=element()},elapsedSeconds:()=>0,updateScore(){},renderEvents(){},save(){},Date});
  c.document.getElementById('matchTitle').value=title;
  vm.runInContext(code,c);c.renderPickerPlayers=()=>pickerCount++;
@@ -39,4 +39,9 @@ test('own goal credits opponents without increasing player season goals',()=>{
 });
 test('team names tolerate case and surrounding whitespace',()=>{
  const {c}=setup('  unser fc  vs. Gegner');assert.equal(vm.runInContext('getOurTeamSide()',c),'home');
+});
+
+test('goals receive no minute before play and minute one immediately after starting',()=>{
+ const {c}=setup('Unser FC vs. Gegner');c.addGoal('away',false,null);assert.equal(c.events[0].minute,null);
+ c.timerStarted=true;c.addGoal('away',false,null);assert.equal(c.events[0].minute,1);
 });

@@ -19,7 +19,18 @@ test('photo-only comments render only the image and optional trainer delete cont
  const spectator=c.buildEventItemHtml(event,'Gast','Wir',false,context);
  assert.match(spectator,/^<img class="event-comment-photo"/);assert.doesNotMatch(spectator,/event-min|event-info|event-scorer|event-tag|event-delete/);
  assert.match(c.buildEventItemHtml(event,'Gast','Wir',true,context),/event-delete/);
+ for(const minute of [null,1,45,90]) {
+  for(const trainer of [true,false]) assert.doesNotMatch(c.buildEventItemHtml({...event,minute},'Gast','Wir',trainer,context),/event-min|event-minute/);
+ }
  assert.doesNotMatch(c.eventCssClass({...event,text:'Text'}),/image-only/);
  assert.doesNotMatch(c.eventCssClass({...event,photo:'invalid'}),/image-only/);
  c.isCommentPhoto=()=>false;
+});
+
+test('cards omit an unset minute while keeping the minute of started events',()=>{
+ for(const typ of ['tor','kommentar','wechsel']) {
+  const event={id:40,typ,text:'Vor dem Spiel',minute:null};
+  assert.doesNotMatch(c.buildEventItemHtml(event,'Heim','Gast',false),/event-minute|0'|null'/);
+  assert.match(c.buildEventItemHtml({...event,minute:1},'Heim','Gast',false),/event-minute">1'/);
+ }
 });
