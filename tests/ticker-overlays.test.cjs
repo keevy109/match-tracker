@@ -1,7 +1,7 @@
 const {test}=require('node:test'); const assert=require('node:assert/strict');
 const fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
 const html=fs.readFileSync(process.env.TRACKER_HTML || path.join(__dirname,'../match-tracker.html'),'utf8');
-const source=html.slice(html.indexOf('function currentMatchSquad('),html.indexOf('function buildEventItemHtml('))+html.slice(html.indexOf('function isCommentPhoto('),html.indexOf('function buildPlayerOptions('))+html.slice(html.indexOf('function previewDevTickerOverlay('),html.indexOf('function addGoal('))+html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
+const source=html.slice(html.indexOf('function isImageOnlyComment('),html.indexOf('function eventIcon('))+html.slice(html.indexOf('function currentMatchSquad('),html.indexOf('function buildEventItemHtml('))+html.slice(html.indexOf('function isCommentPhoto('),html.indexOf('function buildPlayerOptions('))+html.slice(html.indexOf('function previewDevTickerOverlay('),html.indexOf('function addGoal('))+html.slice(html.indexOf('function createTickerEventDetector()'),html.indexOf('function updateTickerUI('));
 function context() {
   const nodes = {}, timers = [];
   const c = vm.createContext({
@@ -85,4 +85,13 @@ test('goal and substitution overlays prefer current roster portraits',()=>{
  assert.equal(nodes.goalOverlayPlayerPhoto.src,'new.png');
  c.showGoalOverlay({typ:'wechsel',team:'home',reinId:1,reinPhoto:'in-old.png',rausId:2,rausPhoto:'out-old.png'},{homeTeam:'Wir'});
  assert.equal(nodes.subInPhoto.src,'new.png');assert.equal(nodes.subOutPhoto.src,'out-new.png');
+});
+
+test('photo-only overlay resets its layout for the next text event',()=>{
+ const {c,nodes}=context();c.showGoalOverlay({typ:'kommentar',text:'',photo:'data:image/webp;base64,aGVsbG8='},{});
+ const toggles=[];nodes.goalOverlayCard.classList.toggle=(name,value)=>toggles.push([name,value]);
+ c.showGoalOverlay({typ:'kommentar',text:'  ',photo:'data:image/webp;base64,aGVsbG8='},{});
+ assert.deepEqual(toggles.find(([name])=>name==='image-only'),['image-only',true]);assert.equal(nodes.goalOverlayEventPhoto.style.display,'block');
+ toggles.length=0;c.showGoalOverlay({typ:'kommentar',text:'Text'},{});
+ assert.deepEqual(toggles.find(([name])=>name==='image-only'),['image-only',false]);assert.equal(nodes.goalOverlayEventPhoto.style.display,'none');
 });

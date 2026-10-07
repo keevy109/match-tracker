@@ -896,6 +896,19 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) .event-score { display: none; }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:not([data-type="tor"]) .event-comment-photo { max-height: 160px; }
 
+  .event-item.kommentar.image-only,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"].image-only {
+    display: block; position: relative; padding: 0; border: 0; min-height: 0; overflow: hidden;
+  }
+  .event-item.kommentar.image-only .event-comment-photo,
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"].image-only .event-comment-photo {
+    display: block; width: 100%; height: auto; max-height: none; margin: 0; border-radius: 0; object-fit: cover;
+  }
+  .event-item.image-only .event-delete { position: absolute; top: 8px; right: 8px; z-index: 2; background: #111b; color: #fff; border-radius: 50%; width: 26px; height: 26px; }
+  .goal-overlay-card.event-message.image-only { padding: 0; border: 0; overflow: hidden; }
+  .goal-overlay-card.image-only > :not(.goal-overlay-event-photo) { display: none !important; }
+  .goal-overlay-card.image-only .goal-overlay-event-photo { width: 100%; height: auto; max-height: 85vh; object-fit: cover; border-radius: 0; margin: 0; }
+
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] {
     display: flex; flex-direction: column; gap: 8px; padding: 16px 12px 0;
     background: var(--feed-surface); border: 0;
@@ -1938,8 +1951,12 @@ function eventCssClass(e) {
   const typ = e.typ || 'tor';
   if (typ === 'tor') return e.isOwnGoal ? 'own' : e.team;
   if (typ === 'wechsel') return 'wechsel' + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
-  if (typ === 'kommentar') return 'kommentar' + (e.playerId != null ? ' has-comment-player' : '') + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
+  if (typ === 'kommentar') return 'kommentar' + (isImageOnlyComment(e) ? ' image-only' : e.playerId != null ? ' has-comment-player' : '') + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
   return '';
+}
+
+function isImageOnlyComment(e) {
+  return e.typ === 'kommentar' && !String(e.text || '').trim() && isCommentPhoto(e.photo);
 }
 
 function eventIcon(e) {
@@ -1990,6 +2007,9 @@ function currentMatchSquad(data = {}) {
 }
 
 function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
+  if (isImageOnlyComment(e)) {
+    return `<img class="event-comment-photo" src="${esc(e.photo)}" alt="Foto zur Meldung" loading="lazy">${isTrainer ? `<button class="event-delete" onclick="deleteEvent(${e.id})" aria-label="Meldung löschen">×</button>` : ''}`;
+  }
   const cls = eventCssClass(e);
   const icon = eventIcon(e);
   let { main, sub } = eventMainText(e, homeName, awayName);
@@ -3462,7 +3482,7 @@ function openEventModal(typ) {
         <select class="em-select" id="em-player" onchange="applyCommentPlayer()">${buildPlayerOptions()}</select>
       </div>
       <p style="font-size:12px;line-height:1.5">Spieler über die Kaderliste auswählen. Alle Texte sind frei bearbeitbar.</p>
-      <label class="em-label" for="em-text">Text</label>
+      <label class="em-label" for="em-text">Text (optional bei Foto)</label>
       <textarea class="em-textarea" id="em-text" rows="4" placeholder="Zum Beispiel: Großchance!" maxlength="200"></textarea>
       <label class="em-label" for="em-photo">Foto (optional)</label>
       <input class="em-select" id="em-photo" type="file" accept="image/jpeg,image/png,image/webp">
@@ -3514,9 +3534,9 @@ async function saveEventModal() {
       document.getElementById('em-text').focus();
       return;
     }
-    if (!text) { document.getElementById('em-text').focus(); return; }
-    if (eventModalSaving) return;
     const file = document.getElementById('em-photo').files[0];
+    if (!text && !file) { document.getElementById('em-text').focus(); return; }
+    if (eventModalSaving) return;
     const selectedPlayerId = document.getElementById('em-player').value;
     const selectedPlayer = isOpponentComment() ? null : squad.find(p => String(p.id) === selectedPlayerId);
     const generation = eventModalGeneration;
@@ -3808,6 +3828,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
     ? (event.team || (data.isHomeTeam === false ? 'away' : 'home'))
     : event.team;
   card.classList.toggle('event-message', !isGoal);
+  card.classList.toggle('image-only', isImageOnlyComment(event));
   document.getElementById('goalOverlayTitle').textContent = isGoal ? 'Tor für' : kind === 'wechsel' ? 'Wechsel' : 'Text';
 
   // Glow-Farbe je nach Team (home-glow = default, away-glow, own-glow)

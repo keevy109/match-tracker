@@ -11,3 +11,15 @@ test('substitutions show outgoing red and incoming green portraits',()=>{const r
 test('missing photos use a placeholder and image attributes are escaped',()=>{assert.match(c.buildEventItemHtml({id:1,team:'away',scorer:'Unbekannt'},'Gast','Wir',false,context),/event-player-placeholder/);assert.match(c.eventPlayerPortrait({scorerPhoto:'a"b.png',scorer:'A'},'scorer',[]),/a&quot;b.png/);});
 test('goal score fades the value that already existed before the goal',()=>{const away=c.buildEventItemHtml({id:20,team:'away',snapshot:'2:3'},'Gast','Wir',false,context);assert.match(away,/event-score-value event-score-previous">2<\/span><span class="event-score-separator">:<\/span><span class="event-score-value">3/);const home=c.buildEventItemHtml({id:21,team:'home',snapshot:'3:3'},'Gast','Wir',false,context);assert.match(home,/event-score-value">3<\/span><span class="event-score-separator">:<\/span><span class="event-score-value event-score-previous">3/);});
 test('own scorer shows the stored season-goal ordinal below the name',()=>{const result=c.buildEventItemHtml({id:22,team:'away',scorer:'Anna',scorerId:1,seasonGoals:3,snapshot:'0:1'},'Gast','Wir',false,context);assert.match(result,/event-scorer-name">Anna/);assert.match(result,/event-season-goals">3\. Saisontor/);});
+
+test('photo-only comments render only the image and optional trainer delete control',()=>{
+ c.isCommentPhoto=value=>value==='data:image/webp;base64,aGVsbG8=';
+ const event={id:30,typ:'kommentar',text:'  ',photo:'data:image/webp;base64,aGVsbG8=',team:'away',playerId:1};
+ assert.match(c.eventCssClass(event),/image-only/);assert.doesNotMatch(c.eventCssClass(event),/has-comment-player/);
+ const spectator=c.buildEventItemHtml(event,'Gast','Wir',false,context);
+ assert.match(spectator,/^<img class="event-comment-photo"/);assert.doesNotMatch(spectator,/event-min|event-info|event-scorer|event-tag|event-delete/);
+ assert.match(c.buildEventItemHtml(event,'Gast','Wir',true,context),/event-delete/);
+ assert.doesNotMatch(c.eventCssClass({...event,text:'Text'}),/image-only/);
+ assert.doesNotMatch(c.eventCssClass({...event,photo:'invalid'}),/image-only/);
+ c.isCommentPhoto=()=>false;
+});

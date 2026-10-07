@@ -88,3 +88,10 @@ test('opponent comments clear and disable roster selection and never store playe
  fields['em-player'].value='1';await c.saveEventModal();assert.equal(c.events[0].playerId,undefined);
  fields['em-team'].value='';c.updateCommentTeam();assert.equal(fields['em-player'].disabled,false);assert.equal(fields['em-player-field'].hidden,false);
 });
+
+ test('photo-only comments save trimmed empty text while empty comments are rejected',async()=>{
+ const {c,fields}=setup();fields['em-text'].value='   ';
+ await c.saveEventModal();assert.equal(c.events.length,0);
+ fields['em-photo'].files=[{}];c.prepareCommentPhoto=async()=> 'data:image/webp;base64,aGVsbG8=';
+ await c.saveEventModal();assert.equal(c.events.length,1);assert.equal(c.events[0].text,'');assert.equal(c.events[0].photo,'data:image/webp;base64,aGVsbG8=');
+ });
