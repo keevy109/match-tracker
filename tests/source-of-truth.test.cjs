@@ -57,7 +57,7 @@ test('player detail cards support videos and use the supplied player clips',()=>
   assert.match(script,/function rewindAndReplay\(video\)[\s\S]*?startAt - \(now - startedAt\) \/ 1000/);
   assert.match(script,/kaderDetail[^\n]*addEventListener\('click',[\s\S]*?rewindAndReplay\(video\)/);
   const grigorios=JSON.parse(read('public/data/kader.json')).find(player=>player.name==='Grigorios');
-  assert.equal(grigorios.detailPhoto,'uploads/kader/detail/1783855173705_uywz5o8pbzc.mp4');
+  assert.equal(grigorios.detailPhoto,'uploads/kader/detail/grigorios-20261006.mp4');
   assert.equal(fs.existsSync(path.join(__dirname,'../public',grigorios.detailPhoto)),true);
   const jonah=JSON.parse(read('public/data/kader.json')).find(player=>player.name==='Jonah');
   assert.equal(jonah.detailPhoto,'uploads/kader/detail/1774612459953_viggle.mp4');
@@ -100,7 +100,9 @@ test('supplied transparent roster portraits are assigned by player name',()=>{
   const names=['Aleciano','Emil','Grigorios','Jonah','Leo','Max','Pan','Paul','Till','Tom'];
   for(const name of names){
     const player=roster.find(item=>item.name===name);
-    const expected=`uploads/kader/portraits/${name.toLowerCase()}.png`;
+    const expected=name==='Grigorios'
+      ? 'uploads/kader/portraits/grigorios-20261006.png'
+      : `uploads/kader/portraits/${name.toLowerCase()}.png`;
     assert.equal(player?.photo,expected);
     assert.equal(fs.existsSync(path.join(__dirname,'../public',expected)),true);
   }
