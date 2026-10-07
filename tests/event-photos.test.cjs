@@ -34,3 +34,17 @@ test('cards omit an unset minute while keeping the minute of started events',()=
   assert.match(c.buildEventItemHtml({...event,minute:1},'Heim','Gast',false),/event-minute">1'/);
  }
 });
+
+test('stored substitution minutes are hidden in trainer and spectator cards until play',()=>{
+ const event={id:50,typ:'wechsel',minute:1,reinName:'A',rausName:'B'};
+ for(const trainer of [true,false]) {
+  for(const data of [{},{timerStarted:false,timerBase:null,timerOffset:0}]) {
+   const result=c.buildEventItemHtml(event,'Heim','Gast',trainer,{matchStarted:c.hasMatchStarted(data)});
+   assert.doesNotMatch(result,/event-minute/);assert.match(result,/Wechsel/);
+  }
+  for(const data of [{timerStarted:true},{timerBase:1000},{timerOffset:60},{matchFinished:true}]) {
+   const result=c.buildEventItemHtml(event,'Heim','Gast',trainer,{matchStarted:c.hasMatchStarted(data)});
+   assert.match(result,/event-minute">1'/);
+  }
+ }
+});

@@ -102,6 +102,16 @@ test('photo-only overlays never display a match minute, even after kickoff',()=>
   c.showGoalOverlay({typ:'kommentar',text:'',photo:'data:image/webp;base64,aGVsbG8=',minute},{});
   assert.equal(nodes.goalOverlayMinute.textContent,'');
  }
- c.showGoalOverlay({typ:'kommentar',text:'Weiter!',minute:45},{});
+ c.showGoalOverlay({typ:'kommentar',text:'Weiter!',minute:45},{timerStarted:true});
  assert.equal(nodes.goalOverlayMinute.textContent,'45. Minute');
+});
+
+test('substitution overlays suppress stored minutes before play and show them while running or paused',()=>{
+ const {c,nodes}=context();const event={typ:'wechsel',minute:1,reinName:'A',rausName:'B'};
+ for(const data of [{},{timerStarted:false,timerBase:null,timerOffset:0}]) {
+  c.showGoalOverlay(event,data);assert.equal(nodes.goalOverlayMinute.textContent,'');
+ }
+ for(const data of [{timerStarted:true,timerBase:null,timerOffset:0},{timerBase:1000},{timerOffset:60},{matchFinished:true}]) {
+  c.showGoalOverlay(event,data);assert.equal(nodes.goalOverlayMinute.textContent,'1. Minute');
+ }
 });

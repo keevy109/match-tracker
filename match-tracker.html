@@ -1966,6 +1966,10 @@ function isImageOnlyComment(e) {
   return e.typ === 'kommentar' && !String(e.text || '').trim() && isCommentPhoto(e.photo);
 }
 
+function hasMatchStarted(data) {
+  return data.timerStarted === true || data.timerBase != null || Number(data.timerOffset) > 0 || data.matchFinished === true;
+}
+
 function eventIcon(e) {
   const typ = e.typ || 'tor';
   if (typ === 'tor') return '⚽';
@@ -2057,7 +2061,7 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     ? `${typ==='tor' ? `<button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>` : ''}
        <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`
     : '';
-  return `<div class="event-min"><span class="event-icon" aria-hidden="true">${icon}</span>${e.minute != null && e.minute > 0 ? `<span class="event-minute">${esc(e.minute)}'</span>` : ''}</div>
+  return `<div class="event-min"><span class="event-icon" aria-hidden="true">${icon}</span>${context.matchStarted !== false && e.minute != null && e.minute > 0 ? `<span class="event-minute">${esc(e.minute)}'</span>` : ''}</div>
     <div class="event-info">
       <div class="event-scorer">${main}</div>
       ${sub ? `<div class="event-tag">${esc(sub)}</div>` : ''}
@@ -2102,7 +2106,7 @@ function renderEvents() {
     item.dataset.eventId = String(e.id);
     if (DEV_MODE && pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
     if (DEV_MODE && pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
-    item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide(), homeLogo, awayLogo });
+    item.innerHTML = buildEventItemHtml(e, homeName, awayName, true, { squad, ownSide: getOurTeamSide(), homeLogo, awayLogo, matchStarted: hasMatchStarted({timerStarted, timerBase, timerOffset}) });
     appendFeedEvent(list, item);
   });
   renderLocalLineup();
@@ -3886,7 +3890,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   document.getElementById('goalOverlayTeam').textContent   = teamName;
   document.getElementById('goalOverlayScore').textContent  = event.snapshot || '';
   document.getElementById('goalOverlayScorer').textContent = scorer ? `${numPrefix}${scorer}` : (event.isOwnGoal ? 'Eigentor' : '');
-  document.getElementById('goalOverlayMinute').textContent = !isImageOnlyComment(event) && event.minute ? event.minute + '. Minute' : '';
+  document.getElementById('goalOverlayMinute').textContent = hasMatchStarted(data) && !isImageOnlyComment(event) && event.minute ? event.minute + '. Minute' : '';
   const seasonEl = document.getElementById('goalOverlaySeason');
   if (seasonEl) {
     if (isGoal && event.scorerId && !event.isOwnGoal) {
@@ -4068,7 +4072,7 @@ function updateTickerUI(data, lastScore, headerOnly = false) {
       item.dataset.eventId = String(e.id);
       if (pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
       if (pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
-      item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home', homeLogo: data.homeLogo, awayLogo: data.awayLogo });
+      item.innerHTML = buildEventItemHtml(e, homeName, awayName, false, { squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home', homeLogo: data.homeLogo, awayLogo: data.awayLogo, matchStarted: hasMatchStarted(data) });
       appendFeedEvent(list, item);
     });
   }
