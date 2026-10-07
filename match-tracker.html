@@ -213,7 +213,6 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   @keyframes slideIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
   .event-item.home { border-left-color: var(--home-color); background-image: linear-gradient(to right, color-mix(in srgb, var(--home-color) 50%, transparent) -30%, var(--surface) 30%); }
   .event-item.away { border-left-color: var(--away-color); background-image: linear-gradient(to right, color-mix(in srgb, var(--away-color) 50%, transparent) -30%, var(--surface) 30%); }
-  .event-item.own  { border-left-color: var(--own);        background-image: linear-gradient(to right, color-mix(in srgb, var(--own)        50%, transparent) -30%, var(--surface) 30%); }
   .event-min { font-family: var(--mono); font-size: 13px; color: #fff; text-align: right; }
   .event-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .event-item.kommentar .event-scorer { display: block; white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; }
@@ -816,7 +815,6 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"][data-team="home"] { background: linear-gradient(135deg, color-mix(in srgb, var(--home-color) 88%, #080808), var(--home-color)); }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"][data-team="away"] { background: linear-gradient(135deg, color-mix(in srgb, var(--away-color) 88%, #080808), var(--away-color)); }
-  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"].own { background: linear-gradient(135deg, color-mix(in srgb, var(--own) 88%, #080808), var(--own)); }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="tor"]::before {
     content: ''; position: absolute; inset: 0; z-index: 0;
     background: linear-gradient(90deg, rgba(0,0,0,0.18), transparent 70%);
@@ -1956,7 +1954,7 @@ function updateScore(animate) {
 // ─── EVENT-RENDERING HELPER ──────────────────────────────────────────────────
 function eventCssClass(e) {
   const typ = e.typ || 'tor';
-  if (typ === 'tor') return e.isOwnGoal ? 'own' : e.team;
+  if (typ === 'tor') return e.team;
   if (typ === 'wechsel') return 'wechsel' + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
   if (typ === 'kommentar') return 'kommentar' + (isImageOnlyComment(e) ? ' image-only' : e.playerId != null ? ' has-comment-player' : '') + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
   return '';
@@ -2230,7 +2228,7 @@ function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr
     let y = scoreBlockH + 44;
     sorted.forEach(e => {
       const name = e.isOwnGoal ? 'Eigentor' : ((e.scorer && e.scorer !== '—') ? e.scorer : '');
-      const color = e.isOwnGoal ? colors.own : (e.team === 'home' ? colors.home : colors.away);
+      const color = e.team === 'home' ? colors.home : colors.away;
 
       // Subtle row bg
       ctx.fillStyle = 'rgba(255,255,255,0.03)';
@@ -3349,18 +3347,19 @@ async function prepareCommentPhoto(file) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx || !image.width || !image.height) throw new Error('Das Foto kann nicht verarbeitet werden.');
-  let scale = Math.min(1, 1200 / Math.max(image.width, image.height));
-  for (let step = 0; step < 8; step++) {
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    for (const quality of [0.85, 0.7, 0.55]) {
-      const photo = canvas.toDataURL('image/webp', quality);
-      if (isCommentPhoto(photo) && photo.length <= 128 * 1024) return photo;
-    }
-    scale *= 0.75;
+  const maxPhotoLength = 2 * 1024 * 1024;
+  const scale = Math.min(1, 2560 / Math.max(image.width, image.height));
+  if (scale === 1 && isCommentPhoto(source) && source.length <= maxPhotoLength) return source;
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  for (const quality of [0.92, 0.88, 0.84]) {
+    const photo = canvas.toDataURL('image/webp', quality);
+    if (isCommentPhoto(photo) && photo.length <= maxPhotoLength) return photo;
   }
-  throw new Error('Das Foto ist zu groß. Bitte einen kleineren Ausschnitt auswählen.');
+  throw new Error('Das Foto ist für einen Upload in guter Qualität zu groß. Bitte als JPEG oder WebP erneut auswählen.');
 }
 
 function buildPlayerOptions() {
@@ -3843,11 +3842,9 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   card.classList.toggle('image-only', isImageOnlyComment(event));
   document.getElementById('goalOverlayTitle').textContent = isGoal ? 'Tor für' : kind === 'wechsel' ? 'Wechsel' : 'Text';
 
-  // Glow-Farbe je nach Team (home-glow = default, away-glow, own-glow)
+  // Farbe des Teams, dem das Tor zugesprochen wird.
   card.classList.remove('away-glow', 'own-glow', 'has-photo');
-  if (event.isOwnGoal) {
-    card.classList.add('own-glow');
-  } else if (overlayTeam === 'away') {
+  if (overlayTeam === 'away') {
     card.classList.add('away-glow');
   }
   // team === 'home': kein extra class, Standard verwendet --home-color
