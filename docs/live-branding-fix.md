@@ -41,3 +41,13 @@ Textmeldungen mit Foto zeigen das Foto über dem Text in voller Kartenbreite ohn
 public/ticker-loader.js blendet beim ersten Laden eine gestrichelte Kreispfeil-Animation ein. Der Zuschauer wartet auf Match, Kader/Statistik, Vereinsdaten, Trainer und Aufstellung; der Reporter auf die Wiederherstellung des Matches, Kader/Statistik und Vereinsdaten. Vor dem Einblenden werden die Headerwappen dekodiert. Bei ausbleibenden Daten erscheint nach 15 Sekunden ein Verbindungshinweis mit Neuladen-Schaltfläche. Fehlende Bilddateien blockieren die Darstellung höchstens fünf Sekunden. Reduced Motion wird respektiert. Die Ladeanzeige führt keine Datenbank-Schreibzugriffe aus.
 
 Validierung: 148 Tests und Produktionsbuild erfolgreich. Browserprüfung des bestehenden Spiels ausschließlich im Zuschauer-Modus; außerdem isolierte Vorschau für eine kombinierte Bild/Text-Karte (gemessen: Bildbreite = Kartenbreite, Text darunter, Minute ausgeblendet) und den Canvas-Export. Keine Spieldaten verändert.
+
+## Reporter-Spielplan: laufende Aktualisierung und Sortierung
+
+Der gespeicherte Spielplan enthält HSV Langenfeld (Testspiel, 07.10.2026, ID 1791182778226); das Spiel ist mit 20:0 beendet. Solingen-Wald (ID 221205005) ist mit matchFinished=true und abandoned=true korrekt abgeschlossen. Beide Datensätze wurden ausschließlich lesend geprüft.
+
+Die gemeinsame Live-Abfrage gab bisher den aktualisierten Spielplan nur für die Statistikberechnung intern weiter. Der Reporter behielt dagegen seinen einmalig geladenen Spielplan. Der Listener liefert nun auch die aktuellen Termine; reporterSchedule übernimmt neue Einträge und verknüpft abgeschlossene Ergebnisse sowie Abbrüche mit den Match-Daten. Vorhandene Teilnahmeinformationen bleiben erhalten. Keine neuen Termine werden erfunden, archivierte bleiben ausgeblendet, keine Datenbankänderung ist erforderlich.
+
+sortReporter sortiert auf einer Kopie: laufendes Spiel zuerst, anschließend kommende Spiele nach Datum/Uhrzeit aufsteigend (Termine ohne Datum zuletzt in dieser Gruppe), danach vergangene, abgeschlossene und abgebrochene Spiele chronologisch. Die Tagesgrenze wird in Europe/Berlin bestimmt. Abbrüche behalten die sichtbare Abbruch-Kennzeichnung und bieten keinen Neustart-Button.
+
+Validierung: 150 Tests und Produktionsbuild bestanden, einschließlich neu hinzugefügtem HSV-Testspiel, abgeschlossenem Abbruch, kommenden Testspielen und unverändertem Quelldatensatz bei Sortierung.

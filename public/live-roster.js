@@ -14,7 +14,7 @@
       const records = root.MatchTrackerSchedule.visibleMatches(matches, schedule);
       const totals = root.MatchTrackerStats.calculate(players, records);
       changed(players.map((player, index) => ({...player, goals:totals[index].goals})), records,
-        root.MatchTrackerStats.seasonGoalNumbers(players, records));
+        root.MatchTrackerStats.seasonGoalNumbers(players, records), schedule);
     }
     [['app/squad', value => { roster = value; }],
       ['app/schedule', value => { schedule = value; }],

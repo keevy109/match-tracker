@@ -90,3 +90,18 @@ test('admin schedule editing keeps results out of fixtures and archives only rem
   assert.equal(updates['3'], undefined);
   assert.equal(updates['4'].isHome, false);
 });
+
+test('reporter receives newly added HSV fixture and keeps abandoned games closed',()=>{
+ const source={hsv:{id:12,opponent:'HSV Langenfeld',date:'2026-10-07',type:'Testspiel'},wald:{id:13,opponent:'Solingen-Wald',date:'2026-09-26'}};
+ const matches={12:{matchFinished:true,homeScore:20,awayScore:0},13:{matchFinished:true,abandoned:true,homeScore:8,awayScore:3}};
+ const result=context.MatchTrackerSchedule.reporterSchedule(source,matches,[]);
+ assert.equal(result.length,2);assert.equal(result[0].result.home,20);assert.equal(result[0].type,'Testspiel');
+ assert.equal(result[1].abandoned,true);assert.equal(result[1].result.home,8);
+ assert.equal(source.hsv.result,undefined);
+});
+test('reporter sorts next fixtures chronologically before all past and completed matches',()=>{
+ const items=[{id:1,date:'2026-09-26',abandoned:true},{id:2,date:'2026-12-05'},{id:3,date:'2026-11-21',type:'Testspiel'}, {id:4,date:'2026-11-07'}, {id:5,date:'2026-10-07',result:{}}, {id:6,date:'2026-09-01'}, {id:7,date:'2026-10-01',archived:true}];
+ const before=JSON.stringify(items);
+ assert.deepEqual(Array.from(context.MatchTrackerSchedule.sortReporter(items,'2026-10-10',null),m=>m.id),[4,3,2,6,1,5]);
+ assert.equal(JSON.stringify(items),before);
+});

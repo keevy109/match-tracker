@@ -91,5 +91,35 @@
     return updates;
   }
 
-  root.MatchTrackerSchedule = {normalize, visibleMatches, mergeAdminSchedule};
+  function reporterSchedule(source, matches, previous = []) {
+    return Object.entries(source || {}).filter(([, item]) => item && !item.archived).map(([key, item]) => {
+      const id = item.id ?? key;
+      const local = previous.find(old => String(old.id) === String(id)) || {};
+      const match = matches?.[id];
+      const merged = {...local, ...item, id, isHome:typeof item.home === 'boolean' ? item.home : item.isHome !== false};
+      if (match?.matchFinished) {
+        merged.abandoned = match.abandoned === true;
+        merged.result = {home:match.homeScore || 0, away:match.awayScore || 0,
+          ourScore:match.isHomeTeam === false ? match.awayScore : match.homeScore,
+          theirScore:match.isHomeTeam === false ? match.homeScore : match.awayScore,
+          events:Object.values(match.events || {})};
+      }
+      return merged;
+    });
+  }
+
+  function sortReporter(schedule, today, activeId) {
+    const group = item => String(item.id) === String(activeId) && !item.result && !item.abandoned ? 0
+      : item.result || item.abandoned || (item.date && item.date < today) ? 2 : 1;
+    return (schedule || []).filter(item => item && !item.archived).slice().sort((a, b) => {
+      const difference = group(a) - group(b);
+      if (difference) return difference;
+      const aDate = `${a.date || '9999-12-31'}T${a.time || '23:59'}`;
+      const bDate = `${b.date || '9999-12-31'}T${b.time || '23:59'}`;
+      return aDate.localeCompare(bDate) || String(a.id).localeCompare(String(b.id));
+    });
+
+  }
+
+  root.MatchTrackerSchedule = {normalize, visibleMatches, mergeAdminSchedule, reporterSchedule, sortReporter};
 })(globalThis);
