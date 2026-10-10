@@ -57,3 +57,9 @@ Validierung: 150 Tests und Produktionsbuild bestanden, einschließlich neu hinzu
 Die Fade-in-Animation auf .feed-result-space mit animation-fill-mode:both erzeugte einen bleibenden Stacking Context um den fixierten Header. Dadurch konnten die nachfolgenden Karten den Header trotz z-index:40 überdecken. Der Fade liegt jetzt direkt auf .feed-result-header; er hält nach seinem Ende keine Animationsebene fest. Reduced Motion bleibt berücksichtigt.
 
 Browserprüfung vor dem Fix: Header fixed, top=0, Höhe=70px, aber am Headerpunkt lag eine Karte vorne. Nach dem Fix: gleiche Position/Höhe, Wrapper ohne Animation, Header liegt nach dem Scrollen vorne. Produktionsbuild erfolgreich. Keine Spieldaten verändert.
+
+## Öffentlicher Spielplan verlinkt vergangene Ticker
+
+Abgeschlossene Matches erhalten beim Zusammenführen der Daten eine tickerId aus ihrer bestehenden Match-ID. Die gesamte öffentliche Spielkarte verlinkt auf match-tracker.html?ticker=<ID>, einschließlich abgebrochener Spiele. „Ticker ansehen →“ macht die Aktion sichtbar; der Link ist per Tastatur bedienbar und besitzt eine Fokusmarkierung. Zukünftige Termine und reine lokale Ergebnis-Fallbacks ohne bestätigten Match-Datensatz erhalten keinen möglicherweise toten Link. Es werden keine Spieldaten geschrieben.
+
+Validierung: 151 Tests und Produktionsbuild bestanden; Test prüft abgeschlossene und abgebrochene Matches sowie unverlinkte zukünftige Termine und Ergebnis-Fallbacks.

@@ -22,6 +22,7 @@
           id,
           home: typeof item.home === 'boolean' ? item.home : item.isHome !== false,
           result,
+          tickerId: finished ? String(id) : null,
           abandoned,
           status: abandoned ? 'abandoned' : result ? 'past' : 'future',
         };

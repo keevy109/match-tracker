@@ -105,3 +105,8 @@ test('reporter sorts next fixtures chronologically before all past and completed
  assert.deepEqual(Array.from(context.MatchTrackerSchedule.sortReporter(items,'2026-10-10',null),m=>m.id),[4,3,2,6,1,5]);
  assert.equal(JSON.stringify(items),before);
 });
+
+test('only actual completed ticker records expose a historical ticker link',()=>{
+ const rows=normalize({1:{id:1},2:{id:2},3:{id:3},4:{id:4,result:'3:0'}},{1:{matchFinished:true,homeScore:2,awayScore:1},2:{matchFinished:true,abandoned:true},3:{matchFinished:false}},'2026-10-10');
+ assert.deepEqual(Array.from(rows,m=>m.tickerId),['1','2',null,null]);
+});

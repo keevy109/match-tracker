@@ -78,14 +78,18 @@ function render(matches, clubs = []) {
       ? 'border-color:var(--accent);opacity:1'
       : isFuture ? 'opacity:0.6' : '';
 
-    return `<div class="match-card"${styleAttr ? ` style="${styleAttr}"` : ''}>
+    const tickerUrl = isPast && m.tickerId != null
+      ? `${import.meta.env.BASE_URL}match-tracker.html?ticker=${encodeURIComponent(m.tickerId)}` : null;
+    const tag = tickerUrl ? 'a' : 'div';
+    const linkAttr = tickerUrl ? ` href="${escAttr(tickerUrl)}" aria-label="Ticker: SSV Berghausen gegen ${escAttr(m.opponent)} vom ${escAttr(m.date || '')}"` : '';
+    return `<${tag} class="match-card${tickerUrl ? ' match-card-link' : ''}"${linkAttr}${styleAttr ? ` style="${styleAttr}"` : ''}>
       <div class="match-card-date"><strong>${day}</strong>${month}</div>
       <div>
         <div class="match-card-teams">${teams} ${badgeHtml}</div>
         <div class="match-card-meta">${meta}</div>
       </div>
-      <div style="text-align:right">${rightCol}</div>
-    </div>`;
+      <div style="text-align:right">${rightCol}${tickerUrl ? '<span class="match-card-ticker">Ticker ansehen →</span>' : ''}</div>
+    </${tag}>`;
   }).join('');
 }
 
