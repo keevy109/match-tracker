@@ -57,3 +57,17 @@ test('header colors accept RGB and clamp legacy out-of-range channels', () => {
   assert.equal(color('#123456'), '#123456');
   assert.equal(color(undefined), '#333333');
 });
+
+test('live match presentation resolves Inter squad suffix without changing game state', () => {
+  const events = [{type:'goal', minute:5}];
+  const data = {homeTeam:'SSV Berghausen',awayTeam:'Inter Monheim E1',awayLogo:'',awayColor:'',homeScore:2,awayScore:1,timerBase:123,events};
+  const result = context.MatchTrackerTeams.resolveMatch(data, [{name:'Inter Monheim',badge:'inter.png',color1:'#ff0000'}]);
+  assert.equal(result.awayTeam, 'Inter Monheim');
+  assert.equal(result.awayLogo, 'inter.png');
+  assert.equal(result.awayColor, '#ff0000');
+  assert.equal(result.events, events);
+  assert.equal(result.timerBase, 123);
+  assert.equal(result.homeScore, 2);
+  assert.equal(result.awayScore, 1);
+  assert.equal(data.awayTeam, 'Inter Monheim E1');
+});

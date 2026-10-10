@@ -3166,12 +3166,12 @@ function renderTeamsList() {
 function getTeamLogo(name) {
   const t = globalThis.MatchTrackerTeams.find(teams, name);
   if (t?.isOurTeam || getCanonicalTeamName(name) === getOurTeamName()) return OUR_TEAM_LOGO;
-  return t?.logo || '';
+  return t?.badge || t?.logo || '';
 }
 
 function getTeamColor(name) {
   const t = globalThis.MatchTrackerTeams.find(teams, name);
-  return t?.color || '';
+  return t?.color1 || t?.color || '';
 }
 
 // ─── COLOR UTILITIES ──────────────────────────────────────────────────────────
@@ -3729,6 +3729,12 @@ function initTickerMode(matchId) {
     if (tickerData) updateTickerUI(tickerData, lastScore);
   });
 
+  // Resolve club branding even for matches started before the club was linked.
+  firebase.database().ref('app/teams').on('value', snapshot => {
+    teams = Object.values(snapshot.val() || {}).filter(Boolean);
+    if (tickerData) updateTickerUI(tickerData, lastScore);
+  });
+
   // Spieluhr live hochzählen im Ticker – berechnet direkt aus Admin-timerBase/timerOffset
   setInterval(() => {
     if (!tickerData) return;
@@ -3967,6 +3973,7 @@ function updateFeedScrollState() {
 }
 
 function updateTickerUI(data, lastScore, headerOnly = false) {
+  data = globalThis.MatchTrackerTeams.resolveMatch(data, teams);
   updateFeedMatchTime(data);
   updateFeedScrollState();
   for (const side of ['home', 'away']) {

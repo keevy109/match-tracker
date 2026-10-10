@@ -73,5 +73,18 @@
     return [...ownTeams, ...opponents];
   }
 
-  root.MatchTrackerTeams = {normalize, merge, canonicalName, find, color};
+  // Resolve presentation only; scores, events and clocks remain untouched.
+  function resolveMatch(data, teams) {
+    const resolved = {...data};
+    for (const side of ['home', 'away']) {
+      const club = find(teams, data[side + 'Team']);
+      if (!club) continue;
+      resolved[side + 'Team'] = club.name;
+      resolved[side + 'Logo'] = club.badge || club.logo || data[side + 'Logo'] || '';
+      resolved[side + 'Color'] = club.color1 || club.color || data[side + 'Color'] || '';
+    }
+    return resolved;
+  }
+
+  root.MatchTrackerTeams = {normalize, merge, canonicalName, find, color, resolveMatch};
 })(globalThis);
