@@ -63,3 +63,9 @@ Browserprüfung vor dem Fix: Header fixed, top=0, Höhe=70px, aber am Headerpunk
 Abgeschlossene Matches erhalten beim Zusammenführen der Daten eine tickerId aus ihrer bestehenden Match-ID. Die gesamte öffentliche Spielkarte verlinkt auf match-tracker.html?ticker=<ID>, einschließlich abgebrochener Spiele. „Ticker ansehen →“ macht die Aktion sichtbar; der Link ist per Tastatur bedienbar und besitzt eine Fokusmarkierung. Zukünftige Termine und reine lokale Ergebnis-Fallbacks ohne bestätigten Match-Datensatz erhalten keinen möglicherweise toten Link. Es werden keine Spieldaten geschrieben.
 
 Validierung: 151 Tests und Produktionsbuild bestanden; Test prüft abgeschlossene und abgebrochene Matches sowie unverlinkte zukünftige Termine und Ergebnis-Fallbacks.
+
+## Taktikgrafik als Ladeanimation
+
+Das vom Nutzer gelieferte Taktikmotiv wurde als skalierbare SVG nachgezeichnet: drei Kreuze, vier Kreise, diagonaler Passpfeil und geschwungene gestrichelte Laufroute. In einem 3,6-Sekunden-Zyklus zeichnet sich zuerst die durchgezogene Linie samt Pfeilspitze, danach die gestrichelte Route samt Pfeilspitze. Eine SVG-Maske erhält die einzelnen Striche während des Zeichnens. Markierungen bleiben statisch. Reduced Motion zeigt das vollständige Motiv ohne Animation. Datenbereitschaft, Timeout und Fade-in bleiben unverändert; keine künstliche Mindestladezeit.
+
+Browserprüfung mit isolierter Ladeansicht: beide Zeichenphasen und vollständiges Motiv sichtbar. Bestehende Loader-Tests und Produktionsbuild erfolgreich. Skript-URL versioniert, damit die neue Grafik nach Neuladen geladen wird.

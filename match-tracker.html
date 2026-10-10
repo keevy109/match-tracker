@@ -1071,12 +1071,20 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .btn-ticker-close { background: var(--surface2); border: 1px solid var(--border) !important; color: var(--text); }
 
   .ticker-loading-overlay { position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; background:var(--feed-surface, #faf9f6); color:var(--feed-text, #193d32); }
-  .ticker-loading-overlay svg { width:64px; height:64px; fill:none; stroke:currentColor; stroke-width:3; stroke-linecap:round; animation:ticker-spin 1.5s linear infinite; }
-  .ticker-loading-overlay svg path:first-child { stroke-dasharray:7 5; }
+  .ticker-loading-overlay .tactics-loader { width:clamp(150px, 35vw, 230px); height:auto; fill:none; stroke:currentColor; stroke-width:9; stroke-linecap:round; stroke-linejoin:round; }
+  .tactics-pass { stroke-dasharray:1; animation:tactics-pass 3.6s ease-in-out infinite; }
+  .tactics-pass-arrow { animation:tactics-pass-tip 3.6s ease-in-out infinite; }
+  .tactics-route { stroke-dasharray:24 18; stroke-linecap:butt; }
+  .tactics-route-reveal { stroke-dasharray:1; animation:tactics-route 3.6s ease-in-out infinite; }
+  .tactics-route-arrow { animation:tactics-route-tip 3.6s ease-in-out infinite; }
+  @keyframes tactics-pass { 0%,5% { stroke-dashoffset:1; } 35%,95% { stroke-dashoffset:0; opacity:1; } 100% { stroke-dashoffset:0; opacity:0; } }
+  @keyframes tactics-pass-tip { 0%,30% { opacity:0; } 38%,95% { opacity:1; } 100% { opacity:0; } }
+  @keyframes tactics-route { 0%,42% { stroke-dashoffset:1; } 82%,95% { stroke-dashoffset:0; opacity:1; } 100% { stroke-dashoffset:0; opacity:0; } }
+  @keyframes tactics-route-tip { 0%,78% { opacity:0; } 86%,95% { opacity:1; } 100% { opacity:0; } }
+  @media (prefers-reduced-motion:reduce) { .tactics-loader path { animation:none; stroke-dashoffset:0; opacity:1; } }
   .ticker-loading-overlay button { padding:12px 20px; }
   body.ticker-loading .feed-result-space, body.ticker-loading .events-section { visibility:hidden; opacity:0; }
   body.ticker-loaded .feed-result-header, body.ticker-loaded .events-section { animation:ticker-reveal .5s ease; }
-  @keyframes ticker-spin { to { transform:rotate(360deg); } }
   @keyframes ticker-reveal { from { opacity:0; } to { opacity:1; } }
   body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.no-minute:not([data-type="tor"]) { grid-template-columns:minmax(0,1fr); }
   .event-item.no-minute > .event-min { display:none; }
@@ -1398,7 +1406,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 <script src="./schedule-data.js?v=20261010-schedule"></script>
 <script src="./live-roster.js?v=20261010-schedule"></script>
 <script src="./lineup-card.js"></script>
-<script src="./ticker-loader.js?v=20261010-feed"></script>
+<script src="./ticker-loader.js?v=20261010-tactics"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
 (function() {
