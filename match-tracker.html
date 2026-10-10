@@ -2119,7 +2119,7 @@ function renderLocalLineup() {
 function getMatchTeams() {
   const title = document.getElementById('matchTitle').value;
   const parts = title.split(/\s+vs\.?\s+/i);
-  return { home: parts[0]?.trim() || 'Heim', away: parts[1]?.trim() || 'Gast' };
+  return { home: getCanonicalTeamName(parts[0]?.trim() || 'Heim'), away: getCanonicalTeamName(parts[1]?.trim() || 'Gast') };
 }
 
 function exportText() {
@@ -2451,11 +2451,18 @@ function finishSetup() {
   updateEndMatchBtn();
 }
 
+function refreshReporterBranding() {
+  const title = document.getElementById('matchTitle');
+  if (!title.value) return;
+  const {home, away} = getMatchTeams();
+  title.value = home + ' vs. ' + away;
+  updateScoreLabels();
+  updateGoalButtons();
+  if (!DEV_MODE) updateTickerUI(matchSnapshot(), null, true);
+}
+
 function updateScoreLabels() {
-  const title = document.getElementById('matchTitle').value;
-  const parts = title.split(/\s+vs\.?\s+/i);
-  const homeName = parts[0]?.trim() || 'Heim';
-  const awayName = parts[1]?.trim() || 'Gast';
+  const {home: homeName, away: awayName} = getMatchTeams();
   const homeEl = document.querySelector('.team-name.home');
   const awayEl = document.querySelector('.team-name.away');
   if (homeEl) homeEl.textContent = homeName;
@@ -3667,7 +3674,7 @@ async function loadGlobalFromFirebase(cb) {
       renderSpielplan();
       renderTeamsList();
       updateSpielplanGegnerSelect();
-      updateGoalButtons();
+      refreshReporterBranding();
       // Lokales Backup aktualisieren
       try {
         const existing = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
@@ -4247,6 +4254,12 @@ function checkAccess() {
     initTickerMode(tickerId);
   } else {
     initFirebase();
+    // Branding loads independently of the larger roster/schedule request.
+    // Never save or restore match state in this listener: a match may be running.
+    if (!DEV_MODE) firebase.database().ref('app/teams').on('value', snapshot => {
+      teams = Object.values(snapshot.val() || {}).filter(Boolean);
+      refreshReporterBranding();
+    });
     // Phase 2: globale Daten (Kader/Spielplan/Teams) aus Firebase laden
     // und localStorage-Stand ggf. überschreiben
     loadGlobalFromFirebase(async () => {

@@ -71,3 +71,18 @@ test('live match presentation resolves Inter squad suffix without changing game 
   assert.equal(result.awayScore, 1);
   assert.equal(data.awayTeam, 'Inter Monheim E1');
 });
+
+test('reporter refresh repairs restored title and buttons without saving or resetting match', () => {
+  const html = fs.readFileSync('match-tracker.html', 'utf8');
+  const title = {value:'SSV Berghausen vs. Inter Monheim E1'};
+  const calls = [];
+  const ctx = vm.createContext({document:{getElementById:()=>title}, DEV_MODE:false,
+    getMatchTeams:()=>({home:'SSV Berghausen',away:'Inter Monheim'}),
+    updateScoreLabels:()=>calls.push('logos'), updateGoalButtons:()=>calls.push('buttons'),
+    matchSnapshot:()=>({homeScore:3,awayScore:1,timerBase:123}),
+    updateTickerUI:(data)=>{assert.equal(data.homeScore,3);assert.equal(data.timerBase,123);calls.push('header');}});
+  vm.runInContext(html.slice(html.indexOf('function refreshReporterBranding()'),html.indexOf('function updateScoreLabels()')),ctx);
+  ctx.refreshReporterBranding();
+  assert.equal(title.value,'SSV Berghausen vs. Inter Monheim');
+  assert.deepEqual(calls,['logos','buttons','header']);
+});
