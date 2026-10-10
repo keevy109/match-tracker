@@ -28,6 +28,7 @@ test('completed fixture cannot restart; another active match cannot be replaced'
 test('offline start leaves state intact',async()=>{const x=setup();x.c.activeMatchId=null;x.c.navigator.onLine=false;await x.c.startMatchFromSchedule(1);assert.equal(x.c.awayScore,5);assert.equal(x.c.activeMatchId,null);});
 
 async function boot(x) {
+ vm.runInContext(fs.readFileSync(path.join(__dirname, "../public/live-roster.js"), "utf8"), x.c);
  x.c.loadTrainingForStats=async()=>{};x.c.checkAccess=()=>true;x.c.initFirebase=()=>true;
  x.c.loadGlobalFromFirebase=cb=>{x.boot=cb();};
  vm.runInContext(html.slice(html.lastIndexOf('(function() {'),html.lastIndexOf('</script>')),x.c);

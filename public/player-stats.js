@@ -47,5 +47,24 @@
     });
     return totals;
   }
-  root.MatchTrackerStats = {calculate, summarizeMatches};
+  // Derive ordinals from original goal timestamps, never from a stale event snapshot.
+  function seasonGoalNumbers(roster, matches) {
+    const counts = new Map(Object.values(roster || {}).filter(Boolean).map(p => [String(p.id), Number(p.goalAdjustment) || 0]));
+    const goals = [];
+    Object.entries(matches || {}).forEach(([matchId, match]) => {
+      if (!match || matchId === 'null') return;
+      const side = match.isHomeTeam === false ? 'away' : 'home';
+      Object.values(match.events || {}).forEach(event => {
+        if ((event.typ || 'tor') === 'tor' && !event.isOwnGoal && event.team === side && counts.has(String(event.scorerId))) goals.push(event);
+      });
+    });
+    const result = {};
+    goals.sort((a, b) => Number(a.id) - Number(b.id)).forEach(event => {
+      const id = String(event.scorerId);
+      counts.set(id, counts.get(id) + 1);
+      result[event.id] = Math.max(0, counts.get(id));
+    });
+    return result;
+  }
+  root.MatchTrackerStats = {calculate, summarizeMatches, seasonGoalNumbers};
 })(globalThis);

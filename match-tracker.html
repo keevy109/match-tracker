@@ -1375,7 +1375,9 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 </div>
 
 <script src="./team-data.js?v=20261010-branding"></script>
-<script src="./player-stats.js"></script>
+<script src="./player-stats.js?v=20261010-live-roster-stats"></script>
+<script src="./schedule-data.js?v=20261010-live-roster-stats"></script>
+<script src="./live-roster.js?v=20261010-live-roster-stats"></script>
 <script src="./lineup-card.js"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
@@ -2027,7 +2029,7 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
   const members = Array.isArray(rawSquad) ? rawSquad : Object.values(rawSquad);
   const ourEvent = context.ownSide && (e.team || (typ === 'wechsel' ? context.ownSide : null)) === context.ownSide;
   if (typ === 'tor' && ourEvent && !e.isOwnGoal) {
-    const seasonGoals = Number(e.seasonGoals);
+    const seasonGoals = Number(globalThis.MatchTrackerSeasonGoals?.[e.id] ?? e.seasonGoals);
     const seasonGoalHtml = Number.isFinite(seasonGoals) && seasonGoals > 0
       ? `<span class="event-season-goals">${seasonGoals}. Saisontor</span>`
       : '';
@@ -2504,17 +2506,18 @@ function removePlayer(id) {
 }
 
 function recalculatePlayerStats() {
-  const records = {};
+  const records = {...(globalThis.MatchTrackerLiveRecords || {})};
   const participants = {};
   schedule.forEach(m => {
     if (m.archived) return;
-    if (m.result) records[m.id] = {isHomeTeam:m.isHome ?? m.home ?? true, events:m.result.events || []};
+    if (m.result && !records[m.id]) records[m.id] = {isHomeTeam:m.isHome ?? m.home ?? true, events:m.result.events || []};
     participants[m.id] = {playerIds:m.participantIds || []};
   });
-  if (activeMatchId && schedule.some(m => String(m.id) === String(activeMatchId) && !m.archived)) {
+  if (activeMatchId && (globalThis.MatchTrackerLiveRecords || schedule.some(m => String(m.id) === String(activeMatchId) && !m.archived))) {
     records[activeMatchId] = {isHomeTeam, events};
   }
   squad = MatchTrackerStats.calculate(squad, records, participants, trainingSessions);
+  if (globalThis.MatchTrackerLiveRecords) globalThis.MatchTrackerSeasonGoals = MatchTrackerStats.seasonGoalNumbers(squad, records);
 }
 
 function lineupMembers(players = squad) {
@@ -3725,9 +3728,12 @@ function initTickerMode(matchId) {
 
   // Der öffentliche Ticker verwendet immer den aktuellen Admin-Kader. So
   // erscheinen neue Portraits auch bei bereits gespeicherten Ereignissen.
-  firebase.database().ref('app/squad').on('value', snapshot => {
-    const raw = snapshot.val();
-    squad = !raw ? [] : (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw).filter(Boolean));
+  MatchTrackerLiveRoster.subscribe(firebase.database(), (players, records, numbers) => {
+    squad = players;
+    if (records) {
+      globalThis.MatchTrackerLiveRecords = records;
+      globalThis.MatchTrackerSeasonGoals = numbers;
+    }
     if (tickerData) updateTickerUI(tickerData, lastScore);
   });
 
@@ -3905,7 +3911,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
   if (seasonEl) {
     if (isGoal && event.scorerId && !event.isOwnGoal) {
       const sp = members.find(s => String(s.id) === String(event.scorerId));
-      const g = event.seasonGoals ?? (sp ? (sp.goals || 0) : 0);
+      const g = globalThis.MatchTrackerSeasonGoals?.[event.id] ?? event.seasonGoals ?? (sp ? (sp.goals || 0) : 0);
       seasonEl.textContent = g === 1 ? 'Erstes Saisontor' : g > 1 ? g + '. Saisontor' : '';
     } else {
       seasonEl.textContent = '';
@@ -4263,6 +4269,16 @@ function checkAccess() {
     // Phase 2: globale Daten (Kader/Spielplan/Teams) aus Firebase laden
     // und localStorage-Stand ggf. überschreiben
     loadGlobalFromFirebase(async () => {
+      if (!DEV_MODE) MatchTrackerLiveRoster.subscribe(firebase.database(), (players, records, numbers) => {
+        squad = players;
+        if (records) {
+          globalThis.MatchTrackerLiveRecords = records;
+          globalThis.MatchTrackerSeasonGoals = numbers;
+          // Overlay unsent local goals only after the live match has been restored.
+          if (storageReady) recalculatePlayerStats();
+        }
+        renderKaderList(); renderPickerPlayers(); renderEvents();
+      });
       try {
         if (DEV_MODE) {
           try { await loadTrainingForStats(); } catch (_) { trainingSessions = {}; }
