@@ -1075,7 +1075,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .ticker-loading-overlay svg path:first-child { stroke-dasharray:7 5; }
   .ticker-loading-overlay button { padding:12px 20px; }
   body.ticker-loading .feed-result-space, body.ticker-loading .events-section { visibility:hidden; opacity:0; }
-  body.ticker-loaded .feed-result-space, body.ticker-loaded .events-section { animation:ticker-reveal .5s ease both; }
+  body.ticker-loaded .feed-result-header, body.ticker-loaded .events-section { animation:ticker-reveal .5s ease; }
   @keyframes ticker-spin { to { transform:rotate(360deg); } }
   @keyframes ticker-reveal { from { opacity:0; } to { opacity:1; } }
   body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.no-minute:not([data-type="tor"]) { grid-template-columns:minmax(0,1fr); }
@@ -1086,7 +1086,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .event-item.comment-with-photo > .event-info { padding:18px; }
   .event-item.comment-with-photo > .event-min { padding:12px 18px 0; }
   .event-item.comment-with-photo > .event-delete { position:absolute; top:10px; right:10px; z-index:3; }
-  @media (prefers-reduced-motion:reduce) { .ticker-loading-overlay svg, body.ticker-loaded .feed-result-space, body.ticker-loaded .events-section { animation:none; } }
+  @media (prefers-reduced-motion:reduce) { .ticker-loading-overlay svg, body.ticker-loaded .feed-result-header, body.ticker-loaded .events-section { animation:none; } }
 
 </style>
 </head>

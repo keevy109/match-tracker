@@ -51,3 +51,9 @@ Die gemeinsame Live-Abfrage gab bisher den aktualisierten Spielplan nur für die
 sortReporter sortiert auf einer Kopie: laufendes Spiel zuerst, anschließend kommende Spiele nach Datum/Uhrzeit aufsteigend (Termine ohne Datum zuletzt in dieser Gruppe), danach vergangene, abgeschlossene und abgebrochene Spiele chronologisch. Die Tagesgrenze wird in Europe/Berlin bestimmt. Abbrüche behalten die sichtbare Abbruch-Kennzeichnung und bieten keinen Neustart-Button.
 
 Validierung: 150 Tests und Produktionsbuild bestanden, einschließlich neu hinzugefügtem HSV-Testspiel, abgeschlossenem Abbruch, kommenden Testspielen und unverändertem Quelldatensatz bei Sortierung.
+
+## Sticky-Header nach Fade-in korrigiert
+
+Die Fade-in-Animation auf .feed-result-space mit animation-fill-mode:both erzeugte einen bleibenden Stacking Context um den fixierten Header. Dadurch konnten die nachfolgenden Karten den Header trotz z-index:40 überdecken. Der Fade liegt jetzt direkt auf .feed-result-header; er hält nach seinem Ende keine Animationsebene fest. Reduced Motion bleibt berücksichtigt.
+
+Browserprüfung vor dem Fix: Header fixed, top=0, Höhe=70px, aber am Headerpunkt lag eine Karte vorne. Nach dem Fix: gleiche Position/Höhe, Wrapper ohne Animation, Header liegt nach dem Scrollen vorne. Produktionsbuild erfolgreich. Keine Spieldaten verändert.
