@@ -69,3 +69,9 @@ Validierung: 151 Tests und Produktionsbuild bestanden; Test prüft abgeschlossen
 Das vom Nutzer gelieferte Taktikmotiv wurde als skalierbare SVG nachgezeichnet: drei Kreuze, vier Kreise, diagonaler Passpfeil und geschwungene gestrichelte Laufroute. In einem 3,6-Sekunden-Zyklus zeichnet sich zuerst die durchgezogene Linie samt Pfeilspitze, danach die gestrichelte Route samt Pfeilspitze. Eine SVG-Maske erhält die einzelnen Striche während des Zeichnens. Markierungen bleiben statisch. Reduced Motion zeigt das vollständige Motiv ohne Animation. Datenbereitschaft, Timeout und Fade-in bleiben unverändert; keine künstliche Mindestladezeit.
 
 Browserprüfung mit isolierter Ladeansicht: beide Zeichenphasen und vollständiges Motiv sichtbar. Bestehende Loader-Tests und Produktionsbuild erfolgreich. Skript-URL versioniert, damit die neue Grafik nach Neuladen geladen wird.
+
+## Schnellere Animation und Loader auf der Vereinswebseite
+
+Der vollständige Animationszyklus dauert jetzt 1,8 statt 3,6 Sekunden und wiederholt sich unbegrenzt, bis die erforderlichen Daten geladen sind. Ticker und Vereinswebseite teilen public/ticker-loader.css und denselben SVG-Loader. Die Vereinswebseite ersetzt ihren bisherigen klickpflichtigen Splashscreen durch den automatischen Loader. Kader, Nachrichten, Statistiken, Spielplan und Spieltagsprüfung werden parallel abgewartet; anschließend blendet #app ohne bleibenden Stacking Context ein. Bereits vorhandene Fehler-/Fallbackanzeigen der Module bleiben erhalten. Es wird keine Mindestwartezeit erzwungen. Reduced Motion bleibt unterstützt.
+
+Validierung: 151 Tests und Produktionsbuild bestanden. Browser zeigt zunächst ausschließlich „Webseite wird geladen …“ und anschließend die Vereinsinhalte automatisch.

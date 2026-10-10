@@ -33,7 +33,7 @@
       revealing = true;
       // Decode crests before revealing their final layout; failed assets cannot
       // leave the ticker blocked indefinitely.
-      await Promise.all(Array.from(document.querySelectorAll('.feed-result-logo')).map(img =>
+      await Promise.all(Array.from(document.querySelectorAll('.feed-result-logo, .club-site nav img')).map(img =>
         !img.getAttribute('src') ? Promise.resolve() : Promise.race([
           img.decode().catch(() => {}), new Promise(resolve => setTimeout(resolve, 5000))
         ])));

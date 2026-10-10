@@ -13,7 +13,7 @@ export async function init() {
   if (document.documentElement.classList.contains('splash-open')) {
     document.addEventListener('splashClosed', checkAndOpen, { once: true });
   } else {
-    checkAndOpen();
+    return checkAndOpen();
   }
 }
 

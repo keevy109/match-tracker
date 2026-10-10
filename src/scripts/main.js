@@ -1,6 +1,6 @@
 import '../styles/main.css';
 
-import splashHtml    from '../sections/splash.frag?raw';
+import '../../public/ticker-loader.js';
 import navHtml       from '../sections/nav.frag?raw';
 import heroHtml      from '../sections/hero.frag?raw';
 import tickerHtml    from '../sections/ticker.frag?raw';
@@ -20,7 +20,6 @@ import { init as initNews } from './news.js';
 import { init as initHero } from './hero.js';
 import { init as initTheme }      from './theme.js';
 import { init as initBackground } from './background.js';
-import { init as initSplash }     from './splash.js';
 import { init as initNewsModal }  from './news-modal.js';
 import { init as initKader }      from './kader.js';
 import { init as initSpielplan }  from './spielplan.js';
@@ -28,10 +27,12 @@ import { init as initMatchday }   from './matchday.js';
 
 // Theme-Token sofort anwenden (vor dem Rendern)
 initTheme();
+const loading = globalThis.MatchTrackerLoader.start(['site']);
+document.querySelector('.ticker-loading-overlay span').textContent = 'Webseite wird geladen …';
 
 // HTML-Bausteine in #app einfügen
 const app = document.getElementById('app');
-const rawHtml = splashHtml + navHtml + heroHtml + tickerHtml + spielplanHtml +
+const rawHtml = navHtml + heroHtml + tickerHtml + spielplanHtml +
   kaderHtml + aktuellesHtml + kontaktHtml + footerHtml + modalHtml + matchdayHtml;
 app.innerHTML = rawHtml
   .replaceAll('/ssvlogo_white.png', brandLogoUrl)
@@ -39,10 +40,7 @@ app.innerHTML = rawHtml
 
 // Module initialisieren
 initBackground();
-initSplash();
 initNewsModal();
-initNews();
-initKader();
-initHero();
-initSpielplan();
-initMatchday();
+Promise.allSettled([initNews(), initKader(), initHero(), initSpielplan(), initMatchday()])
+  .then(() => loading.ready('site'));
+

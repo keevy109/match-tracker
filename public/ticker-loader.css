@@ -1,0 +1,18 @@
+  .ticker-loading-overlay { position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; background:var(--feed-surface, var(--bg, #faf9f6)); color:var(--feed-text, var(--text, #193d32)); }
+  .ticker-loading-overlay .tactics-loader { width:clamp(150px, 35vw, 230px); height:auto; fill:none; stroke:currentColor; stroke-width:9; stroke-linecap:round; stroke-linejoin:round; }
+  .tactics-pass { stroke-dasharray:1; animation:tactics-pass 1.8s ease-in-out infinite; }
+  .tactics-pass-arrow { animation:tactics-pass-tip 1.8s ease-in-out infinite; }
+  .tactics-route { stroke-dasharray:24 18; stroke-linecap:butt; }
+  .tactics-route-reveal { stroke-dasharray:1; animation:tactics-route 1.8s ease-in-out infinite; }
+  .tactics-route-arrow { animation:tactics-route-tip 1.8s ease-in-out infinite; }
+  @keyframes tactics-pass { 0%,5% { stroke-dashoffset:1; } 35%,95% { stroke-dashoffset:0; opacity:1; } 100% { stroke-dashoffset:0; opacity:0; } }
+  @keyframes tactics-pass-tip { 0%,30% { opacity:0; } 38%,95% { opacity:1; } 100% { opacity:0; } }
+  @keyframes tactics-route { 0%,42% { stroke-dashoffset:1; } 82%,95% { stroke-dashoffset:0; opacity:1; } 100% { stroke-dashoffset:0; opacity:0; } }
+  @keyframes tactics-route-tip { 0%,78% { opacity:0; } 86%,95% { opacity:1; } 100% { opacity:0; } }
+  @media (prefers-reduced-motion:reduce) { .tactics-loader path { animation:none; stroke-dashoffset:0; opacity:1; } }
+  .ticker-loading-overlay button { padding:12px 20px; }
+
+body.club-site.ticker-loading #app { visibility:hidden; opacity:0; }
+body.club-site.ticker-loaded #app { animation:site-reveal .5s ease; }
+@keyframes site-reveal { from { opacity:0; } to { opacity:1; } }
+@media (prefers-reduced-motion:reduce) { body.club-site.ticker-loaded #app { animation:none; } }

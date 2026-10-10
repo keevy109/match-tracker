@@ -6,3 +6,5 @@
 @import './news.css';
 @import './kontakt.css';
 @import './matchday.css';
+
+@import '../../public/ticker-loader.css';
