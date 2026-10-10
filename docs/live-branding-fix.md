@@ -31,3 +31,13 @@ Rückmeldung: Mats zeigte beim Eintragenden 6 statt 7, Jonah 6 statt 10; die Ver
 renderKaderList stellt jetzt ausschließlich die bereits berechneten Werte dar. Nach dem Wiederherstellen des Spiels werden Kader, Spielerauswahl und Tormeldungen gemeinsam aktualisiert. Auch nach lokalen Änderungen werden Saisontor-Labels nach der Berechnung neu gezeichnet. Keine Migration und kein zusätzlicher Datenbank-Schreibzugriff; Status, Uhr und Ereignisse bleiben bestehen.
 
 Zwei neue Regressionstests schlugen vor der Korrektur fehl und bestehen danach: unveränderte frische Statistik beim Zeichnen des Kaders und erneute Darstellung nach abgeschlossener Startberechnung. Alle 145 Tests und der Produktionsbuild bestehen.
+
+## Feed, Teilen-Bild und Ladeübergang
+
+Der Bildexport verwendet nun den Feed-Stil: zweifarbiger Vereinskopf, Wappen, helle Anzeigetafel mit schwarzem Statusband und kompakte Torzeilen. Es werden ausschließlich Tore exportiert, keine Wechsel oder Kommentare. Vereinsfarben werden pro exportierter Begegnung aufgelöst. Wappen werden mit CORS vorab geladen; bei nicht erreichbaren Bildern bleibt ein Textkürzel als Fallback, damit der Export möglich bleibt. Lange Teamnamen und Zeilentexte werden auf die verfügbare Breite begrenzt.
+
+Textmeldungen mit Foto zeigen das Foto über dem Text in voller Kartenbreite ohne Höhenbeschränkung. Ereignisse ohne Minutenangabe erhalten keine leere Minutenspalte. Beide Regeln gelten für Reporter und Zuschauer, auch bei bereits gespeicherten Meldungen.
+
+public/ticker-loader.js blendet beim ersten Laden eine gestrichelte Kreispfeil-Animation ein. Der Zuschauer wartet auf Match, Kader/Statistik, Vereinsdaten, Trainer und Aufstellung; der Reporter auf die Wiederherstellung des Matches, Kader/Statistik und Vereinsdaten. Vor dem Einblenden werden die Headerwappen dekodiert. Bei ausbleibenden Daten erscheint nach 15 Sekunden ein Verbindungshinweis mit Neuladen-Schaltfläche. Fehlende Bilddateien blockieren die Darstellung höchstens fünf Sekunden. Reduced Motion wird respektiert. Die Ladeanzeige führt keine Datenbank-Schreibzugriffe aus.
+
+Validierung: 148 Tests und Produktionsbuild erfolgreich. Browserprüfung des bestehenden Spiels ausschließlich im Zuschauer-Modus; außerdem isolierte Vorschau für eine kombinierte Bild/Text-Karte (gemessen: Bildbreite = Kartenbreite, Text darunter, Minute ausgeblendet) und den Canvas-Export. Keine Spieldaten verändert.

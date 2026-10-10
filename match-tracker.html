@@ -1069,6 +1069,25 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   }
   .btn-ticker-copy { background: var(--accent); color: #000; }
   .btn-ticker-close { background: var(--surface2); border: 1px solid var(--border) !important; color: var(--text); }
+
+  .ticker-loading-overlay { position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; background:var(--feed-surface, #faf9f6); color:var(--feed-text, #193d32); }
+  .ticker-loading-overlay svg { width:64px; height:64px; fill:none; stroke:currentColor; stroke-width:3; stroke-linecap:round; animation:ticker-spin 1.5s linear infinite; }
+  .ticker-loading-overlay svg path:first-child { stroke-dasharray:7 5; }
+  .ticker-loading-overlay button { padding:12px 20px; }
+  body.ticker-loading .feed-result-space, body.ticker-loading .events-section { visibility:hidden; opacity:0; }
+  body.ticker-loaded .feed-result-space, body.ticker-loaded .events-section { animation:ticker-reveal .5s ease both; }
+  @keyframes ticker-spin { to { transform:rotate(360deg); } }
+  @keyframes ticker-reveal { from { opacity:0; } to { opacity:1; } }
+  body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.no-minute:not([data-type="tor"]) { grid-template-columns:minmax(0,1fr); }
+  .event-item.no-minute > .event-min { display:none; }
+  .event-item.no-minute > .event-delete { position:absolute; top:8px; right:8px; z-index:3; }
+  body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.comment-with-photo { display:block; padding:0; }
+  body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.comment-with-photo > .event-comment-photo { display:block; width:100%; height:auto; max-height:none; margin:0; border-radius:0; object-fit:contain; }
+  .event-item.comment-with-photo > .event-info { padding:18px; }
+  .event-item.comment-with-photo > .event-min { padding:12px 18px 0; }
+  .event-item.comment-with-photo > .event-delete { position:absolute; top:10px; right:10px; z-index:3; }
+  @media (prefers-reduced-motion:reduce) { .ticker-loading-overlay svg, body.ticker-loaded .feed-result-space, body.ticker-loaded .events-section { animation:none; } }
+
 </style>
 </head>
 <body>
@@ -1379,6 +1398,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 <script src="./schedule-data.js?v=20261010-live-roster-stats"></script>
 <script src="./live-roster.js?v=20261010-live-roster-stats"></script>
 <script src="./lineup-card.js"></script>
+<script src="./ticker-loader.js?v=20261010-feed"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
 (function() {
@@ -2062,11 +2082,10 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     ? `${typ==='tor' ? `<button class="btn-row-edit" onclick="editEvent(${e.id})" title="Bearbeiten">✎</button>` : ''}
        <button class="event-delete" onclick="deleteEvent(${e.id})">×</button>`
     : '';
-  return `<div class="event-min"><span class="event-icon" aria-hidden="true">${icon}</span>${context.matchStarted !== false && e.minute != null && e.minute > 0 ? `<span class="event-minute">${esc(e.minute)}'</span>` : ''}</div>
+  return `${typ === 'kommentar' && isCommentPhoto(e.photo) ? `<img class="event-comment-photo" src="${esc(e.photo)}" alt="Foto zur Meldung" loading="lazy">` : ''}<div class="event-min"><span class="event-icon" aria-hidden="true">${icon}</span>${context.matchStarted !== false && e.minute != null && e.minute > 0 ? `<span class="event-minute">${esc(e.minute)}'</span>` : ''}</div>
     <div class="event-info">
       <div class="event-scorer">${main}</div>
       ${sub ? `<div class="event-tag">${esc(sub)}</div>` : ''}
-      ${typ === 'kommentar' && isCommentPhoto(e.photo) ? `<img class="event-comment-photo" src="${esc(e.photo)}" alt="Foto zur Meldung" loading="lazy">` : ''}
     </div>
     ${scoreHtml}
     ${trainerBtns}`;
@@ -2104,6 +2123,8 @@ function renderEvents() {
     item.className = `event-item ${eventCssClass(e)}`;
     item.dataset.team = e.typ === 'kommentar' && !['home', 'away'].includes(e.team) ? '' : e.team === 'away' ? 'away' : 'home';
     item.dataset.type = e.typ || 'tor';
+    if (!(e.minute > 0)) item.classList.add('no-minute');
+    if (e.typ === 'kommentar' && isCommentPhoto(e.photo) && !isImageOnlyComment(e)) item.classList.add('comment-with-photo');
     item.dataset.eventId = String(e.id);
     if (DEV_MODE && pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
     if (DEV_MODE && pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
@@ -2149,134 +2170,75 @@ function getCanvasColors() {
   };
 }
 
-function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr, statusLabel = '' }) {
-  sorted = sorted.filter(e => !e.typ || e.typ === 'tor' || e.typ === 'wechsel');
-  const colors = getCanvasColors();
+function renderMatchCanvas({ homeName, awayName, hScore, aScore, sorted, dateStr, statusLabel = 'SPIELSTAND', homeCrest, awayCrest }) {
+  sorted = sorted.filter(e => (e.typ || 'tor') === 'tor');
+  const fallback = getCanvasColors();
+  const colors = {home:getTeamColor(homeName) || fallback.home, away:getTeamColor(awayName) || fallback.away};
   const canvas = document.getElementById('exportCanvas');
   const ctx = canvas.getContext('2d');
-
-  const w = 1080;
-  const pad = 64;
-  const scoreBlockH = 340;
-  const goalLineH = 48;
-  const goalsBlockH = sorted.length > 0 ? (sorted.length * goalLineH + 60) : 0;
-  const footerH = 40;
-  const totalH = scoreBlockH + goalsBlockH + footerH;
-
+  const w = 1080, pad = 48, header = 420, row = 66;
   canvas.width = w;
-  canvas.height = totalH;
-
-  // ── Background ────────────────────────────────────────────
-  ctx.fillStyle = '#0f0f0f';
-  ctx.fillRect(0, 0, w, totalH);
-
-  // Subtle gradient overlay top
-  const grad = ctx.createLinearGradient(0, 0, 0, scoreBlockH);
-  grad.addColorStop(0, 'rgba(255,255,255,0.03)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, scoreBlockH);
-
-  // Color bars left (home) and right (away)
-  ctx.fillStyle = colors.home;
-  ctx.fillRect(0, 0, 8, scoreBlockH);
-  ctx.fillStyle = colors.away;
-  ctx.fillRect(w - 8, 0, 8, scoreBlockH);
-
-  // ── Date ──────────────────────────────────────────────────
-  ctx.fillStyle = '#888';
-  ctx.font = '600 28px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(dateStr, w / 2, 60);
-
-  if (statusLabel) {
-    ctx.fillStyle = '#f5a623';
-    ctx.font = '700 24px monospace';
-    ctx.fillText(statusLabel, w / 2, 100);
+  canvas.height = header + Math.max(1, sorted.length) * row + 100;
+  ctx.fillStyle = '#f5f4ef'; ctx.fillRect(0, 0, w, canvas.height);
+  ['home','away'].forEach((side, index) => {
+    const x = index * w / 2;
+    ctx.fillStyle = colors[side]; ctx.fillRect(x, 0, w / 2, header);
+    const glow = ctx.createLinearGradient(x, 0, x + w / 2, header);
+    glow.addColorStop(0, 'rgba(255,255,255,.35)'); glow.addColorStop(1, 'rgba(0,0,0,.16)');
+    ctx.fillStyle = glow; ctx.fillRect(x, 0, w / 2, header);
+  });
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '600 24px sans-serif';
+  ctx.fillText(dateStr, w / 2, 48);
+  function crest(image, x, name) {
+    if (image) {
+      const scale = Math.min(190 / image.naturalWidth, 190 / image.naturalHeight);
+      const width = image.naturalWidth * scale, height = image.naturalHeight * scale;
+      ctx.drawImage(image, x - width / 2, 158 + (190 - height) / 2, width, height);
+    } else {
+      ctx.fillStyle = '#fff'; ctx.font = '800 48px sans-serif';
+      ctx.fillText(name.slice(0, 3).toUpperCase(), x, 270, 190);
+    }
   }
+  crest(homeCrest, 195, homeName); crest(awayCrest, 885, awayName);
+  ctx.fillStyle = '#fff'; ctx.font = '700 30px sans-serif';
+  ctx.fillText(homeName, 260, 110, 450); ctx.fillText(awayName, 820, 110, 450);
+  ctx.fillStyle = '#fff'; ctx.fillRect(360, 155, 360, 166);
+  ctx.fillStyle = '#141414'; ctx.font = '800 90px sans-serif';
+  ctx.fillText(`${hScore}:${aScore}`, 540, 273, 330);
+  ctx.fillStyle = '#111'; ctx.fillRect(360, 321, 360, 50);
+  ctx.fillStyle = '#fff'; ctx.font = '700 20px sans-serif';
+  ctx.fillText(statusLabel || 'ENDSTAND', 540, 353, 335);
+  sorted.forEach((e, index) => {
+    const y = header + 24 + index * row;
+    ctx.fillStyle = '#fff'; ctx.fillRect(pad, y, w - pad * 2, row - 8);
+    ctx.fillStyle = colors[e.team === 'away' ? 'away' : 'home']; ctx.fillRect(pad, y, 6, row - 8);
+    ctx.textAlign = 'left'; ctx.fillStyle = '#192c25'; ctx.font = '800 28px sans-serif';
+    ctx.fillText(e.snapshot || '', pad + 24, y + 38, 150);
+    ctx.font = '500 25px sans-serif'; ctx.fillStyle = '#6b756f';
+    if (e.minute > 0) ctx.fillText(`${e.minute}'`, pad + 200, y + 38);
+    ctx.fillStyle = '#192c25'; ctx.font = '700 28px sans-serif';
+    const name = e.isOwnGoal ? 'Eigentor' : e.scorer && e.scorer !== '—' ? e.scorer : e.team === 'away' ? awayName : homeName;
+    ctx.fillText(name, pad + 310, y + 38, w - pad * 2 - 340);
+  });
+  ctx.textAlign = 'center'; ctx.fillStyle = '#69766f'; ctx.font = '600 20px sans-serif';
+  ctx.fillText('matchTracker · Dein Spieltag. Dein Ticker.', w / 2, canvas.height - 28);
+  return canvas;
+}
 
-  // ── Team names ────────────────────────────────────────────
-  ctx.font = 'bold 44px sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillStyle = colors.home;
-  ctx.fillText(homeName, w / 2 - 90, 155);
-  ctx.textAlign = 'left';
-  ctx.fillStyle = colors.away;
-  ctx.fillText(awayName, w / 2 + 90, 155);
-
-  // ── Score ─────────────────────────────────────────────────
-  ctx.font = 'bold 160px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = colors.home;
-  ctx.fillText(String(hScore), w / 2 - 120, 290);
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillText(':', w / 2, 280);
-  ctx.fillStyle = colors.away;
-  ctx.fillText(String(aScore), w / 2 + 120, 290);
-
-  // ── Divider ───────────────────────────────────────────────
-  if (sorted.length > 0) {
-    ctx.strokeStyle = '#1e1e1e';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(pad, scoreBlockH);
-    ctx.lineTo(w - pad, scoreBlockH);
-    ctx.stroke();
-
-    // ── Goal rows ──────────────────────────────────────────
-    const colSnapshot = pad + 24;
-    const colMinute   = colSnapshot + 200;
-    const colName     = colMinute + 110;
-
-    let y = scoreBlockH + 44;
-    sorted.forEach(e => {
-      const name = e.isOwnGoal ? 'Eigentor' : ((e.scorer && e.scorer !== '—') ? e.scorer : '');
-      const color = e.team === 'home' ? colors.home : colors.away;
-
-      // Subtle row bg
-      ctx.fillStyle = 'rgba(255,255,255,0.03)';
-      roundRect(ctx, pad, y - 30, w - pad * 2, 42, 8);
-      ctx.fill();
-
-      // snapshot
-      ctx.fillStyle = color;
-      ctx.font = '600 26px monospace';
-      ctx.textAlign = 'left';
-      ctx.fillText(e.typ === 'wechsel' ? 'Wechsel' : e.snapshot, colSnapshot, y);
-
-      // minute
-      ctx.fillStyle = '#999';
-      ctx.font = '500 26px monospace';
-      if (e.minute != null && e.minute > 0) ctx.fillText(`${e.minute}'`, colMinute, y);
-
-      // name
-      ctx.fillStyle = color;
-      ctx.font = '600 26px monospace';
-      if (e.typ === 'wechsel') {
-        const parts = [
-          { text: e.rausName || '–', color: '#ff6262' },
-          { text: ' <-> ', color: '#999' },
-          { text: e.reinName || '–', color: '#55df8c' }
-        ];
-        const width = parts.reduce((sum, part) => sum + ctx.measureText(part.text).width, 0);
-        ctx.save();
-        ctx.translate(colName, y);
-        ctx.scale(Math.min(1, (w - pad - colName - 24) / Math.max(1, width)), 1);
-        let x = 0;
-        parts.forEach(part => {
-          ctx.fillStyle = part.color;
-          ctx.fillText(part.text, x, 0);
-          x += ctx.measureText(part.text).width;
-        });
-        ctx.restore();
-      } else if (name) ctx.fillText(name, colName, y);
-
-      y += goalLineH;
+async function prepareMatchCanvas(options) {
+  async function load(name) {
+    const src = getTeamLogo(name);
+    if (!src) return null;
+    return new Promise(resolve => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => resolve(null), 5000);
+      img.onload = () => { clearTimeout(timer); resolve(img); };
+      img.onerror = () => { clearTimeout(timer); resolve(null); };
+      img.src = src;
     });
   }
-
-  // ── Footer ────────────────────────────────────────────────
-  return canvas;
+  const [homeCrest, awayCrest] = await Promise.all([load(options.homeName), load(options.awayName)]);
+  return renderMatchCanvas({...options, homeCrest, awayCrest});
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -2326,8 +2288,7 @@ function exportImage() {
   const { home, away } = getMatchTeams();
   const sorted = [...events].sort((a,b) => a.id - b.id);
   const dateStr = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
-  const canvas = renderMatchCanvas({ homeName: home, awayName: away, hScore: homeScore, aScore: awayScore, sorted, dateStr });
-  shareCanvas(canvas);
+  prepareMatchCanvas({ homeName: home, awayName: away, hScore: homeScore, aScore: awayScore, sorted, dateStr, statusLabel: timerBase !== null ? 'LIVE' : 'SPIELSTAND' }).then(canvas => shareCanvas(canvas)).catch(() => showToast('Bild konnte nicht erstellt werden.'));
 }
 
 function exportImageForMatch(matchId) {
@@ -2344,16 +2305,15 @@ function exportImageForMatch(matchId) {
   } else {
     dateStr = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
   }
-  const canvas = renderMatchCanvas({
+  prepareMatchCanvas({
     homeName,
     awayName,
     hScore: m.result.home,
     aScore: m.result.away,
     sorted,
     dateStr,
-    statusLabel: m.abandoned ? 'ABBRUCH · ZWISCHENSTAND' : '',
-  });
-  shareCanvas(canvas, m.abandoned ? 'spielabbruch.png' : 'ergebnis.png');
+    statusLabel: m.abandoned ? 'ABBRUCH · ZWISCHENSTAND' : 'ENDSTAND',
+  }).then(canvas => shareCanvas(canvas, m.abandoned ? 'spielabbruch.png' : 'ergebnis.png')).catch(() => showToast('Bild konnte nicht erstellt werden.'));
 }
 
 function showToast(msg) {
@@ -3693,6 +3653,7 @@ async function loadGlobalFromFirebase(cb) {
 // ─── TICKER MODE ─────────────────────────────────────────────────────────────
 function initTickerMode(matchId) {
   document.body.classList.add('ticker-mode');
+  const loading = MatchTrackerLoader.start(['match', 'roster', 'teams', 'coaches', 'participants']);
 
   document.title = 'Live-Ticker';
 
@@ -3716,6 +3677,7 @@ function initTickerMode(matchId) {
   let liveParticipantsPublishedAt = null;
   firebase.database().ref('matchParticipants/' + matchId).on('value', snapshot => {
     const entry = snapshot.val();
+    loading.ready('participants');
     liveCoachIds = Object.values(entry?.coachIds || []);
     liveParticipantsPublishedAt = entry?.publishedAt || entry?.updatedAt || null;
     liveParticipantIds = entry ? Object.values(entry.playerIds || []) : null;
@@ -3736,17 +3698,20 @@ function initTickerMode(matchId) {
       globalThis.MatchTrackerSeasonGoals = numbers;
     }
     if (tickerData) updateTickerUI(tickerData, lastScore);
-  });
+    if (records) loading.ready('roster');
+  }, () => loading.fail());
 
   firebase.database().ref('app/trainer').on('value', snapshot => {
     coaches = Object.values(snapshot.val() || {}).filter(Boolean);
     if (tickerData) updateTickerUI(tickerData, lastScore);
+    loading.ready('coaches');
   });
 
   // Resolve club branding even for matches started before the club was linked.
   firebase.database().ref('app/teams').on('value', snapshot => {
     teams = Object.values(snapshot.val() || {}).filter(Boolean);
     if (tickerData) updateTickerUI(tickerData, lastScore);
+    loading.ready('teams');
   });
 
   // Spieluhr live hochzählen im Ticker – berechnet direkt aus Admin-timerBase/timerOffset
@@ -3775,6 +3740,7 @@ function initTickerMode(matchId) {
     const data = snapshot.val();
     if (!data) {
       document.getElementById('tickerUpdated').textContent = 'Kein Spiel gefunden';
+      loading.fail('Kein Spiel gefunden.');
       return;
     }
     data.participantsPublishedAt = liveParticipantsPublishedAt;
@@ -3783,6 +3749,7 @@ function initTickerMode(matchId) {
     tickerData = data;
     tickerDataReceivedAt = Date.now();
     updateTickerUI(data, lastScore);
+    loading.ready('match');
     for (const event of detectNewEvents(data.events)) enqueueTickerOverlay(event, data);
     lastScore = { h: data.homeScore, a: data.awayScore };
   });
@@ -4087,6 +4054,8 @@ function updateTickerUI(data, lastScore, headerOnly = false) {
       item.className = 'event-item ' + eventCssClass(e);
       item.dataset.team = e.typ === 'kommentar' && !['home', 'away'].includes(e.team) ? '' : e.team === 'away' ? 'away' : 'home';
       item.dataset.type = e.typ || 'tor';
+      if (!(e.minute > 0)) item.classList.add('no-minute');
+      if (e.typ === 'kommentar' && isCommentPhoto(e.photo) && !isImageOnlyComment(e)) item.classList.add('comment-with-photo');
       item.dataset.eventId = String(e.id);
       if (pendingFeedGoals.has(String(e.id))) item.classList.add('feed-goal-pending');
       if (pendingFeedSubs.has(String(e.id))) item.classList.add('feed-sub-pending');
@@ -4261,11 +4230,13 @@ function checkAccess() {
     initTickerMode(tickerId);
   } else {
     initFirebase();
+    const loading = !DEV_MODE ? globalThis.MatchTrackerLoader?.start(['match', 'roster', 'teams']) : null;
     // Branding loads independently of the larger roster/schedule request.
     // Never save or restore match state in this listener: a match may be running.
     if (!DEV_MODE) firebase.database().ref('app/teams').on('value', snapshot => {
       teams = Object.values(snapshot.val() || {}).filter(Boolean);
       refreshReporterBranding();
+      loading?.ready('teams');
     });
     // Phase 2: globale Daten (Kader/Spielplan/Teams) aus Firebase laden
     // und localStorage-Stand ggf. überschreiben
@@ -4279,6 +4250,7 @@ function checkAccess() {
           if (storageReady) recalculatePlayerStats();
         }
         renderKaderList(); renderPickerPlayers(); renderEvents();
+        if (records) loading?.ready('roster');
       });
       try {
         if (DEV_MODE) {
@@ -4319,11 +4291,13 @@ function checkAccess() {
         document.getElementById('storageLoading').style.display = 'none';
         updateTickerUI(matchSnapshot(), null, true);
         storageStatus('Speicher bereit. Live-Spielstände werden direkt übertragen.');
+        loading?.ready('match');
       } catch(e) {
         // A previously tracked game can continue offline; starting a fixture cannot.
         storageReady = true;
         document.getElementById('storageLoading').style.display = 'none';
         storageStatus('Offline oder Laden fehlgeschlagen. Bitte Verbindung prüfen.', true);
+        loading?.fail();
       }
     });
   }
