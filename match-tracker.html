@@ -1691,6 +1691,7 @@ function save(matchReady) {
   if (!storageReady || matchTransition || PAGE_PARAMS.has('ticker')) return;
   localStorageFailed = false;
   recalculatePlayerStats();
+  renderEvents();
   try {
     const existing = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
     localStorage.setItem(STATE_KEY, JSON.stringify({
@@ -2582,7 +2583,7 @@ function editParticipants(id) {
 }
 
 function renderKaderList() {
-  recalculatePlayerStats();
+  // Rendering must not overwrite live totals with a not-yet-restored local match.
   const list = document.getElementById('kaderList');
   if (!list) return;
   if (!squad.length) { list.innerHTML='<div class="kader-empty">Noch keine Spieler hinterlegt</div>'; return; }
@@ -4312,7 +4313,7 @@ function checkAccess() {
         const appearances = (await readStoredValue(firebase.database().ref('matchParticipants'))).val() || {};
         schedule.forEach(m => { if (appearances[m.id]) { m.participantIds = Object.values(appearances[m.id].playerIds || []); m.coachIds = Object.values(appearances[m.id].coachIds || []); m.participantsPublishedAt = appearances[m.id].publishedAt || appearances[m.id].updatedAt || null; } });
         await loadTrainingForStats();
-        recalculatePlayerStats(); renderKaderList();
+        recalculatePlayerStats(); renderKaderList(); renderPickerPlayers(); renderEvents();
         renderSpielplan();
         storageReady = true;
         document.getElementById('storageLoading').style.display = 'none';

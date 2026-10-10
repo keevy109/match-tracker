@@ -23,3 +23,11 @@ Die Saisontor-Nummer einer Meldung wird nach Ereignis-ID (Erfassungszeitpunkt) a
 Der neue Service ist hiervon technisch getrennt: matchtracker-service/server/dev.ts verwendet .local/pilot.sqlite; der veröffentlichte alte Ticker verwendet Firebase. Die Fehler liegen in den unterschiedlichen Datenwegen des alten Tickers, nicht in einer Service-Datenmigration. Änderungen am alten Ticker während der Weiterentwicklung sind davon zu unterscheiden.
 
 Validierung: 143 Node-Tests bestanden, darunter Live-Kaderwechsel, historische Torkorrektur, Archivfilter, manuelle Toranpassung und Unveränderlichkeit eines pausierten Spiels; Produktionsbuild erfolgreich.
+
+## Reporter: verbleibender Fehler in der Ladereihenfolge
+
+Rückmeldung: Mats zeigte beim Eintragenden 6 statt 7, Jonah 6 statt 10; die Vereins-Kaderseite war korrekt. Die erste Korrektur berücksichtigte einen Seiteneffekt nicht: renderKaderList rief selbst recalculatePlayerStats auf und konnte dadurch frisch geladene Statistikwerte mit dem noch nicht wiederhergestellten lokalen Spiel überschreiben. Nach der abschließenden Wiederherstellung und Neuberechnung fehlte außerdem das erneute Zeichnen der Tormeldungen.
+
+renderKaderList stellt jetzt ausschließlich die bereits berechneten Werte dar. Nach dem Wiederherstellen des Spiels werden Kader, Spielerauswahl und Tormeldungen gemeinsam aktualisiert. Auch nach lokalen Änderungen werden Saisontor-Labels nach der Berechnung neu gezeichnet. Keine Migration und kein zusätzlicher Datenbank-Schreibzugriff; Status, Uhr und Ereignisse bleiben bestehen.
+
+Zwei neue Regressionstests schlugen vor der Korrektur fehl und bestehen danach: unveränderte frische Statistik beim Zeichnen des Kaders und erneute Darstellung nach abgeschlossener Startberechnung. Alle 145 Tests und der Produktionsbuild bestehen.
