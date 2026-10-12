@@ -48,7 +48,7 @@ test('substitution displays both players and comment is literal text',()=>{
  c.showGoalOverlay({id:3,typ:'kommentar',text:'<b>Test</b>'},{});
  assert.equal(nodes.goalOverlayTitle.textContent,'Text');assert.equal(nodes.goalOverlayScorer.textContent,'<b>Test</b>');assert.equal(nodes.goalOverlayScore.textContent,'');
  c.showGoalOverlay({id:4,team:'home',snapshot:'1:0'},{homeTeam:'Heim'});
- assert.equal(nodes.goalOverlayTitle.textContent,'Tor für');assert.equal(nodes.goalOverlayScore.textContent,'1:0');assert.equal(nodes.goalOverlayEmoji.style.display,'none');
+ assert.equal(nodes.goalOverlayTitle.textContent,'Führungstreffer für');assert.equal(nodes.goalOverlayScore.textContent,'1:0');assert.equal(nodes.goalOverlayEmoji.style.display,'none');
 });
 test('multiple events are displayed in sequence instead of replacing each other',()=>{
  const {c,nodes,timers}=context();c.enqueueTickerOverlay({id:1,typ:'kommentar',text:'Erster'},{});c.enqueueTickerOverlay({id:2,typ:'kommentar',text:'Zweiter'},{});
@@ -117,10 +117,10 @@ test('substitution overlays suppress stored minutes before play and show them wh
 });
 
 
-test('opponent overlay uses goal situation labels and resets to the default for other goals',()=>{
- for(const team of ['home','away']) {
+test('overlay uses goal situation labels for both own and opponent goals and resets to default',()=>{
+ for(const team of ['home','away']) for(const isHomeTeam of [true,false]) {
   const {c,nodes}=context();
-  const data={isHomeTeam:team==='away'};
+  const data={isHomeTeam};
   for(const [goals,own,title] of [[1,0,'Führungstreffer für'],[2,2,'Ausgleichstreffer für'],[2,3,'Anschlusstreffer für'],[4,2,'Tor für'],[1,4,'Tor für']]) {
    const snapshot=team==='home'?`${goals}:${own}`:`${own}:${goals}`;
    c.showGoalOverlay({typ:'tor',team,snapshot},data);
@@ -129,6 +129,6 @@ test('opponent overlay uses goal situation labels and resets to the default for 
   c.showGoalOverlay({typ:'tor',team,snapshot:''},data);
   assert.equal(nodes.goalOverlayTitle.textContent,'Tor für');
   c.showGoalOverlay({typ:'tor',team,snapshot:team==='home'?'1:0':'0:1'},{isHomeTeam:team==='home'});
-  assert.equal(nodes.goalOverlayTitle.textContent,'Tor für');
+  assert.equal(nodes.goalOverlayTitle.textContent,'Führungstreffer für');
  }
 });

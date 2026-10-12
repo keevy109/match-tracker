@@ -3841,8 +3841,7 @@ function showGoalOverlay(event, data, onDone = () => {}) {
     : event.team;
   card.classList.toggle('event-message', !isGoal);
   card.classList.toggle('image-only', isImageOnlyComment(event));
-  const ownSide = data.isHomeTeam === false ? 'away' : 'home';
-  const goalLabel = isGoal && event.team !== ownSide ? opponentGoalLabel(event) : '';
+  const goalLabel = isGoal ? opponentGoalLabel(event) : '';
   document.getElementById('goalOverlayTitle').textContent = isGoal ? (goalLabel ? goalLabel + ' für' : 'Tor für') : kind === 'wechsel' ? 'Wechsel' : 'Text';
 
   // Farbe des Teams, dem das Tor zugesprochen wird.
