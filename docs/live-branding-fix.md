@@ -75,3 +75,8 @@ Browserprüfung mit isolierter Ladeansicht: beide Zeichenphasen und vollständig
 Der vollständige Animationszyklus dauert jetzt 1,8 statt 3,6 Sekunden und wiederholt sich unbegrenzt, bis die erforderlichen Daten geladen sind. Ticker und Vereinswebseite teilen public/ticker-loader.css und denselben SVG-Loader. Die Vereinswebseite behält ihren klickpflichtigen Startbildschirm. Erst nach dessen Ausblenden startet der Loader. Kader, Nachrichten, Statistiken, Spielplan und Spieltagsprüfung werden parallel abgewartet; anschließend blendet #app ohne bleibenden Stacking Context ein. Bereits vorhandene Fehler-/Fallbackanzeigen der Module bleiben erhalten. Es wird keine Mindestwartezeit erzwungen. Reduced Motion bleibt unterstützt.
 
 Validierung: 151 Tests und Produktionsbuild bestanden. Der Startbildschirm bleibt erhalten; nach dem Klick folgen „Webseite wird geladen …“ und anschließend das Einblenden der Vereinsinhalte.
+
+
+## Gegner-Tor-Cards: Wappen und Trefferart (12.10.2026)
+
+Nur im bestehenden Matchtracker: Das Wappen in Tor-Cards liegt mit z-index:-1 hinter dem Inhalt. Bei Gegnertoren nutzt der gemeinsame Renderer für Reporter und Zuschauer den unveränderten `event-season-goals`-Stil für die Trefferart. Aus dem Spielstand-Snapshot nach dem Tor: Vorsprung genau 1 = Führungstreffer (vorher Gleichstand), Gleichstand = Ausgleichstreffer, Rückstand genau 1 = Anschlusstreffer. Bei Führungsausbau, größerem Rückstand oder ungültigem/fehlendem Snapshot bleibt der Zusatz weg. Heim-/Auswärtsrolle wird berücksichtigt; eigene Saisontore bleiben unverändert. Keine Änderung an gespeicherten Spielen oder am Service.

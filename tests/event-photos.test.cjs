@@ -48,3 +48,21 @@ test('stored substitution minutes are hidden in trainer and spectator cards unti
   }
  }
 });
+
+
+test('opponent goal labels use the resulting score for both match sides and views', () => {
+ for (const team of ['home','away']) for (const trainer of [true,false]) {
+  const ownSide = team === 'home' ? 'away' : 'home';
+  for (const [opponent, own, label] of [[1,0,'Führungstreffer'],[3,2,'Führungstreffer'],[2,2,'Ausgleichstreffer'],[2,3,'Anschlusstreffer'],[4,2,''],[1,4,'']]) {
+   const snapshot = team === 'home' ? `${opponent}:${own}` : `${own}:${opponent}`;
+   const result = c.buildEventItemHtml({id:800,team,snapshot,seasonGoals:99},'Heim','Gast',trainer,{ownSide});
+   if(label) assert.ok(result.includes(`<span class="event-season-goals">${label}</span>`));
+   else assert.doesNotMatch(result,/event-season-goals/);
+   assert.doesNotMatch(result,/Saisontor/);
+  }
+ }
+});
+test('missing or invalid opponent scores do not invent a goal label', () => {
+ for (const snapshot of [undefined,'','invalid','0:0','-1:0'])
+  assert.doesNotMatch(c.buildEventItemHtml({id:801,team:'home',snapshot},'Heim','Gast',false,{ownSide:'away'}),/event-season-goals/);
+});
