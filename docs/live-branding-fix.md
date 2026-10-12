@@ -80,3 +80,5 @@ Validierung: 151 Tests und Produktionsbuild bestanden. Der Startbildschirm bleib
 ## Gegner-Tor-Cards: Wappen und Trefferart (12.10.2026)
 
 Nur im bestehenden Matchtracker: Das Wappen in Tor-Cards liegt mit z-index:-1 hinter dem Inhalt. Bei Gegnertoren nutzt der gemeinsame Renderer für Reporter und Zuschauer den unveränderten `event-season-goals`-Stil für die Trefferart. Aus dem Spielstand-Snapshot nach dem Tor: Vorsprung genau 1 = Führungstreffer (vorher Gleichstand), Gleichstand = Ausgleichstreffer, Rückstand genau 1 = Anschlusstreffer. Bei Führungsausbau, größerem Rückstand oder ungültigem/fehlendem Snapshot bleibt der Zusatz weg. Heim-/Auswärtsrolle wird berücksichtigt; eigene Saisontore bleiben unverändert. Keine Änderung an gespeicherten Spielen oder am Service.
+
+Das Tor-Overlay verwendet für Gegnertore dieselbe Snapshot-Logik: „Führungstreffer für“, „Ausgleichstreffer für“ oder „Anschlusstreffer für“. Ansonsten und bei eigenen Toren bleibt „Tor für“ der Standard. Overlay-Tests decken beide Heim-/Auswärtsrollen, alle drei Fälle und den Rückfall auf den Standard ab.

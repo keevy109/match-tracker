@@ -115,3 +115,20 @@ test('substitution overlays suppress stored minutes before play and show them wh
   c.showGoalOverlay(event,data);assert.equal(nodes.goalOverlayMinute.textContent,'1. Minute');
  }
 });
+
+
+test('opponent overlay uses goal situation labels and resets to the default for other goals',()=>{
+ for(const team of ['home','away']) {
+  const {c,nodes}=context();
+  const data={isHomeTeam:team==='away'};
+  for(const [goals,own,title] of [[1,0,'Führungstreffer für'],[2,2,'Ausgleichstreffer für'],[2,3,'Anschlusstreffer für'],[4,2,'Tor für'],[1,4,'Tor für']]) {
+   const snapshot=team==='home'?`${goals}:${own}`:`${own}:${goals}`;
+   c.showGoalOverlay({typ:'tor',team,snapshot},data);
+   assert.equal(nodes.goalOverlayTitle.textContent,title);
+  }
+  c.showGoalOverlay({typ:'tor',team,snapshot:''},data);
+  assert.equal(nodes.goalOverlayTitle.textContent,'Tor für');
+  c.showGoalOverlay({typ:'tor',team,snapshot:team==='home'?'1:0':'0:1'},{isHomeTeam:team==='home'});
+  assert.equal(nodes.goalOverlayTitle.textContent,'Tor für');
+ }
+});
