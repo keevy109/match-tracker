@@ -104,8 +104,8 @@ function renderKader() {
       ${avatar}
       <div class="kl-name">${p.name}</div>
       <div class="kl-stat" data-col="goals">${p.goals ?? 0}</div>
-      <div class="kl-stat" data-col="games">${p.games ?? 0}</div>
-      <div class="kl-stat" data-col="training">${p.training ?? 0}<span class="kl-pct">%</span></div>
+      <div class="kl-stat" data-col="games" title="${p.games ?? 0} von ${p.gamesTotal ?? 0} Spielen">${p.games ?? 0}${p.gamesTotal ? `<span class="kl-pct"> · ${Math.round((p.games ?? 0) / p.gamesTotal * 100)}%</span>` : ''}</div>
+      <div class="kl-stat" data-col="training" title="${p.trainingAttended ?? 0} von ${p.trainingTotal ?? 0} Einheiten">${p.training ?? 0}<span class="kl-pct">%</span>${p.trainingTotal ? ` · ${p.trainingAttended ?? 0}` : ''}</div>
     </div>`;
   }).join('');
 
