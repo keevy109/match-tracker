@@ -33,7 +33,7 @@ const SORT_COLS = [
   { field: 'name',     label: 'Name',   right: false },
   { field: 'goals',    label: 'Tore',   right: true  },
   { field: 'games',    label: 'Spiele', right: true  },
-  { field: 'training', label: 'Train.', right: true  },
+  { field: 'training', label: 'Training', right: true  },
 ];
 
 function sortedSquad() {
@@ -242,8 +242,19 @@ function applyPlayerContent(player) {
   set('kdPos',    '');
   set('kdLN', (player.name || '–').toUpperCase());
   set('kdGoals',    player.goals    ?? 0);
-  set('kdGames',    player.games    ?? 0);
-  set('kdTraining', (player.training ?? 0) + ' %');
+  setCountPct('kdGames', player.games ?? 0, player.gamesTotal ? Math.round((player.games ?? 0) / player.gamesTotal * 100) : null);
+  setCountPct('kdTraining', player.trainingAttended ?? 0, player.trainingTotal ? player.training ?? 0 : null);
+}
+
+function setCountPct(id, count, pct) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = count;
+  if (pct === null) return;
+  const span = document.createElement('span');
+  span.className = 'kd-pct';
+  span.textContent = ` (${pct}%)`;
+  el.appendChild(span);
 }
 
 function showDetail(player) {
