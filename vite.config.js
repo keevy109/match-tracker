@@ -81,7 +81,7 @@ export default defineConfig({
   server: { port: 4321 },
   build: {
     rollupOptions: {
-      input: { main: 'index.html', tracker: 'match-tracker.html', admin: 'admin.html' },
+      input: { main: 'index.html', tracker: 'match-tracker.html', share: 'share-embed.html', fixtures: 'ticker-dev.html', features: 'feature-settings.html', design: 'design-system.html', scoreboard: 'scoreboard.html', crossTracker: 'cross-tracker.html', admin: 'admin.html' },
     },
   },
 });

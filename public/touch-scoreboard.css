@@ -1,0 +1,22 @@
+body.touch-scoreboard-open { overflow:hidden!important; }
+#touchScoreboard[hidden],#touchScoreboard [hidden] { display:none!important; }
+#touchScoreboard { position:fixed; inset:0; z-index:9000; background:var(--feed-page,#eef0ef); color:var(--feed-text,#17251e); display:flex; flex-direction:column; padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); overflow:auto; }
+#touchScoreboard header { display:flex!important; align-items:center; flex-wrap:wrap; gap:12px; padding:0 0 12px; }
+#touchStatus { flex:1; font-size:12px; }
+#touchScoreboard button { min-height:56px; padding:12px 20px; border:0; border-radius:12px; font:700 18px system-ui; cursor:pointer; touch-action:manipulation; }
+#touchScoreboard button:focus-visible { outline:4px solid #e9b532; outline-offset:3px; }
+#touchScoreboard button:disabled { opacity:.45; cursor:default; }
+#touchGame { display:flex; flex-direction:column; flex:1; min-height:0; }
+.touch-teams { display:grid; grid-template-columns:1fr 1fr; gap:16px; flex:1; min-height:230px; }
+#touchScoreboard .touch-teams button { position:relative; isolation:isolate; overflow:hidden; container-type:inline-size; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:linear-gradient(#0003,#0006),var(--team-color); user-select:none; -webkit-user-select:none; }
+.touch-name { font-size:clamp(20px,3vw,44px); overflow-wrap:anywhere; }
+.touch-score { position:relative; z-index:1; font-size:min(clamp(210px,60vmin,720px),var(--score-width,88cqw)); line-height:.9; font-variant-numeric:tabular-nums; }
+.touch-crest { position:absolute; right:0; bottom:-33%; height:140%; width:auto; max-width:none; object-fit:contain; opacity:.4; z-index:-1; pointer-events:none; }
+.touch-name,.touch-teams small { position:relative; z-index:1; }
+.touch-teams small { font-size:14px; opacity:.8; }
+#touchScoreboard footer { display:flex; gap:12px; justify-content:space-between; flex-wrap:wrap; padding-top:16px; }
+#touchClock { flex:1; font-variant-numeric:tabular-nums; }
+#touchSetup { width:min(100%,500px); margin:auto; }
+#touchSetup label { display:block; margin:18px 0; }
+#touchSetup input { display:block; width:100%; font:inherit; padding:16px; }
+@media(max-width:600px) { #touchScoreboard button { font-size:15px; padding:10px; } .touch-teams { gap:8px; } }

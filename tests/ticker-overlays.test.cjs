@@ -11,8 +11,9 @@ function context() {
     setTimeout: fn => { timers.push(fn); return timers.length; },
     clearTimeout() {},
     document: {
+      body: { append() {}, classList: { contains() { return false; } } },
       getElementById: id => nodes[id] ??= {
-        textContent: '', src: '', style: {},
+        textContent: '', src: '', style: {}, hidden: true, append() {},
         classList: { add() {}, remove() {}, toggle() {} },
       },
     },

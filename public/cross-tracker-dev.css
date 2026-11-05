@@ -1,0 +1,33 @@
+.cross-demo{padding:20px;background:#142d25;color:#fff;border-radius:16px}#crossControls{display:flex;gap:8px;flex-wrap:wrap}#crossControls button{padding:10px;border:0;border-radius:6px;cursor:pointer}#crossStage{position:relative;height:650px;background:#101617;overflow:hidden;border-radius:12px}#crossStage iframe{position:absolute;border:0;width:29%;height:200px;right:12px;top:70px;background:#fff;z-index:2;box-shadow:0 8px 25px #0007;transition:top .3s,width .3s}#crossStage iframe.main{inset:0;width:100%;height:100%;z-index:1;box-shadow:none}#crossStage iframe.side-two{top:290px}@media(max-width:700px){#crossStage{height:700px}#crossStage iframe.main{height:480px}#crossStage iframe:not(.main){top:auto;bottom:8px;left:1%;width:48%;height:200px}#crossStage iframe.side-two{left:51%}}
+.cross-embed{margin:0;box-sizing:border-box;height:100dvh;background:#142d25;color:#fff;font:14px system-ui;display:flex;flex-direction:column;gap:8px;padding:10px;overflow:hidden}.cross-embed>header{display:flex;gap:12px;align-items:center}.cross-embed>header span{flex:1;font-size:12px}.cross-embed #crossStage{flex:1;min-height:0;height:auto}.cross-embed #crossStatus{margin:0}.cross-embed #crossStage iframe:not(.main){height:28%;top:12%}.cross-embed #crossStage iframe.side-two{top:44%}@media(max-width:700px){.cross-embed #crossStage iframe.main{height:65%}.cross-embed #crossStage iframe:not(.main){top:auto;bottom:0;height:33%}}
+/* Each row is the unchanged 100px compact score embed. */
+body.cross-embed.cross-compact{padding:0;gap:0;background:transparent;overflow:auto}
+.cross-compact>header,.cross-compact #crossControls,.cross-compact #crossStatus{display:none!important}
+.cross-compact #crossStage{display:flex;flex-direction:column;gap:0;height:auto;flex:none;overflow:visible;border-radius:0;background:transparent}
+.cross-compact #crossStage iframe,.cross-compact #crossStage iframe.main,.cross-compact #crossStage iframe.side-two{position:relative;inset:auto;width:100%;height:100px;min-height:100px;flex:none;box-shadow:none;transition:none;border:0}
+.cross-scores #crossStage iframe,.cross-scores #crossStage iframe.main,.cross-scores #crossStage iframe.side-two{height:200px;min-height:200px}
+.cross-embed[data-style="dark"]{background:#101617;color:#fff}
+.cross-score-row{flex:none;background:#fff;color:#17251e;border-bottom:1px solid #bbc4bf}
+.cross-expand{display:block;width:100%;padding:10px 14px;min-height:40px;text-align:left;background:transparent;color:inherit;border:0;font:600 14px system-ui;cursor:pointer}
+.cross-expand:focus-visible{outline:3px solid #d9841c;outline-offset:-3px}
+.cross-compact #crossStage .cross-score-row iframe{display:block;height:100px;min-height:100px;transition:height .25s ease}
+.cross-compact #crossStage .cross-score-row.expanded iframe{height:200px;min-height:200px}
+[data-style="dark"] .cross-score-row{background:#101617;color:#fff;border-color:#38413c}
+@media(prefers-reduced-motion:reduce){.cross-compact #crossStage .cross-score-row iframe{transition:none}}
+.cross-compact.cross-simulate #crossControls{display:flex!important;padding:8px;flex:none;background:#142d25}
+.cross-goal-overlay{position:fixed;inset:0;width:100%;height:100%;border:0;z-index:10000;background:#101617}
+.cross-goal-overlay[hidden]{display:none!important}
+.cross-score-row{position:relative}
+.cross-open-ticker{display:block;width:100%;min-height:32px;padding:7px 12px;text-align:left;border:0;background:transparent;color:inherit;font:600 13px system-ui;cursor:pointer}
+.cross-open-ticker:focus-visible{outline:3px solid #d9841c;outline-offset:-3px}
+.cross-score-hit{position:absolute;inset:32px 0 0;width:100%;border:0;background:transparent;cursor:pointer}
+.cross-score-row:has(.cross-expand) .cross-score-hit{top:72px}
+.has-focused-game .collapsed-game>:not(.cross-open-ticker){display:none!important}
+.has-focused-game .focused-game>.cross-score-hit,.has-focused-game .focused-game>.cross-expand{display:none!important}
+.cross-compact #crossStage .focused-game iframe{height:600px;min-height:600px}
+.cross-scores #crossStage .cross-score-row:not(.focused-game) iframe{height:200px;min-height:200px}
+.cross-open-ticker{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cross-open-ticker strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.cross-open-ticker span{flex:none;white-space:nowrap;font-size:12px;font-weight:400}
+.has-focused-game .collapsed-game>iframe{display:block!important}
+.cross-compact #crossStage .collapsed-game iframe{height:36px!important;min-height:36px!important}

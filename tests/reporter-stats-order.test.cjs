@@ -25,7 +25,7 @@ test('rendering the reporter roster cannot replace fresh season totals with stal
 test('reporter startup redraws goal cards after restoring the match and recalculating totals', async () => {
   let rendered, completed;
   const c = vm.createContext({
-    URLSearchParams, window:{location:{search:''}}, DEV_MODE:false,
+    URLSearchParams, window:{location:{search:''}}, ANONYMOUS_SCOREBOARD:false, DEV_MODE:false,
     checkAccess:() => true, initFirebase(){},
     firebase:{database:() => ({ref:path => ({path,on(){}})})},
     MatchTrackerLiveRoster:{subscribe(){}},

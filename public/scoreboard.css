@@ -1,0 +1,28 @@
+/* Mobile keeps the existing feed and compact sticky scoreboard. */
+.scoreboard-panel, .scoreboard-feed { display:contents; }
+@media (min-width:1024px) {
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) { max-width:none; width:100%; margin-inline:auto; height:100dvh; min-height:0; overflow:hidden; box-sizing:border-box; }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) #tabSpiel.active {
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-rows:var(--feed-height,300px) minmax(0,1fr);
+    gap:16px; align-items:stretch; padding:16px; box-sizing:border-box; flex:1; min-height:0; overflow:hidden;
+  }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) #tabSpiel > .feed-result-space { grid-column:1 / -1; height:var(--feed-height,300px); }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .scoreboard-panel {
+    display:flex; flex-direction:column; min-width:0; position:relative; top:auto; min-height:0;
+    overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin;
+    background:var(--feed-surface); border-radius:16px;
+  }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .scoreboard-feed { display:block; min-width:0; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; overflow-anchor:none; }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .feed-result-header,
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode).feed-scrolled .feed-result-header {
+    position:relative; top:auto; left:auto; right:auto; width:100%; max-width:none;
+    margin:0; box-shadow:none; height:var(--feed-height,300px); padding-top:var(--feed-padding,64px);
+  }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .feed-result-logo { width:var(--feed-logo-width,160px); height:var(--feed-logo-height,160px); }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .feed-result-score > .feed-result-value { min-width:var(--feed-value-width,90px); height:var(--feed-value-height,110px); font-size:var(--feed-score-size,64px); padding-top:var(--feed-value-padding,24px); }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .feed-result-names { font-size:20px; }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .feed-result-time { font-size:18px; }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .scoreboard-panel > .btn-clear { margin:12px 20px; align-self:flex-start; }
+  body:is(.dev-mode,.entry-mode):not(.ticker-mode) .scoreboard-feed .events-header { margin-top:0; }
+}

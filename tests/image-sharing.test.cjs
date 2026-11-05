@@ -1,34 +1,5 @@
-const {test} = require('node:test');
-const assert = require('node:assert/strict');
-const vm = require('node:vm');
-const fs = require('node:fs');
-const source = fs.readFileSync('match-tracker.html', 'utf8').split('async function shareCanvas')[1].split('\nfunction exportImage()')[0];
-function setup(share) {
-  const calls = [];
-  const context = {navigator:{canShare:()=>true, share}, Uint8Array, atob,
-    File:class {constructor(parts,name){this.name=name;}},
-    URL:{createObjectURL:()=> 'blob:test', revokeObjectURL:()=>calls.push('revoke')},
-    document:{body:{appendChild:()=>calls.push('append')},createElement:()=>({click:()=>calls.push('download'),remove:()=>{}})},
-    setTimeout:()=>calls.push('deferred cleanup'), showToast:()=>{}, console};
-  vm.createContext(context);
-  vm.runInContext('async function shareCanvas'+source,context);
-  return {context,calls,canvas:{toDataURL:()=> 'data:image/png;base64,YQ=='}};
-}
-test('native sharing is invoked immediately from the click path', async()=>{
-  let shared = false;
-  const {context,canvas,calls} = setup(()=>{shared=true;return Promise.resolve();});
-  const pending=context.shareCanvas(canvas);
-  assert.equal(shared,true);
-  await pending;
-  assert.deepEqual(calls,[]);
-});
-test('failed sharing downloads the image and defers URL cleanup',async()=>{
-  const {context,canvas,calls}=setup(()=>Promise.reject({name:'NotAllowedError'}));
-  await context.shareCanvas(canvas);
-  assert.deepEqual(calls,['append','download','deferred cleanup']);
-});
-test('cancelling native sharing does not download',async()=>{
-  const {context,canvas,calls}=setup(()=>Promise.reject({name:'AbortError'}));
-  await context.shareCanvas(canvas);
-  assert.deepEqual(calls,[]);
-});
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+function setup(share){const elements=[];const context={window:{},navigator:{canShare:()=>true,share},File:class{},URL:Object.assign(URL,{createObjectURL:()=> 'blob:test',revokeObjectURL:()=>{}}),URLSearchParams,setTimeout,location:{search:''},document:{addEventListener(){},body:{append(){}},createElement(tag){const e={tag,children:[],append(...items){this.children.push(...items)},setAttribute(){},addEventListener(){},showModal(){this.open=true}};elements.push(e);return e;}}};vm.createContext(context);vm.runInContext(fs.readFileSync('public/share-embed.js','utf8'),context);return {api:context.window.MatchShare,elements};}
+test('image is prepared before a fresh share button click invokes native share',async()=>{let shared=false;const {api,elements}=setup(()=>{shared=true;return Promise.resolve()});await api.image({toBlob:done=>done({})},'score.png');assert.equal(shared,false);const button=elements.find(e=>e.textContent==='Bild teilen'&&e.tag==='button');const pending=button.onclick();assert.equal(shared,true);await pending;assert.equal(elements.find(e=>e.tag==='a').download,'score.png');});
+test('native cancellation is quiet; failure offers download',async()=>{for(const name of ['AbortError','NotAllowedError']){const {api,elements}=setup(()=>Promise.reject({name}));await api.image({toBlob:done=>done({})},'score.png');await elements.find(e=>e.tag==='button'&&e.textContent==='Bild teilen').onclick();assert.equal(!!elements.find(e=>e.tag==='p').textContent,name!=='AbortError');}});
+test('embed parameters are encoded and variants validated',()=>{const {api}=setup();assert.match(api.embed('123','score','dark'),/height="200"/);assert.match(api.embed('123','score-compact','light'),/height="100"/);assert.match(api.embed('"<bad>'),/%22%3Cbad%3E/);assert.throws(()=>api.embed('123','bad'));});

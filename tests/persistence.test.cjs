@@ -8,7 +8,7 @@ function setup(db={}, dev=false) {
  const store=new Map(),elements=new Map();
  const copy=x=>x==null?null:JSON.parse(JSON.stringify(x));
  const api={ref(key){return {on(){},once:async()=>({val:()=>copy(db[key])}),set:async value=>{if(db.fail)throw Error('denied');db[key]=copy(value)}}}};
- const c=vm.createContext({console,DEV_MODE:dev,URLSearchParams,window:{location:{search:''},addEventListener(){}},navigator:{onLine:true},setTimeout,clearTimeout,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k),key:i=>[...store.keys()][i],get length(){return store.size}},document:{getElementById(id){if(!elements.has(id))elements.set(id,{style:{},value:'Home vs. Away',textContent:'12.09.2026'});return elements.get(id)}},firebase:{database:Object.assign(()=>api,{ServerValue:{TIMESTAMP:123}})},firebaseReady:true,activeMatchId:1,homeScore:2,awayScore:5,isHomeTeam:false,events:[{id:4,minute:5,team:'away'}],squad:[{id:1,photo:'large-photo'}],schedule:[{id:1,opponent:'Home',isHome:false}],timerStarted:true,timerBase:null,timerOffset:300,homeLogo:'',awayLogo:'',homeColor:'',awayColor:'',elapsedSeconds:()=>300,getMatchTeams:()=>({home:'Home',away:'Away'}),getOurTeamName:()=> 'Away',getCanonicalTeamName:name=>name,showToast(){},applyTeamColors(){},updateScoreLabels(){},updateGoalButtons(){},updateScore(){},renderEvents(){},updateEndMatchBtn(){},updateTimerDisplay(){},startTimerLoop(){},stopTimerLoop(){},switchTab(){},resolveLogos(){},renderSpielplan(){},save(){},pauseTimer(){},resetTimer(){}});
+ const c=vm.createContext({MatchTiming:require('../public/match-timing.js'),matchTiming:null,restoreTimingForm(){},homeScore:0,awayScore:0,console,ANONYMOUS_SCOREBOARD:false,DEV_MODE:dev,URLSearchParams,window:{location:{search:''},addEventListener(){}},navigator:{onLine:true},setTimeout,clearTimeout,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k),key:i=>[...store.keys()][i],get length(){return store.size}},document:{getElementById(id){if(!elements.has(id))elements.set(id,{style:{},value:'Home vs. Away',textContent:'12.09.2026'});return elements.get(id)}},firebase:{database:Object.assign(()=>api,{ServerValue:{TIMESTAMP:123}})},firebaseReady:true,activeMatchId:1,homeScore:2,awayScore:5,isHomeTeam:false,events:[{id:4,minute:5,team:'away'}],squad:[{id:1,photo:'large-photo'}],schedule:[{id:1,opponent:'Home',isHome:false}],timerStarted:true,timerBase:null,timerOffset:300,homeLogo:'',awayLogo:'',homeColor:'',awayColor:'',elapsedSeconds:()=>300,getMatchTeams:()=>({home:'Home',away:'Away'}),getOurTeamName:()=> 'Away',getCanonicalTeamName:name=>name,showToast(){},applyTeamColors(){},updateScoreLabels(){},updateGoalButtons(){},updateScore(){},renderEvents(){},updateEndMatchBtn(){},updateTimerDisplay(){},startTimerLoop(){},stopTimerLoop(){},switchTab(){},resolveLogos(){},renderSpielplan(){},save(){},pauseTimer(){},resetTimer(){}});
  vm.runInContext(slice('// Durable match state:', '// ─── INIT ─')+slice('function syncToFirebase(', '// ─── FIREBASE GLOBAL SYNC')+slice('async function startMatchFromSchedule(', 'function updateEndMatchBtn()'),c);
  vm.runInContext('storageReady=true; syncWritePromise=Promise.resolve();',c);
  return {c,store,db,flush:()=>vm.runInContext('syncWritePromise',c),status:()=>elements.get('storageStatus')?.textContent};
@@ -45,4 +45,13 @@ test('match snapshots retain the initial play even if paused at zero seconds',()
  c.timerStarted=false;c.applyMatchSnapshot(1,saved);assert.equal(c.timerStarted,true);
  c.applyMatchSnapshot(2,{homeTeam:'Home',awayTeam:'Away',timerOffset:0});assert.equal(c.timerStarted,false);
  c.applyMatchSnapshot(3,{homeTeam:'Home',awayTeam:'Away',timerOffset:60});assert.equal(c.timerStarted,true);
+});
+
+test('period settings and boundary survive snapshot persistence and reload',async()=>{
+ const x=setup();
+ x.c.matchTiming={version:1,count:3,minutes:20,breaks:[5,7],period:1,periodStart:1240,breakStarted:123456,message:'Wasserpause'};
+ x.c.syncToFirebase();await x.flush();
+ assert.deepEqual(x.db['matches/1'].matchTiming,x.c.matchTiming);
+ const saved=x.db['matches/1'];x.c.matchTiming=null;x.c.applyMatchSnapshot(1,saved);
+ assert.equal(x.c.matchTiming.period,1);assert.equal(x.c.matchTiming.breakStarted,123456);
 });

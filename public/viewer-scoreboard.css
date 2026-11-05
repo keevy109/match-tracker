@@ -1,0 +1,21 @@
+.viewer-score-choices { display:flex; gap:8px; padding:12px; }
+.viewer-score-choices[hidden],#viewerScoreboard[hidden] { display:none!important; }
+.viewer-score-choices button,#viewerScoreboard nav button { padding:12px 16px; min-height:44px; border:0; border-radius:8px; font:600 16px system-ui; cursor:pointer; }
+body.viewer-score-open { overflow:hidden!important; }
+#viewerScoreboard { position:fixed; inset:0; z-index:9000; background:#101617; color:white; display:flex; flex-direction:column; padding:12px; gap:12px; }
+#viewerScoreboard nav { display:flex; justify-content:flex-end; gap:8px; }
+.viewer-score-teams { display:grid; grid-template-columns:1fr 1fr; gap:12px; flex:1; min-height:0; }
+.viewer-score-team { position:relative; isolation:isolate; overflow:hidden; container-type:inline-size; background:linear-gradient(#0003,#0005),var(--team-color); display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; padding:12px; }
+.viewer-score-team > img { position:absolute; right:0; bottom:-33%; height:140%; max-width:none; width:auto; opacity:.4; z-index:-1; object-fit:contain; }
+.viewer-team-name { font:700 clamp(18px,3vw,48px) system-ui; text-align:center; overflow-wrap:anywhere; }
+.viewer-score-team > strong { font:800 min(55vmin,var(--score-size))/.95 system-ui; font-variant-numeric:tabular-nums; }
+.viewer-score-clock { text-align:center; font:700 clamp(20px,3vw,48px) ui-monospace,monospace; }
+#viewerScoreboard[data-mode="tv"] nav { position:absolute; top:12px; right:12px; z-index:3; opacity:0; pointer-events:none; }
+#viewerScoreboard[data-mode="tv"].show-controls nav,#viewerScoreboard nav:focus-within { opacity:1; pointer-events:auto; }
+#viewerScoreboard[data-mode="tv"] { padding:24px; gap:20px; }
+@media(orientation:landscape) and (max-height:500px) { #viewerScoreboard { padding:6px; gap:6px; } #viewerScoreboard nav button { padding:6px 12px; } .viewer-score-team > strong { font-size:min(50vh,var(--score-size)); } .viewer-team-name { font-size:18px; } .viewer-score-clock { font-size:20px; } }
+#viewerScoreboard .viewer-score-team[hidden]{display:none!important}
+#viewerScoreboard:is([data-view-side="left"],[data-view-side="right"]) .viewer-score-teams{grid-template-columns:1fr}
+.viewer-screen-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.viewer-screen-links a{color:white;font:600 14px system-ui}
+#viewerScoreboard nav{flex-wrap:wrap}

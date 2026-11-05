@@ -158,6 +158,29 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
   .score-sep { font-family: var(--mono); font-size: 40px; color: #fff; line-height: 1; padding: 0 2px; }
 
+  .timing-setup { flex-shrink:0; background:var(--feed-surface); color:var(--feed-text); padding:16px; border:1px solid #7775; border-radius:10px; margin-bottom:16px; }
+  .timing-formats { border:0; padding:0; margin:12px 0; }
+  .timing-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .timing-options button span { display:block; margin-bottom:8px; }
+  .timing-options button[aria-pressed="true"] { outline:2px solid var(--feed-text); background:var(--feed-border); }
+  #tabEinstellungen { overflow:auto; }
+  .settings-subnav { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 24px; }
+  .settings-subnav a { padding:10px 16px; border:1px solid var(--border); border-radius:8px; color:var(--text); text-decoration:none; font:inherit; }
+  .settings-subnav a:hover, .settings-subnav a[aria-current] { border-color:var(--accent); color:var(--accent); }
+  .settings-subnav a:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .automation-settings { margin:16px; }
+  .automation-settings section { border-top:1px solid var(--feed-border); padding:12px 0; }
+  body.ticker-mode #tabEinstellungen { display:none!important; }
+  .timing-setup label { display:flex; gap:12px; align-items:center; margin:10px 0; flex-wrap:wrap; }
+  .timing-setup input,.timing-setup select { padding:8px; max-width:100%; }
+  .timing-info { flex-shrink:0; color:var(--feed-text); background:var(--feed-surface); font-size:13px; padding:8px 12px; margin:0; text-align:center; }
+  body.ticker-mode .timing-setup,body.ticker-mode #btnPeriodBreak { display:none; }
+  [hidden] { display:none !important; }
+  .automation-info { margin:0; padding:12px; color:var(--feed-text); background:var(--feed-surface); text-align:center; }
+  .automation-info:empty { display:none; }
+  .timing-info:empty, body.ticker-mode .timing-info { display:none; }
+  #btnPeriodBreak,.timing-setup button { padding:12px 16px; border:1px solid var(--feed-border); border-radius:8px; background:var(--feed-surface); color:var(--feed-text); font:inherit; font-weight:700; cursor:pointer; margin-bottom:12px; }
+  #btnPeriodBreak:disabled { opacity:.55; cursor:default; }
   .timer-row { display: flex; width: 100%; padding: 0 0 14px; }
   .btn-timer {
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -185,6 +208,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 10px;
   }
 
+  [data-feature][hidden] { display:none!important; }
   .goal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .btn-goal {
     border: none; border-radius: 10px; padding: 18px 14px; font-family: var(--sans);
@@ -612,6 +636,25 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   body:not(.dev-mode) .kader-tab,
   body:not(.dev-mode) #tabKader { display: none !important; }
   /* Tor-Overlay */
+  body.cross-feed-navigation .feed-result-names { opacity:1!important; pointer-events:auto!important; z-index:5; }
+  .cross-feed-open { position:absolute; right:12px; top:50%; transform:translateY(-50%); border:0; background:transparent; color:inherit; font:400 12px var(--sans); cursor:pointer; padding:2px; white-space:nowrap; }
+  body.cross-feed-collapsed .feed-result-header > :not(.feed-result-names) { display:none!important; }
+  body.cross-feed-collapsed .feed-result-header { height:36px!important; min-height:0!important; padding:0!important; }
+  body.cross-feed-collapsed .feed-result-space { height:36px!important; }
+  .scoreboard-goal-stage {
+    position: absolute; inset: 0; z-index: 1000; display: grid; place-items: center;
+    padding: 0; background: linear-gradient(#0003,#0005), var(--team-color); overflow: hidden; pointer-events: none;
+    animation: scoreboardGoalEnter .3s ease-out both;
+  }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .scoreboard-goal-stage > .event-item {
+    width: min(600px, 100%); margin: 0; text-align: left;
+    font-family: var(--sans); font-size: 16px; font-weight: 400; line-height: normal;
+    letter-spacing: normal; white-space: normal;
+  }
+  .scoreboard-goal-stage.leaving { animation: scoreboardGoalLeave .35s ease-in both; }
+  @keyframes scoreboardGoalEnter { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  @keyframes scoreboardGoalLeave { to { opacity: 0; transform: translateY(-12px); } }
+  @media (prefers-reduced-motion: reduce) { .scoreboard-goal-stage, .scoreboard-goal-stage.leaving { animation-duration: .01s; } }
   .goal-overlay {
     display: none;
     position: fixed; inset: 0; z-index: 500;
@@ -716,7 +759,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .feed-result-header { display: none; }
 
   /* Eigenständige Feedansicht: eigener Ergebnis-Kopf und randloser Nachrichtenstrom. */
-  body:is(.ticker-mode, .dev-mode, .entry-mode) { width: 100%; max-width: none; margin: 0; background: var(--feed-page); }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) { width: 100%; max-width: 600px; margin: 0 auto; background: var(--feed-page); }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-header { padding: 0; background: var(--feed-surface); }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-live-badge,
   body:is(.ticker-mode, .dev-mode, .entry-mode) .ticker-date,
@@ -783,8 +826,12 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
       linear-gradient(90deg, var(--feed-home-color, var(--home-color)) 50%, var(--feed-away-color, var(--away-color)) 50%);
   }
   body:is(.ticker-mode, .dev-mode, .entry-mode).feed-scrolled .feed-result-header {
-    position: fixed; top: var(--feed-top, 0px); left: 0; z-index: 40;
+    position: fixed; top: var(--feed-top, 0px); left: 0; right: 0; width: 100%; max-width: 600px; margin-inline: auto; z-index: 40;
     box-shadow: 0px -20px 40px 10px rgba(17, 17, 17, var(--feed-shadow-opacity, 0));
+  }
+  @media (min-width: 1024px) {
+    body:is(.ticker-mode, .dev-mode, .entry-mode) { margin-left: auto; margin-right: 0; border: 1px solid var(--feed-text); }
+    body:is(.ticker-mode, .dev-mode, .entry-mode).feed-scrolled .feed-result-header { left: auto; right: 0; margin-inline: 0; }
   }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-names,
   body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-short { opacity: var(--feed-label-opacity, 1); pointer-events: none; }
@@ -860,6 +907,26 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     color: var(--feed-text); background: var(--feed-surface); background-image: none; border: 0; border-right: 4px solid #777; border-radius: 0;
   }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="wechsel"] { min-height: 260px; }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:is([data-type="gelbe-karte"],[data-type="gelb-rote-karte"],[data-type="rote-karte"],[data-type="verletzung"]) {
+    display:grid; grid-template-columns:46px minmax(0,1fr) 130px; gap:12px; min-height:150px;
+    padding:14px 12px 0; background:var(--feed-surface); color:var(--feed-text); border:0; border-left:4px solid #f3c51b;
+  }
+  body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:is([data-type="gelbe-karte"],[data-type="gelb-rote-karte"],[data-type="rote-karte"],[data-type="verletzung"]) .event-min { display:flex; flex-direction:column; align-items:flex-start; gap:14px; color:var(--feed-muted); }
+  body:is(.ticker-mode,.dev-mode,.entry-mode) .event-item:is([data-type="rote-karte"],[data-type="gelb-rote-karte"]) { border-left-color:#df3544; }
+  .event-item[data-type="rote-karte"] .yellow-card-symbol { background:linear-gradient(135deg,#ff6974,#df2034); box-shadow:2px 3px 0 #9c1424; }
+  .event-item[data-type="gelb-rote-karte"] .yellow-card-symbol { position:relative; width:14px; height:22px; box-shadow:none; margin-bottom:5px; }
+  .event-item[data-type="gelb-rote-karte"] .yellow-card-symbol::after { content:''; position:absolute; left:4px; top:5px; width:14px; height:22px; border-radius:3px; background:linear-gradient(135deg,#ff6974,#df2034); box-shadow:2px 1px 0 #9c1424; }
+  .yellow-card > .event-min { grid-column:1; grid-row:1; }
+  .yellow-card > .event-info { grid-column:2; grid-row:1; }
+  .yellow-card > .yellow-card-photo { grid-column:3; grid-row:1; }
+  .yellow-card > .event-delete { position:absolute; top:8px; right:8px; z-index:3; }
+  .yellow-card > .event-info { align-self:center; min-width:0; padding-bottom:14px; }
+  .yellow-card-photo { align-self:end; width:130px; height:150px; object-fit:contain; object-position:bottom; }
+  .event-item[data-type="verletzung"] { border-left-color:#e34d59!important; }
+  .event-item[data-type="verletzung"] .yellow-card-symbol { background:none; box-shadow:none; color:#e34d59; width:20px; height:24px; }
+  .event-item[data-type="verletzung"] .yellow-card-symbol::before { content:'✚'; font:24px/1 sans-serif; }
+  .yellow-card-symbol { display:block; flex-shrink:0; width:18px; max-width:20px; height:27px; margin:0; border-radius:3px; background:linear-gradient(135deg,#ffe775,#f3c51b); transform:none; box-shadow:2px 3px 0 #a78012; }
+  @media(max-width:380px) { body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item:is([data-type="gelbe-karte"],[data-type="gelb-rote-karte"],[data-type="rote-karte"],[data-type="verletzung"]) { grid-template-columns:34px minmax(0,1fr) 90px; gap:8px; } .yellow-card-photo { width:90px; height:130px; } }
   .event-comment-player { display: none; }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .event-item[data-type="kommentar"] {
     min-height: 130px; background: var(--feed-surface); background-image: none; border-right: 0;
@@ -1073,8 +1140,8 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   body.ticker-loading .feed-result-space, body.ticker-loading .events-section { visibility:hidden; opacity:0; }
   body.ticker-loaded .feed-result-header, body.ticker-loaded .events-section { animation:ticker-reveal .5s ease; }
   @keyframes ticker-reveal { from { opacity:0; } to { opacity:1; } }
-  body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.no-minute:not([data-type="tor"]) { grid-template-columns:minmax(0,1fr); }
-  .event-item.no-minute > .event-min { display:none; }
+  body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.no-minute:not([data-type="tor"]):not(.yellow-card) { grid-template-columns:minmax(0,1fr); }
+  .event-item.no-minute:not(.yellow-card) > .event-min { display:none; }
   .event-item.no-minute > .event-delete { position:absolute; top:8px; right:8px; z-index:3; }
   body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.comment-with-photo { display:block; padding:0; }
   body:is(.ticker-mode,.entry-mode,.dev-mode) .event-item.comment-with-photo > .event-comment-photo { display:block; width:100%; height:auto; max-height:none; margin:0; border-radius:0; object-fit:contain; }
@@ -1084,6 +1151,15 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   @media (prefers-reduced-motion:reduce) { .ticker-loading-overlay svg, body.ticker-loaded .feed-result-header, body.ticker-loaded .events-section { animation:none; } }
 
 </style>
+<link rel="stylesheet" href="./share-embed.css?v=20261023">
+<script src="./share-embed.js?v=20261023"></script>
+<script src="./tracker-features.js"></script>
+<link rel="stylesheet" href="./touch-scoreboard.css">
+<script src="./touch-scoreboard.js"></script>
+<link rel="stylesheet" href="./viewer-scoreboard.css">
+<script src="./viewer-scoreboard.js"></script>
+<link rel="stylesheet" href="./scoreboard.css?v=20261023">
+<script src="./scoreboard.js?v=20261023"></script>
 <link rel="stylesheet" href="./ticker-loader.css?v=20261010-fast">
 </head>
 <body>
@@ -1116,13 +1192,16 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 </header>
 
 <nav class="tab-bar">
+  <button class="tab-btn" onclick="switchTab('einstellungen')">Einstellungen</button>
   <button class="tab-btn active" onclick="switchTab('spiel')">Spiel</button>
+  <button class="tab-btn" onclick="openTouchScoreboard()">Scoreboard</button>
   <button class="tab-btn kader-tab" onclick="switchTab('kader')">Kader</button>
   <button class="tab-btn" onclick="switchTab('spielplan')">Spielplan</button>
 </nav>
 
 <!-- ═══ TAB: SPIEL ═══ -->
 <section class="tab-content active" id="tabSpiel">
+  <div class="scoreboard-panel" aria-label="Scoreboard und Spielsteuerung">
 
   <div class="feed-result-space">
   <div class="feed-result-header" aria-label="Aktueller Spielstand">
@@ -1139,6 +1218,8 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 
   </div>
 
+  <p id="timingInfo" class="timing-info"></p>
+  <p id="automationInfo" class="automation-info" aria-live="polite"></p>
   <div class="scoreboard">
     <div class="scoreboard-top">
       <img class="team-logo" id="logoHome" src="" alt="" style="display:none">
@@ -1159,6 +1240,25 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     <button type="button" class="btn-timer" id="btnToggleTimer" onclick="toggleTimer()" aria-label="Spielzeit starten">▶ Start</button>
   </div>
 
+  <section id="timingSetup" class="timing-setup">
+    <h3>Spielzeit & Abschnitte</h3>
+    <fieldset class="timing-formats"><legend>Wie spielt ihr?</legend>
+      <input id="timingCount" type="hidden" value="2">
+      <div class="timing-options" role="group" aria-label="Spielabschnitte">
+        <button type="button" data-timing-count="1" aria-pressed="false" onclick="selectTimingFormat(1)"><span aria-hidden="true">━━━━</span>Durchgehend</button>
+        <button type="button" data-timing-count="2" aria-pressed="true" onclick="selectTimingFormat(2)"><span aria-hidden="true">━━ ━━</span>Halbzeiten</button>
+        <button type="button" data-timing-count="3" aria-pressed="false" onclick="selectTimingFormat(3)"><span aria-hidden="true">━ ━ ━</span>Drittel</button>
+        <button type="button" data-timing-count="4" aria-pressed="false" onclick="selectTimingFormat(4)"><span aria-hidden="true">━ ━ ━ ━</span>Viertel</button>
+      </div>
+    </fieldset>
+    <label>Gesamte Spielzeit (Minuten, ohne Pausen) <input id="timingMinutes" type="number" min="1" max="480" value="50" oninput="renderTimingPreview()"></label>
+    <p id="timingPreview" aria-live="polite"></p>
+
+    <label>Zusätzliche Nachricht <input id="timingMessage" maxlength="240" placeholder="Optionaler Hinweis für die Zuschauer"></label>
+
+    <button type="button" onclick="configureMatchTiming()">Spielzeit übernehmen</button>
+  </section>
+  <button type="button" id="btnPeriodBreak" onclick="finishTimingPeriod()" hidden>Abschnitt beenden & Pause</button>
   <div class="minute-input-row">
     <label>Minute:</label>
     <input type="number" id="minuteInput" value="1" min="1" max="120" oninput="save()" />
@@ -1178,6 +1278,18 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     </div>
   </div>
 
+  <div class="goal-section" data-feature="cards">
+    <span class="section-label">Karte vergeben</span>
+    <div class="goal-btns">
+      <button class="btn-goal btn-home" onclick="openYellowCard('home')"><span class="btn-label">🟨 🟥 Karte</span><span class="btn-main" id="cardHomeName">Heim</span></button>
+      <button class="btn-goal btn-away" onclick="openYellowCard('away')"><span class="btn-label">🟨 🟥 Karte</span><span class="btn-main" id="cardAwayName">Gast</span></button>
+
+    </div>
+  </div>
+  <div class="goal-section"><span class="section-label">Verletzung melden</span><div class="goal-btns">
+      <button class="btn-goal btn-home" onclick="openInjury('home')">✚ Verletzung · Heim</button>
+      <button class="btn-goal btn-away" onclick="openInjury('away')">✚ Verletzung · Gast</button>
+  </div></div>
   <!-- Sekundäre Ereignis-Buttons -->
   <div class="event-btns-row">
     <button class="btn-event-type" onclick="openEventModal('wechsel')">
@@ -1188,6 +1300,8 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     </button>
   </div>
 
+  </div>
+  <div class="scoreboard-feed">
   <div class="events-section">
     <div class="events-header">
       <span>Ticker</span>
@@ -1203,6 +1317,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   <div class="export-row">
     <button class="btn-export" onclick="exportText()">Text kopieren</button>
     <button class="btn-export" onclick="exportImage()">Bild teilen</button>
+    <button class="btn-export" onclick="showTickerShare()">Share & Embed</button>
     <button class="btn-export" onclick="showTickerShare()" id="btnTickerShare" style="display:none">📡 Live-Ticker</button>
   </div>
 
@@ -1211,6 +1326,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     <button class="btn-reset" id="btnAbandonMatch" onclick="confirmAction('abbruch')" style="display:none">Spielabbruch</button>
   </div>
 
+  </div>
 </section>
 
 <!-- ═══ TAB: KADER ═══ -->
@@ -1230,6 +1346,42 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     <div class="spielplan-list" id="spielplanList">
       <div class="spielplan-empty">Noch keine Spiele geplant</div>
     </div>
+  </div>
+</section>
+
+<section class="tab-content" id="tabEinstellungen">
+  <div class="automation-settings timing-setup">
+    <h2>Einstellungen</h2>
+    <nav class="settings-subnav" aria-label="Unterpunkte Einstellungen">
+      <a href="#automationSettings" aria-current="page">Automation</a>
+      <a href="./design-system.html" target="_blank" rel="noopener">Designsystem ↗</a>
+      <a id="settingsFeaturesLink" href="./feature-settings.html" target="_blank" rel="noopener">Features & Rechte ↗</a>
+      <a id="settingsEmbedLink" href="./share-embed.html" target="_blank" rel="noopener">Embed ↗</a>
+      <a href="./ticker-dev.html" target="_blank" rel="noopener">Dev ↗</a>
+    </nav>
+    <h3 id="automationSettings">Automation</h3>
+    <p>Vorlage für zukünftige Spiele. Bereits konfigurierte Spiele bleiben unverändert. Die Vorlage wird in diesem Browser gespeichert.</p>
+    <div><h3>Automatische Nachrichten · Regeln & Textbausteine</h3>
+      <p>Zeitpunkte gelten eine Minute lang, Zeiträume inklusive beider Grenzen. Passende Nachrichten erscheinen automatisch unter der Uhr, solange die Bedingung zutrifft.</p>
+      <label>Nachrichtensprache <select id="timingLocale"><option value="de">Deutsch</option><option value="en">English</option></select></label>
+      <div id="timingRulesEditor"></div>
+      <button type="button" onclick="addTimingRule()">Regel hinzufügen</button>
+      <p>Platzhalter: {score}, {remaining}, {minute}, {period}. Regeln werden von oben nach unten ausgewertet.</p>
+      <div id="timingTemplatesEditor"></div>
+      <button type="button" onclick="addTimingTemplate()">Textbaustein hinzufügen</button>
+    </div>
+    <button type="button" onclick="saveAutomationSettings()">Einstellungen speichern</button>
+    <p id="automationSettingsStatus" role="status"></p>
+    <button type="button" onclick="applyAutomationToCurrentMatch()">Gespeicherte Vorlage ins aktuelle Spiel übernehmen</button>
+    <details><summary>Regeln testen (ohne Spieländerung)</summary>
+      <label>Spielstand Heim <input id="automationPreviewHome" type="number" min="0" value="0"></label>
+      <label>Spielstand Gast <input id="automationPreviewAway" type="number" min="0" value="0"></label>
+      <label>Abgelaufene Spielminuten <input id="automationPreviewElapsed" type="number" min="0" value="24"></label>
+      <label>Restminuten im Abschnitt <input id="automationPreviewRemaining" type="number" min="0" value="1"></label>
+      <label>Abschnitt <select id="automationPreviewPhase"><option value="break">Vor einer Pause</option><option value="end">Letzter Abschnitt</option></select></label>
+      <button type="button" onclick="previewAutomation()">Vorschau berechnen</button>
+      <p id="automationPreviewResult" role="status"></p>
+    </details>
   </div>
 </section>
 
@@ -1368,6 +1520,9 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     <h3>📡 Live-Ticker teilen</h3>
     <div class="ticker-qr" id="tickerQR"></div>
     <div class="ticker-url" id="tickerURL"></div>
+    <p id="embedNotice"></p>
+    <div id="embedEditor"></div>
+    <a id="embedGalleryLink" href="./share-embed.html" target="_blank" rel="noopener">Alle Varianten auf eigener Seite ansehen</a>
     <div class="ticker-share-btns">
       <button class="btn-ticker-copy" onclick="copyTickerURL()">Link kopieren</button>
       <button class="btn-ticker-close" onclick="closeTickerShare()">Schließen</button>
@@ -1394,6 +1549,9 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 <script src="./schedule-data.js?v=20261010-schedule"></script>
 <script src="./live-roster.js?v=20261010-schedule"></script>
 <script src="./lineup-card.js"></script>
+<script src="./match-text-editor.js?v=20261022"></script>
+<script src="./match-texts.js?v=20261022"></script>
+<script src="./match-timing.js?v=20261022"></script>
 <script src="./ticker-loader.js?v=20261010-tactics"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
@@ -1509,8 +1667,9 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const PAGE_PARAMS = new URLSearchParams(window.location.search);
-const DEV_MODE = PAGE_PARAMS.get('dev') === '1';
-const STATE_KEY = DEV_MODE ? 'matchtracker_dev_v1' : 'matchtracker_v3';
+const ANONYMOUS_SCOREBOARD = PAGE_PARAMS.get('scoreboard') === 'guest' && !PAGE_PARAMS.has('ticker');
+const DEV_MODE = PAGE_PARAMS.get('dev') === '1' || ANONYMOUS_SCOREBOARD;
+const STATE_KEY = ANONYMOUS_SCOREBOARD ? 'matchtracker_scoreboard_guest_v1' : DEV_MODE ? 'matchtracker_dev_v1' : 'matchtracker_v3';
 let homeScore = 0, awayScore = 0;
 let events = [], squad = [], schedule = [], teams = [], coaches = [];
 let trainingSessions = {};
@@ -1540,13 +1699,18 @@ function updateFeedMatchTime(data) {
   const clock = document.getElementById('feedMatchTime');
   if (!clock) return;
   if (data.matchFinished || data.abandoned) {
+    const automationInfo=document.getElementById('automationInfo');if(automationInfo)automationInfo.textContent='';
     clock.classList.remove('is-live');
     clock.textContent = data.abandoned ? 'ABBRUCH' : 'ENDE';
+    if(typeof MatchTiming!=='undefined'){const info=document.getElementById('timingInfo');if(info)info.textContent=MatchTiming.describe(data.matchTiming,0,{...data,finished:true}).text;}
     return;
   }
   const running = data.timerBase != null;
   const seconds = Math.max(0, (Number(data.timerOffset) || 0) + (running ? Math.floor((Date.now() - data.timerBase) / 1000) : 0));
-  const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  const description = typeof MatchTiming!=='undefined' ? MatchTiming.describe(data.matchTiming,seconds,{...data,started:data.timerStarted||seconds>0,running,finished:data.matchFinished,now:Date.now()}) : null;
+  const automationInfo=document.getElementById('automationInfo');if(automationInfo)automationInfo.textContent=(description?.messages||[]).join(' ');
+  const time = description?.clock || `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  if(description){const info=document.getElementById('timingInfo');if(info)info.textContent=description.baseText||description.text;}
   const live = running || seconds === 0;
   clock.classList.toggle('is-live', live);
   clock.textContent = `${live ? 'LIVE' : 'PAUSE'} · ${time}`;
@@ -1579,6 +1743,7 @@ function setDevView(mode) {
   const spectator = mode === 'ticker';
   document.body.classList.toggle('ticker-mode', spectator);
   document.body.classList.toggle('dev-spectator-mode', spectator);
+  window.MatchScoreboard?.refresh();
   for (const [id, active] of [['devViewAdmin', !spectator], ['devViewTicker', spectator]]) {
     const button = document.getElementById(id);
     if (button) { button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); }
@@ -1605,6 +1770,7 @@ let timerBase   = null;
 let timerOffset = 0;
 let timerStarted = false;
 let timerRAF    = null;
+let matchTiming = null;
 
 function elapsedSeconds() {
   if (timerBase === null) return timerOffset;
@@ -1614,7 +1780,7 @@ function elapsedSeconds() {
 const DEFAULT_OUR_TEAM = 'SSV Berghausen';
 const OUR_TEAM_LOGO = './ssvlogo.png';
 function getOurTeamName() {
-  return teams.find(team => team.isOurTeam)?.name || DEFAULT_OUR_TEAM;
+  return teams.find(team => team.isOurTeam)?.name || (ANONYMOUS_SCOREBOARD ? 'Heim' : DEFAULT_OUR_TEAM);
 }
 function getCanonicalTeamName(name) {
   return globalThis.MatchTrackerTeams.find(teams, name)?.name || name;
@@ -1634,12 +1800,15 @@ function getOurTeamSide() {
 function switchTab(name) {
   if (!DEV_MODE && name === 'kader') name = 'spiel';
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    b.classList.toggle('active', b.textContent.toLowerCase().replace('ü','u') === name.replace('ü','u') ||
-      ['spiel','kader','spielplan','teams'][i] === name);
+    b.classList.toggle('active', b.textContent.toLowerCase().replace('ü','u') === name.replace('ü','u'));
   });
   document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
   const tab = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
   if (tab) tab.classList.add('active');
+  if (name === 'einstellungen') {
+    document.getElementById('settingsFeaturesLink').href='./feature-settings.html'+(DEV_MODE?'?dev=1':'');
+    document.getElementById('settingsEmbedLink').href = './share-embed.html' + (!DEV_MODE && activeMatchId ? '?ticker=' + encodeURIComponent(activeMatchId) : '');
+  }
   if (name === 'kader') setTimeout(() => document.getElementById('newPlayerName')?.focus(), 100);
 }
 
@@ -1671,7 +1840,7 @@ function matchSnapshot(finished = false, abandoned = false) {
   const { home, away } = getMatchTeams();
   return JSON.parse(JSON.stringify({
     homeTeam: home, awayTeam: away, homeScore, awayScore, isHomeTeam,
-    events: events || [], timerBase,
+    events: events || [], timerBase, matchTiming,
     timerOffset, timerRunning: timerBase !== null,
     timerStarted: timerStarted || timerBase !== null || timerOffset > 0,
     matchDate: document.getElementById('matchDate').textContent,
@@ -1689,6 +1858,8 @@ function applyMatchSnapshot(id, data) {
   isHomeTeam = data.isHomeTeam !== false;
   timerBase = data.timerRunning ? data.timerBase : null;
   timerOffset = data.timerOffset || 0;
+  matchTiming = data.matchTiming || null;
+  restoreTimingForm();
   timerStarted = data.timerStarted === true || timerBase !== null || timerOffset > 0;
   homeLogo = data.homeLogo || ''; awayLogo = data.awayLogo || '';
   homeColor = data.homeColor || ''; awayColor = data.awayColor || '';
@@ -1712,7 +1883,8 @@ function save(matchReady) {
     const existing = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
     localStorage.setItem(STATE_KEY, JSON.stringify({
       ...existing,
-      homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo, homeColor, awayColor,
+      savedAt: Date.now(),
+      matchTiming, homeScore, awayScore, events, squad, schedule, teams, homeLogo, awayLogo, homeColor, awayColor,
       timerStarted: timerStarted || timerBase !== null || timerOffset > 0,
       timerOffset: elapsedSeconds(),
       timerBase: timerBase !== null ? Date.now() : null,
@@ -1754,6 +1926,8 @@ function stopTimerLoop() {
 function startTimer() {
   if (!activeMatchId) { showToast('Bitte zuerst ein Spiel im Spielplan starten.'); return; }
   if (timerBase !== null) return;
+  if (!timerStarted && !matchTiming) { document.getElementById('timingSetup').hidden=false; document.getElementById('timingSetup').scrollIntoView({behavior:'smooth',block:'center'}); showToast('Bitte zuerst Spielzeit übernehmen.'); return; }
+  matchTiming = MatchTiming.resume(matchTiming);
   timerStarted = true;
   timerBase = Date.now();
   startTimerLoop();
@@ -1771,6 +1945,8 @@ function pauseTimer() {
 }
 
 function resetTimer() {
+  matchTiming = null;
+  restoreTimingForm();
   timerStarted = false;
   timerBase   = null;
   timerOffset = 0;
@@ -1791,15 +1967,55 @@ function updateTimerDisplay() {
     button.textContent = running ? '⏸ Pause' : '▶ Start';
     button.setAttribute('aria-label', running ? 'Spielzeit pausieren' : 'Spielzeit starten');
   }
-  updateFeedMatchTime({timerBase, timerOffset});
+  updateFeedMatchTime({timerBase, timerOffset, matchTiming, homeScore, awayScore, timerStarted});
+  const setup=document.getElementById('timingSetup');
+  if(setup)setup.hidden=timerStarted||!activeMatchId;
+  const next=document.getElementById('btnPeriodBreak');
+  if(next){next.hidden=!activeMatchId||!timerStarted||!matchTiming||matchTiming.period>=matchTiming.count-1;next.disabled=matchTiming?.breakStarted!=null;}
+
 }
 
 document.addEventListener('visibilitychange', () => { save(); });
 window.addEventListener('pagehide', () => { save(); });
 
+function selectTimingFormat(count){
+  document.getElementById('timingCount').value=count;
+  renderTimingBreaks();
+}
+function renderTimingPreview(){
+  const count=Number(document.getElementById('timingCount').value);
+  const duration=Number(document.getElementById('timingMinutes').value);
+  document.querySelectorAll('[data-timing-count]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.timingCount)===count)));
+  const preview=document.getElementById('timingPreview');
+  try { const plan=MatchTiming.plan({duration,count}); preview.textContent=plan.summary; }
+  catch(error){preview.textContent=error.message;}
+}
+function renderTimingBreaks() { renderTimingPreview(); }
+function restoreTimingForm(){
+  document.getElementById('timingCount').value=matchTiming?.count||2;
+  document.getElementById('timingMinutes').value=matchTiming?matchTiming.count*matchTiming.minutes:50;
+  document.getElementById('timingMessage').value=matchTiming?.message||'';
+  renderTimingBreaks();
+
+}
+function configureMatchTiming(){
+  if(timerStarted){showToast('Spielzeit ist nach Anpfiff festgeschrieben.');return;}
+  try{const automation=matchTiming?.automation||loadAutomationSettings();matchTiming=MatchTiming.configure({count:Number(document.getElementById('timingCount').value),duration:Number(document.getElementById('timingMinutes').value),message:document.getElementById('timingMessage').value});matchTiming.automation=automation;save();updateTimerDisplay();showToast('Spielzeit übernommen. Bereit zum Anpfiff.');}catch(e){showToast(e.message);}
+}
+function finishTimingPeriod(){
+  if(!matchTiming||matchTiming.breakStarted!==null)return;
+  if(!window.confirm('Diesen Abschnitt beenden und die geplante Pause beginnen?'))return;
+  try{const elapsed=elapsedSeconds();matchTiming=MatchTiming.endPeriod(matchTiming,elapsed,Date.now());timerOffset=elapsed;timerBase=null;stopTimerLoop();updateTimerDisplay();save();}catch(e){showToast(e.message);}
+}
+renderTimingBreaks();
+restoreTextEditor();
+setInterval(()=>{if(matchTiming?.breakStarted!=null&&!PAGE_PARAMS.has('ticker'))updateTimerDisplay();},1000);
+
 // ─── GOAL BUTTONS ─────────────────────────────────────────────────────────────
 function updateGoalButtons() {
   const { home, away } = getMatchTeams();
+  document.getElementById('cardHomeName').textContent = home;
+  document.getElementById('cardAwayName').textContent = away;
   const ownSide = getOurTeamSide();
   if (ownSide) isHomeTeam = ownSide === 'home';
   const btnOurs = document.getElementById('btnGoalOurs');
@@ -1904,7 +2120,7 @@ function renderPickerPlayers() {
 }
 
 function previewDevTickerOverlay(event) {
-  if (!DEV_MODE || !event) return;
+  if (!event || (!DEV_MODE && !document.body?.classList?.contains('touch-scoreboard-open'))) return;
   enqueueTickerOverlay(event, matchSnapshot());
 }
 
@@ -1915,7 +2131,7 @@ function addGoal(team, isOwnGoal, player) {
     ? squad.find(member => member.id === player?.id) || null
     : null;
   const minute = timerStarted || timerBase !== null || elapsedSeconds() > 0
-    ? Math.max(1, Math.floor(elapsedSeconds() / 60) + 1) : null;
+    ? Math.max(1, MatchTiming.describe(matchTiming,elapsedSeconds()).minute) : null;
   if (team==='home') homeScore++; else awayScore++;
   const event = {
     id: Date.now(), team, isOwnGoal, minute,
@@ -1973,6 +2189,7 @@ function updateScore(animate) {
 // ─── EVENT-RENDERING HELPER ──────────────────────────────────────────────────
 function eventCssClass(e) {
   const typ = e.typ || 'tor';
+  if (['gelbe-karte','gelb-rote-karte','rote-karte','verletzung'].includes(typ)) return 'yellow-card ' + (e.team === 'away' ? 'away' : 'home');
   if (typ === 'tor') return e.team;
   if (typ === 'wechsel') return 'wechsel' + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
   if (typ === 'kommentar') return 'kommentar' + (isImageOnlyComment(e) ? ' image-only' : e.playerId != null ? ' has-comment-player' : '') + (e.team === 'home' || e.team === 'away' ? ' ' + e.team : '');
@@ -1989,6 +2206,10 @@ function hasMatchStarted(data) {
 
 function eventIcon(e) {
   const typ = e.typ || 'tor';
+  if (typ === 'gelbe-karte') return '🟨';
+  if (typ === 'gelb-rote-karte') return '🟨🟥';
+  if (typ === 'rote-karte') return '🟥';
+  if (typ === 'verletzung') return '✚';
   if (typ === 'tor') return '⚽';
   if (typ === 'wechsel') return '🔄';
   if (typ === 'kommentar') return '💬';
@@ -2050,6 +2271,19 @@ function opponentGoalLabel(event) {
 }
 
 function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
+  if (['gelbe-karte','gelb-rote-karte','rote-karte','verletzung'].includes(e.typ)) {
+    const cardLabel = {'gelbe-karte':'Gelbe Karte','gelb-rote-karte':'Gelb-Rote Karte','rote-karte':'Rote Karte',verletzung:'Verletzung'}[e.typ];
+    const raw = context.squad || [];
+    const members = Array.isArray(raw) ? raw : Object.values(raw);
+    const player = e.team === context.ownSide && members.find(p => p && e.playerId != null && String(p.id) === String(e.playerId));
+    const name = player?.name || e.playerName || (e.team === 'away' ? awayName : homeName);
+    const teamName = e.team === 'away' ? awayName : homeName;
+    const portrait = player?.photo || e.playerPhoto;
+    return `<div class="event-min">${e.minute > 0 ? '<span class="event-minute">' + esc(e.minute) + "'</span>" : ''}<span class="yellow-card-symbol" aria-hidden="true"></span></div>
+      <div class="event-info"><div class="event-scorer">${esc(name)}</div><div class="event-tag">${cardLabel}</div></div>
+      ${portrait ? '<img class="yellow-card-photo" src="' + esc(portrait) + '" alt="' + esc(name) + '" loading="lazy">' : ''}
+      ${isTrainer ? '<button class="event-delete" onclick="deleteEvent(' + Number(e.id) + ')" aria-label="Meldung löschen">×</button>' : ''}`;
+  }
   if (isImageOnlyComment(e)) {
     return `<img class="event-comment-photo" src="${esc(e.photo)}" alt="Foto zur Meldung" loading="lazy">${isTrainer ? `<button class="event-delete" onclick="deleteEvent(${e.id})" aria-label="Meldung löschen">×</button>` : ''}`;
   }
@@ -2269,32 +2503,8 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 async function shareCanvas(canvas, filename = 'ergebnis.png') {
-  try {
-    // Encode synchronously so the native share sheet retains the click activation.
-    const encoded = canvas.toDataURL('image/png').split(',')[1];
-    const bytes = Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
-    const file = new File([bytes], filename, { type: 'image/png' });
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file] });
-        return;
-      } catch (error) {
-        if (error.name === 'AbortError') return;
-        // Unsupported or denied native sharing falls back to a PNG download.
-      }
-    }
-    const url = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = url; link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    showToast('Bild heruntergeladen');
-  } catch (error) {
-    console.warn('Bildexport fehlgeschlagen:', error);
-    showToast('Bild konnte nicht erstellt werden. Bitte erneut versuchen.');
-  }
+  try { await MatchShare.image(canvas,filename); }
+  catch(error) { showToast('Bild konnte nicht erstellt werden. Bitte erneut versuchen.'); }
 }
 
 function exportImage() {
@@ -2568,7 +2778,9 @@ function renderKaderList() {
       ? `<img class="player-avatar" src="${esc(p.photo)}" alt="${esc(p.name)}">`
       : '<span class="player-avatar-placeholder">👤</span>';
     const goalsTag = (p.goals||0) > 0 ? `<span class="kader-player-goals">${p.goals} ⚽</span>` : '';
-    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span>${goalsTag}<span class="kader-player-goals" title="${p.trainingAttended || 0} von ${p.trainingTotal || 0} Einheiten">${p.training || 0}% Training</span>`;
+    const totalGames = schedule.filter(m => !m.archived).length;
+    const gamesTag = totalGames > 0 ? `<span class="kader-player-goals" title="${p.games || 0} von ${totalGames} Spielen">${p.games || 0} Spiele · ${Math.round((p.games || 0) / totalGames * 100)}%</span>` : '';
+    item.innerHTML=`${photoHtml}<span class="kader-player-num">${p.num?'#'+p.num:'—'}</span><span class="kader-player-name">${esc(p.name)}</span>${goalsTag}${gamesTag}<span class="kader-player-goals" title="${p.trainingAttended || 0} von ${p.trainingTotal || 0} Einheiten">${p.training || 0}% · ${p.trainingAttended || 0} Training</span>`;
     list.appendChild(item);
   });
 }
@@ -3441,7 +3653,19 @@ function applyCommentTemplate(value) {
   if (start >= 0) field.setSelectionRange(start, start + '[Spieler]'.length);
 }
 
+let yellowCardTeam = 'home';
+function openInjury(team) {
+  if (!['home','away'].includes(team)) return;
+  yellowCardTeam=team;openEventModal('verletzung');
+}
+function openYellowCard(team) {
+  if (!window.TrackerFeatures?.cardsEnabled()) { showToast('Karten-Erfassung ist unter Einstellungen → Features & Rechte deaktiviert.'); return; }
+  if (!['home', 'away'].includes(team)) return;
+  yellowCardTeam = team;
+  openEventModal('gelbe-karte');
+}
 function openEventModal(typ) {
+  if (typ === 'gelbe-karte' && !window.TrackerFeatures?.cardsEnabled()) { showToast('Karten-Erfassung ist deaktiviert.'); return; }
   if (!activeMatchId) { showToast('Bitte zuerst ein Spiel im Spielplan starten.'); return; }
   if (new URLSearchParams(window.location.search).has('ticker')) return;
   if (typ === 'wechsel' && !getOurTeamSide()) { showToast('Wechsel sind nur für unser Team möglich.'); return; }
@@ -3449,11 +3673,21 @@ function openEventModal(typ) {
   commentPlayerSlot = null;
   eventModalGeneration++;
   _selectedKartenTyp = 'gelb';
-  const titles = { wechsel:'🔄 Wechsel', kommentar:'💬 Kommentar' };
+  const titles = { verletzung:'Verletzung melden', 'gelbe-karte':'Karte vergeben', wechsel:'🔄 Wechsel', kommentar:'💬 Kommentar' };
   document.getElementById('eventModalTitle').textContent = titles[typ] || 'Ereignis';
 
   let body = '';
-  if (typ === 'wechsel') {
+  if (typ === 'gelbe-karte' || typ === 'verletzung') {
+    const names = getMatchTeams();
+    const own = yellowCardTeam === getOurTeamSide();
+    const minute = timerStarted || timerBase !== null || elapsedSeconds() > 0 ? MatchTiming.describe(matchTiming, elapsedSeconds()).minute : 0;
+    body = `<p>${typ === 'verletzung' ? 'Verletzung' : 'Karte'} für <strong>${esc(names[yellowCardTeam])}</strong></p>
+      ${typ === 'verletzung' ? '<input type="hidden" id="yc-type" value="verletzung">' : `<label class="em-label" for="yc-type">Karte</label>
+      <select class="em-select" id="yc-type"><option value="gelbe-karte">Gelb</option><option value="gelb-rote-karte">Gelb-Rot</option><option value="rote-karte">Rot</option></select>`}
+      ${own ? '<label class="em-label" for="yc-player">Spieler (optional)</label><select class="em-select" id="yc-player">' + buildPlayerOptions() + '</select>' : '<label class="em-label" for="yc-name">Gegenspieler (optional)</label><input class="em-select" id="yc-name" maxlength="80" placeholder="Name oder Rückennummer">'}
+      <label class="em-label" for="yc-minute">Spielminute (0 = vor Spielbeginn)</label><input class="em-select" id="yc-minute" type="number" min="0" max="480" step="1" value="${minute}">
+      <label class="em-label" for="yc-reason">Grund (optional)</label><input class="em-select" id="yc-reason" maxlength="200" placeholder="Zum Beispiel: Foulspiel">`;
+  } else if (typ === 'wechsel') {
     const opts = buildPlayerOptions();
     body = `<span class="em-label">Einwechslung (rein)</span>
       <select class="em-select" id="em-rein">${opts}</select>
@@ -3506,10 +3740,24 @@ async function saveEventModal() {
   if (!activeMatchId) { showToast('Bitte zuerst ein Spiel im Spielplan starten.'); return; }
   if (new URLSearchParams(window.location.search).has('ticker')) return;
   const minute = timerStarted || timerBase !== null || elapsedSeconds() > 0
-    ? Math.max(1, Math.floor(elapsedSeconds() / 60) + 1) : null;
+    ? Math.max(1, MatchTiming.describe(matchTiming,elapsedSeconds()).minute) : null;
   let ev = null;
 
-  if (_eventModalType === 'wechsel') {
+  if (_eventModalType === 'gelbe-karte' || _eventModalType === 'verletzung') {
+    if (_eventModalType === 'gelbe-karte' && !window.TrackerFeatures?.cardsEnabled()) { showToast('Karten-Erfassung ist deaktiviert.'); return; }
+    const rawMinute = document.getElementById('yc-minute').value;
+    const cardMinute = Number(rawMinute);
+    if (rawMinute === '' || !Number.isInteger(cardMinute) || cardMinute < 0 || cardMinute > 480) { showToast('Bitte eine gültige Spielminute zwischen 0 und 480 eingeben.'); return; }
+    const own = yellowCardTeam === getOurTeamSide();
+    const selectedId = own ? document.getElementById('yc-player').value : '';
+    const player = own ? squad.find(p => String(p.id) === selectedId) : null;
+    if (selectedId && !player) { showToast('Spieler nicht mehr im Kader. Bitte erneut auswählen.'); return; }
+    const cardType = _eventModalType === 'verletzung' ? 'verletzung' : document.getElementById('yc-type').value;
+    if (!['gelbe-karte','gelb-rote-karte','rote-karte','verletzung'].includes(cardType)) { showToast('Bitte eine gültige Karte auswählen.'); return; }
+    ev = {id:Date.now(),typ:cardType,team:yellowCardTeam,minute:cardMinute || null,reason:document.getElementById('yc-reason').value.trim().slice(0,200)};
+    if (player) Object.assign(ev,{playerId:player.id,playerName:player.name,playerPhoto:player.photo || ''});
+    else if (!own) ev.playerName = document.getElementById('yc-name').value.trim().slice(0,80);
+  } else if (_eventModalType === 'wechsel') {
     const reinId  = parseInt(document.getElementById('em-rein').value)  || null;
     const rausId  = parseInt(document.getElementById('em-raus').value)  || null;
     const reinP   = squad.find(p => p.id === reinId);
@@ -3745,9 +3993,10 @@ function initTickerMode(matchId) {
       secs = offset + Math.floor((Date.now() - base) / 1000);
     }
     if (secs <= 0 && base === null) { clockEl.textContent = ''; return; }
+    const timing=MatchTiming.describe(tickerData.matchTiming,secs,{...tickerData,started:true,running:base!==null});
     const m = Math.floor(secs / 60);
     const s = String(secs % 60).padStart(2, '0');
-    clockEl.textContent = base !== null ? `${m}:${s}` : `${m}:${s} – Pause`;
+    clockEl.textContent = timing.clock + (base !== null ? '' : ' – Pause');
   }, 1000);
 
   firebase.database().ref('matches/' + matchId).on('value', snapshot => {
@@ -3819,7 +4068,7 @@ function animateFeedGoalCard(event) {
   const card = Array.from(list?.children || []).find(item => item.dataset.eventId === String(event.id));
   card?.classList.remove('feed-goal-pending', 'feed-sub-pending');
   if (!['tor', 'wechsel'].includes(event.typ || 'tor') || !(document.body?.classList.contains('ticker-mode') || document.body?.classList.contains('dev-mode'))) return false;
-  if (!card) return false;
+  if (!card || document.body.classList.contains('touch-scoreboard-open') || document.body.classList.contains('viewer-score-open')) return false;
   card.scrollIntoView({block: 'nearest', behavior: 'instant'});
   const animationClass = event.typ === 'wechsel' ? 'feed-sub-animate' : 'feed-goal-animate';
   card.classList.remove(animationClass);
@@ -3828,11 +4077,51 @@ function animateFeedGoalCard(event) {
   return true;
 }
 
+// Reuse the feed renderer; scoreboard goals never open the ticker modal.
+function showScoreboardGoalCard(panel, event, data, onDone) {
+  const side = event.team === 'away' ? 'away' : 'home';
+  const field = panel.querySelector('[data-side="' + (panel.id === 'viewerScoreboard' ? side[0].toUpperCase() + side.slice(1) : side) + '"]');
+  if (!field || field.hidden) { onDone(); return; }
+  const stage = document.createElement('div');
+  stage.className = 'scoreboard-goal-stage';
+  stage.setAttribute('role', 'status');
+  const item = document.createElement('div');
+  item.className = 'event-item ' + eventCssClass(event);
+  item.dataset.type = 'tor';
+  item.dataset.team = event.team === 'away' ? 'away' : 'home';
+  if (!(event.minute > 0)) item.classList.add('no-minute');
+  item.innerHTML = buildEventItemHtml(event, data.homeTeam || 'Heim', data.awayTeam || 'Gast', false, {
+    squad: currentMatchSquad(data), ownSide: data.isHomeTeam === false ? 'away' : 'home',
+    homeLogo: data.homeLogo, awayLogo: data.awayLogo, matchStarted: hasMatchStarted(data)
+  });
+  // Use the actual rendered feed card when available, including resolved player data.
+  const feedCard = Array.from(document.getElementById('eventsList')?.children || [])
+    .find(card => card.dataset.eventId === String(event.id));
+  const displayedCard = feedCard ? feedCard.cloneNode(true) : item;
+  displayedCard.querySelectorAll('button').forEach(button => button.remove());
+  displayedCard.removeAttribute('id');
+  displayedCard.classList.remove('feed-goal-pending', 'feed-goal-animate');
+  displayedCard.classList.add('feed-goal-animate');
+  stage.append(displayedCard);
+  field.append(stage);
+  setTimeout(() => {
+    stage.classList.add('leaving');
+    setTimeout(() => { stage.remove(); onDone(); }, 350);
+  }, 3000);
+}
+
 let goalOverlayTimeout = null;
 function showGoalOverlay(event, data, onDone = () => {}) {
   const overlay = document.getElementById('goalOverlay');
   const card    = document.getElementById('goalOverlayCard');
   if (!overlay || !card) { onDone(); return; }
+  const scoreboard = ['touchScoreboard', 'viewerScoreboard']
+    .map(id => document.getElementById(id)).find(panel => panel && !panel.hidden);
+  if (scoreboard) {
+    if ((event.typ || 'tor') !== 'tor') { onDone(); return; }
+    showScoreboardGoalCard(scoreboard, event, data, onDone);
+    return;
+  }
 
   const kind = event.typ || 'tor';
   const isGoal = kind === 'tor';
@@ -3946,16 +4235,25 @@ function updateFeedScrollState() {
   const feed = document.querySelector('#tabSpiel .events-section');
   const tab = document.getElementById('tabSpiel');
   const scrollTop = Math.max(window.scrollY || 0, document.scrollingElement?.scrollTop || 0, feed?.scrollTop || 0, tab?.scrollTop || 0);
-  const progress = Math.min(1, Math.max(0, scrollTop / 100));
+  const split = window.MatchScoreboard?.isSplit() || false;
+  const activeScroll = split ? (document.querySelector('.scoreboard-feed')?.scrollTop || 0) : scrollTop;
+  const embedFormat = document.body.dataset.embed;
+  const staticScore = embedFormat === 'score' || embedFormat === 'score-compact';
+  const progress = staticScore ? (embedFormat === 'score-compact' ? 1 : 0) : Math.min(1, Math.max(0, activeScroll / 100));
   const mix = (from, to) => from + (to - from) * progress;
   const style = document.body.style;
   const values = {
-    'height': mix(200, 70), 'padding': mix(52, 10),
-    'logo-height': mix(105, 36), 'logo-width': mix(Math.min(105, Math.max(60, window.innerWidth * 0.18)), 50),
+    'height': mix(split ? 300 : 200, split ? 100 : 70), 'padding': mix(split ? 64 : 52, 10),
+    'score-size': mix(split ? 64 : 36, 36),
+    'logo-height': mix(split ? 160 : 105, 36), 'logo-width': mix(split ? 160 : Math.min(105, Math.max(60, window.innerWidth * 0.18)), 50),
     'team-padding': mix(0, 32), 'score-gap': mix(0, 10),
-    'value-height': mix(70, 48), 'value-width': mix(54, 40), 'value-padding': mix(20, 0),
+    'value-height': mix(split ? 110 : 70, 48), 'value-width': mix(split ? 90 : 54, 40), 'value-padding': mix(split ? 24 : 20, 0),
     'time-margin': mix(0, 11), 'separator-padding': mix(16, 0)
   };
+  if (document.body.classList.contains?.('cross-feed-navigation')) {
+    values.height += 30 * progress;
+    values.padding += 30 * progress;
+  }
   for (const [key, value] of Object.entries(values)) style.setProperty('--feed-' + key, value + 'px');
   style.setProperty('--feed-color-opacity', String(1 - progress));
   style.setProperty('--feed-shadow-opacity', String(progress));
@@ -3965,7 +4263,7 @@ function updateFeedScrollState() {
   style.setProperty('--feed-collapse-percent', progress * 100 + '%');
   const space = document.querySelector('.feed-result-space');
   style.setProperty('--feed-top', Math.max(0, space?.getBoundingClientRect().top || 0) + 'px');
-  document.body.classList.toggle('feed-scrolled', scrollTop > 0);
+  document.body.classList.toggle('feed-scrolled', !staticScore && !split && scrollTop > 0);
 }
 
 function updateTickerUI(data, lastScore, headerOnly = false) {
@@ -4095,11 +4393,14 @@ function updateTickerUI(data, lastScore, headerOnly = false) {
 
 // ─── TICKER SHARE UI ─────────────────────────────────────────────────────────
 function showTickerShare() {
-  if (DEV_MODE) { showToast('Im Testmodus wird kein öffentlicher Live-Ticker erzeugt.'); return; }
+  if (DEV_MODE) { showToast('Embed-Vorschau: Testspiele haben keinen öffentlichen Ticker.'); }
   if (!activeMatchId) { showToast('Kein aktives Spiel'); return; }
   const BASE_URL = 'https://keevy109.github.io/match-tracker/match-tracker.html';
   const url = BASE_URL + '?ticker=' + activeMatchId;
   document.getElementById('tickerURL').textContent = url;
+  document.getElementById('embedNotice').textContent=DEV_MODE?'Nur Code-Vorschau: Dieses Testspiel ist nicht öffentlich erreichbar.':'';
+  MatchShare.mount(activeMatchId);
+  document.getElementById('embedGalleryLink').href='./share-embed.html'+(DEV_MODE?'':'?ticker='+encodeURIComponent(activeMatchId));
 
   // Generate QR code
   const qrContainer = document.getElementById('tickerQR');
@@ -4146,13 +4447,57 @@ function generateQR(canvas, text, size) {
   img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&bgcolor=ffffff&color=000000&format=png`;
 }
 
+// Touch presentation delegates to the same state, persistence and event commands.
+window.TrackerScoreboard = {
+  read() {
+    const names=getMatchTeams();
+    return {...names,active:!!activeMatchId,ready:storageReady&&!matchTransition,dev:DEV_MODE&&!ANONYMOUS_SCOREBOARD,anonymous:ANONYMOUS_SCOREBOARD,
+      score:{home:homeScore,away:awayScore},logos:{home:homeLogo,away:awayLogo},colors:{home:homeColor,away:awayColor},
+      running:timerBase!==null,clock:MatchTiming.describe(matchTiming,elapsedSeconds()).clock,
+      canNext:!!matchTiming&&matchTiming.breakStarted===null&&matchTiming.period<matchTiming.count-1,
+      canUndo:!!activeMatchId&&events.some(e=>!e.typ||e.typ==='tor')};
+  },
+  goal(side) { if(storageReady&&!matchTransition&&activeMatchId&&!PAGE_PARAMS.has('ticker')) addGoal(side,false,null); },
+  undo() {
+    if(!storageReady||matchTransition||!activeMatchId||PAGE_PARAMS.has('ticker'))return;
+    const last=[...events].filter(e=>!e.typ||e.typ==='tor').sort((a,b)=>b.id-a.id)[0];
+    if(last)deleteEvent(last.id);
+  },
+  toggle() {
+    if(!storageReady||matchTransition||!activeMatchId||PAGE_PARAMS.has('ticker'))return;
+    if(!matchTiming)matchTiming=MatchTiming.configure({duration:50,count:2});
+    toggleTimer();
+  },
+  period() { if(storageReady&&!matchTransition&&activeMatchId&&!PAGE_PARAMS.has('ticker'))finishTimingPeriod(); },
+  end() { if(storageReady&&!matchTransition&&activeMatchId&&!PAGE_PARAMS.has('ticker'))endCurrentMatch(); },
+  discard() {
+    if(!ANONYMOUS_SCOREBOARD)return;
+    stopTimerLoop();localStorage.removeItem(STATE_KEY);location.replace('./scoreboard.html');
+  },
+  async create(opponent,duration,homeName) {
+    if(!storageReady||matchTransition||activeMatchId||PAGE_PARAMS.has('ticker'))return;
+    opponent=String(opponent).trim();if(!opponent)return;
+    let timing;try{timing=MatchTiming.configure({duration,count:2});}catch(e){showToast(e.message);return;}
+    if(ANONYMOUS_SCOREBOARD){
+      homeName=String(homeName||'').trim().slice(0,80);if(!homeName)return;
+      teams=[{id:'guest-home',name:homeName,isOurTeam:true},{id:'guest-away',name:opponent}];
+      schedule=[];homeLogo='';awayLogo='';homeColor='#db6b19';awayColor='#2467b6';
+    }
+    const id=Date.now();
+    schedule.push({id,opponent,isHome:true,date:new Date().toISOString().slice(0,10),time:'',result:null});
+    await startMatchFromSchedule(id);
+    if(activeMatchId===id){if(ANONYMOUS_SCOREBOARD){homeLogo='';awayLogo='';homeColor='#db6b19';awayColor='#2467b6';}matchTiming=timing;restoreTimingForm();save();}
+  }
+};
+
 // Restore saved state only after all runtime state has been initialized.
 (function init() {
   // Skip normal init in ticker mode
-  if (PAGE_PARAMS.get('ticker')) return;
+  if (PAGE_PARAMS.get('ticker') || (DEV_MODE && PAGE_PARAMS.has('fixture'))) return;
   document.body.classList.add(DEV_MODE ? 'dev-mode' : 'entry-mode');
   try {
-    const d = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+    let d = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+    if(ANONYMOUS_SCOREBOARD && d && (!d.savedAt || Date.now()-d.savedAt>86400000)) {localStorage.removeItem(STATE_KEY);d=null;}
     // Kader + Spielplan aus Admin-Keys laden (ssv_kader / ssv_spielplan)
     if (!DEV_MODE) {
       try { const k = JSON.parse(localStorage.getItem('ssv_kader') || '[]'); if (k.length) squad = k; } catch {}
@@ -4175,6 +4520,8 @@ function generateQR(canvas, text, size) {
       if (!teams.find(t => t.isOurTeam)) {
         teams.unshift({ id: 1, name: getOurTeamName(), logo: '', isOurTeam: true });
       }
+      matchTiming = d.matchTiming || null;
+      restoreTimingForm();
       timerOffset   = d.timerOffset   || 0;
       timerBase     = d.timerBase     || null;
       timerStarted  = d.timerStarted === true || timerBase !== null || timerOffset > 0;
@@ -4207,12 +4554,13 @@ function generateQR(canvas, text, size) {
   updateSpielplanGegnerSelect();
   updateEndMatchBtn();
 
-  if (DEV_MODE) {
+  if (DEV_MODE && !ANONYMOUS_SCOREBOARD) {
     const preferredView = localStorage.getItem('matchtracker_dev_view') === 'ticker' ? 'ticker' : 'admin';
-    requestAnimationFrame(() => setDevView(preferredView));
+    requestAnimationFrame(() => { setDevView(PAGE_PARAMS.get('tab') === 'einstellungen' ? 'admin' : preferredView); if(PAGE_PARAMS.get('tab') === 'einstellungen') switchTab('einstellungen'); });
   }
 
   if (!DEV_MODE) updateTickerUI(matchSnapshot(), null, true);
+  if (!DEV_MODE && PAGE_PARAMS.get('tab') === 'einstellungen') switchTab('einstellungen');
 
   // Auto-start erfolgt nach Firebase-Load (Phase 2 im Startup-Block)
 })();
@@ -4238,9 +4586,68 @@ function checkAccess() {
 // ─── STARTUP: Check ticker mode or init Firebase ─────────────────────────────
 // Läuft NACH dem Firebase SDK → firebase ist jetzt definiert
 (function() {
+  if (ANONYMOUS_SCOREBOARD) {
+    storageReady=true;
+    document.getElementById('storageLoading').style.display='none';
+    document.getElementById('devBanner').hidden=true;
+    return;
+  }
   if (!checkAccess()) return;
   const params = new URLSearchParams(window.location.search);
   const tickerId = params.get('ticker');
+  // Explicit isolated fixture path: never initialize Firebase or restore/save matches.
+  if (DEV_MODE && params.has('fixture')) {
+    const script = document.createElement('script');
+    script.src = './ticker-fixtures.js';
+    script.onload = () => {
+      try {
+        const data = TickerFixtures.get(params.get('fixture'));
+        document.body.classList.add('ticker-mode');
+        coaches = params.get('fixture') === 'max' ? TickerFixtures.coaches : [];
+        updateTickerUI(data, null);
+        // Same-origin, fixture-only bridge for the isolated crossTracker laboratory.
+        if (params.get('crossdev') === '1') window.CrossTrackerDev = {
+          showConferenceGoal(event) {
+            const panel = document.createElement('section');
+            panel.style.cssText = 'position:fixed;inset:0;z-index:99999';
+            const field = document.createElement('div');
+            field.dataset.side = event.team === 'away' ? 'away' : 'home';
+            field.style.cssText = 'position:absolute;inset:0';
+            panel.append(field);document.body.append(panel);
+            showScoreboardGoalCard(panel,event,data,()=>panel.remove());
+          },
+          navigation(callback,selected,collapsed) {
+            const names=document.querySelector('.feed-result-names');
+            let button=names.querySelector('.cross-feed-open');
+            if(!button){button=document.createElement('button');button.className='cross-feed-open';button.type='button';names.append(button);}
+            button.textContent=selected?'Übersicht ▴':'Ticker öffnen ▾';
+            button.setAttribute('aria-expanded',String(selected));button.onclick=callback;
+            document.body.classList.add('cross-feed-navigation');
+            document.body.classList.toggle('cross-feed-collapsed',collapsed);
+            updateFeedScrollState();
+          },
+          setFormat(format) {
+            if (!['score', 'score-compact', 'feed'].includes(format)) return;
+            document.body.dataset.embed = format;
+            document.documentElement.dataset.embed = format;
+            updateFeedScrollState();
+          },
+          render(next, event) {
+            Object.assign(data, next);
+            updateTickerUI(data, null);
+            if (event) enqueueTickerOverlay(event, data);
+          }
+        };
+        document.getElementById('storageLoading').style.display = 'none';
+        document.getElementById('tickerUpdated').textContent = 'DEV · synthetische Daten · kein Backend';
+        document.getElementById('tickerDate').textContent = data.matchDate || '';
+        if (data.timerBase != null) setInterval(() => updateFeedMatchTime(data), 1000);
+      } catch (error) { document.getElementById('storageLoading').textContent = error.message; }
+    };
+    script.onerror = () => { document.getElementById('storageLoading').textContent = 'Dev-Daten konnten nicht geladen werden.'; };
+    document.head.append(script);
+    return;
+  }
   if (tickerId) {
     initTickerMode(tickerId);
   } else {
