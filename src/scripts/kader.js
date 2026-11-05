@@ -139,6 +139,14 @@ function isVideoSource(src) {
   return /^data:video\//i.test(src || '') || /\.(?:mp4|webm|ogg)(?:[?#].*)?$/i.test(src || '');
 }
 
+// Bump when video files are replaced under the same name, so browsers skip cached copies.
+const VIDEO_VERSION = '20261105';
+
+function versionedVideo(src) {
+  if (/^data:/i.test(src) || src.includes('?')) return src;
+  return `${src}?v=${VIDEO_VERSION}`;
+}
+
 function activeBg() {
   const video = document.getElementById('kdVideo');
   const image = document.getElementById('kdBg');
@@ -194,6 +202,7 @@ function setBg(src) {
   cancelVideoRewind();
 
   if (isVideoSource(src)) {
+    src = versionedVideo(src);
     detail?.classList.add('kd-has-video');
     if (detail) detail.title = 'Klicken, um das Video zurückzuspulen und erneut abzuspielen';
     image.hidden = true;
