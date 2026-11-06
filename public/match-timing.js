@@ -32,7 +32,7 @@
     else if(local>=duration)text=`${label} · ${vocabulary.added}.`;
     else {const left=Math.ceil((duration-local)/60);text=`${label} · noch ${left} ${left===1?'Minute':'Minuten'} bis ${target===vocabulary.halfTime?'zur Halbzeit':target===vocabulary.end?'zum Abpfiff':'zur '+target}.`;if(options.running===false)text+=' Uhr angehalten.';}
     const textModule=typeof MatchTexts!=='undefined'?MatchTexts:(typeof require==='function'?require('./match-texts.js'):null);
-    const automated=textModule?textModule.messages(state.automation,{...options,homeScore:Number(options.homeScore)||0,awayScore:Number(options.awayScore)||0,elapsed:state.period*duration+local,remaining:duration-local,period:state.period,count:state.count,inBreak:state.breakStarted!==null}):[];
+    const automated=textModule?textModule.messages(state.automation,{...options,homeScore:Number(options.homeScore)||0,awayScore:Number(options.awayScore)||0,elapsed:state.period*duration+local,remaining:duration-local,period:state.period,count:state.count,inBreak:state.breakStarted!=null}):[];
     return {baseText:`Ergebnis: ${Number(options.homeScore)||0}:${Number(options.awayScore)||0}. ${text}${state.message?' '+state.message:''}`,messages:automated,clock:state.breakStarted!=null?clock(state.period*duration):local>=duration?`${Math.floor(boundary/60)} +${Math.floor(overtime/60)}`:clock(state.period*duration+local),minute:Math.floor((state.period*duration+local)/60)+1,overtime,label,text:`Ergebnis: ${Number(options.homeScore)||0}:${Number(options.awayScore)||0}. ${text}${state.message?' '+state.message:''}${automated.length?' '+automated.join(' '):''}`};
   }
   function endPeriod(state,elapsed,now){
