@@ -1551,7 +1551,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 <script src="./lineup-card.js"></script>
 <script src="./match-text-editor.js?v=20261022"></script>
 <script src="./match-texts.js?v=20261022"></script>
-<script src="./match-timing.js?v=20261022"></script>
+<script src="./match-timing.js?v=20261106"></script>
 <script src="./ticker-loader.js?v=20261010-tactics"></script>
 <script>
 /* ── Stadium Background ──────────────────────────────────────── */
@@ -2003,7 +2003,7 @@ function configureMatchTiming(){
   try{const automation=matchTiming?.automation||loadAutomationSettings();matchTiming=MatchTiming.configure({count:Number(document.getElementById('timingCount').value),duration:Number(document.getElementById('timingMinutes').value),message:document.getElementById('timingMessage').value});matchTiming.automation=automation;save();updateTimerDisplay();showToast('Spielzeit übernommen. Bereit zum Anpfiff.');}catch(e){showToast(e.message);}
 }
 function finishTimingPeriod(){
-  if(!matchTiming||matchTiming.breakStarted!==null)return;
+  if(!matchTiming||matchTiming.breakStarted!=null)return;
   if(!window.confirm('Diesen Abschnitt beenden und die geplante Pause beginnen?'))return;
   try{const elapsed=elapsedSeconds();matchTiming=MatchTiming.endPeriod(matchTiming,elapsed,Date.now());timerOffset=elapsed;timerBase=null;stopTimerLoop();updateTimerDisplay();save();}catch(e){showToast(e.message);}
 }
