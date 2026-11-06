@@ -6,7 +6,7 @@
   const panel=document.createElement('section');panel.id='viewerScoreboard';panel.hidden=true;panel.tabIndex=-1;
   panel.innerHTML='<nav><button data-mode="mobile">Mobil</button><button data-mode="tv">TV</button><button id="viewerFull">Vollbild</button><button id="viewerBack">Zum Feed</button></nav><div class="viewer-score-teams">'+['Home','Away'].map(side=>'<div class="viewer-score-team" data-side="'+side+'"><img alt="" hidden><span class="viewer-team-name"></span><strong></strong></div>').join('')+'</div><div class="viewer-score-clock" role="status"></div>';
   const choices=document.createElement('nav');choices.className='viewer-score-choices';choices.setAttribute('aria-label','Ticker-Ansicht');
-  choices.innerHTML='<button data-mode="mobile">Scoreboard · Mobil</button><button data-mode="tv">Scoreboard · TV</button>';
+  choices.innerHTML='<button data-mode="mobile">Scoreboard · Mobil</button><button data-mode="tv">Scoreboard · TV</button>';choices.hidden=true;
   document.querySelector('.feed-result-space').before(choices);document.body.append(panel);
   if(params.has('embed'))choices.hidden=true;
   const selectedSide=['left','right'].includes(params.get('side'))?params.get('side'):'both';
@@ -41,7 +41,7 @@
   panel.querySelector('#viewerFull').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(panel.requestFullscreen)await panel.requestFullscreen();}catch{}};
   panel.addEventListener('pointermove',reveal);panel.addEventListener('pointerdown',reveal);panel.addEventListener('focusin',reveal);
   document.addEventListener('keydown',e=>{if(panel.hidden)return;if(e.key==='Escape')close();else reveal();});
-  const observer=new MutationObserver(draw);observer.observe(document.querySelector('.feed-result-header'),{subtree:true,childList:true,characterData:true,attributes:true});
+  const observer=new MutationObserver(draw);observer.observe(document.querySelector('.feed-result-header'),{subtree:true,childList:true,characterData:true,attributes:true});setInterval(()=>{if(!panel.hidden){const t=document.getElementById('feedMatchTime');if(t)panel.querySelector('.viewer-score-clock').textContent=t.textContent||'Ticker wird geladen …';}},500);
   if(['mobile','tv'].includes(params.get('scoreboard')))open(params.get('scoreboard'));else if(selectedSide!=='both')open('tv');
  });
 })();
