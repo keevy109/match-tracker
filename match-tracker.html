@@ -1157,7 +1157,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 <link rel="stylesheet" href="./touch-scoreboard.css">
 <script src="./touch-scoreboard.js"></script>
 <link rel="stylesheet" href="./viewer-scoreboard.css">
-<script src="./viewer-scoreboard.js"></script>
+<script src="./viewer-scoreboard.js?v=20261106"></script>
 <link rel="stylesheet" href="./scoreboard.css?v=20261023">
 <script src="./scoreboard.js?v=20261023"></script>
 <link rel="stylesheet" href="./ticker-loader.css?v=20261010-fast">
@@ -2280,7 +2280,7 @@ function buildEventItemHtml(e, homeName, awayName, isTrainer, context = {}) {
     const teamName = e.team === 'away' ? awayName : homeName;
     const portrait = player?.photo || e.playerPhoto;
     return `<div class="event-min">${e.minute > 0 ? '<span class="event-minute">' + esc(e.minute) + "'</span>" : ''}<span class="yellow-card-symbol" aria-hidden="true"></span></div>
-      <div class="event-info"><div class="event-scorer">${esc(name)}</div><div class="event-tag">${cardLabel}</div></div>
+      <div class="event-info"><div class="event-scorer">${esc(name)}</div><div class="event-tag">${cardLabel}${e.reason ? ' · ' + esc(e.reason) : ''}</div></div>
       ${portrait ? '<img class="yellow-card-photo" src="' + esc(portrait) + '" alt="' + esc(name) + '" loading="lazy">' : ''}
       ${isTrainer ? '<button class="event-delete" onclick="deleteEvent(' + Number(e.id) + ')" aria-label="Meldung löschen">×</button>' : ''}`;
   }
