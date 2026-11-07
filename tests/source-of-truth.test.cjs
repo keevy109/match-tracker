@@ -130,8 +130,14 @@ test('website points visitors at the latest ticker, never at the reporter tool',
   assert.match(ticker,/id="latestTickerLink"[^>]*>Live-Ticker öffnen</);
   assert.match(ticker,/<iframe[^>]*id="latestTickerFrame"/);
   for(const file of ['src/sections/nav.frag','src/sections/footer.frag'])assert.doesNotMatch(read(file),/match-tracker\.html|admin\.html/);
-  assert.match(read('src/scripts/ticker-link.js'),/embed=compact&style=dark/);
-  assert.match(read('src/scripts/ticker-link.js'),/embed=score-compact&style=dark/);
+  const link=read('src/scripts/ticker-link.js');
+  assert.match(link,/getElementById\('latestTickerFrame'\), 'feed'\]/);
+  assert.match(link,/getElementById\('navScoreFrame'\), 'score-compact&names=1'\]/);
+  assert.match(link,/style=\$\{theme\(\)\}/);
+  assert.match(link,/attributeFilter: \['data-theme'\]/);
+  assert.match(link,/link\.target = '_blank'/);
+  assert.match(read('src/scripts/spielplan.js'),/target="_blank" rel="noopener"/);
+  assert.match(read('public/share-embed.js'),/names.*cross-feed-navigation/);
   assert.match(read('src/sections/nav.frag'),/<iframe[^>]*id="navScoreFrame"/);
   assert.match(read('src/scripts/admin.js'),/MatchTrackerAccess\.check\(\)/);
 });

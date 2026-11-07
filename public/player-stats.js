@@ -41,7 +41,7 @@
     return list;
   }
   function summarizeMatches(matches) {
-    const totals = {played:0, scored:0, conceded:0, wins:0, losses:0};
+    const totals = {played:0, scored:0, conceded:0, wins:0, losses:0, abandoned:0};
     Object.entries(matches || {}).forEach(([id, match]) => {
       if (id === 'null' || match?.matchFinished !== true) return;
       const home = match.homeScore, away = match.awayScore;
@@ -49,7 +49,7 @@
       const scored = match.isHomeTeam === false ? away : home;
       const conceded = match.isHomeTeam === false ? home : away;
       totals.played++; totals.scored += scored; totals.conceded += conceded;
-      if (match.abandoned === true) return;
+      if (match.abandoned === true) { totals.abandoned++; return; }
       if (scored > conceded) totals.wins++;
       if (scored < conceded) totals.losses++;
     });

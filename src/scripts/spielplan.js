@@ -81,7 +81,7 @@ function render(matches, clubs = []) {
     const tickerUrl = isPast && m.tickerId != null
       ? `${import.meta.env.BASE_URL}match-tracker.html?ticker=${encodeURIComponent(m.tickerId)}` : null;
     const tag = tickerUrl ? 'a' : 'div';
-    const linkAttr = tickerUrl ? ` href="${escAttr(tickerUrl)}" aria-label="Ticker: SSV Berghausen gegen ${escAttr(m.opponent)} vom ${escAttr(m.date || '')}"` : '';
+    const linkAttr = tickerUrl ? ` href="${escAttr(tickerUrl)}" target="_blank" rel="noopener" aria-label="Ticker: SSV Berghausen gegen ${escAttr(m.opponent)} vom ${escAttr(m.date || '')}"` : '';
     return `<${tag} class="match-card${tickerUrl ? ' match-card-link' : ''}"${linkAttr}${styleAttr ? ` style="${styleAttr}"` : ''}>
       <div class="match-card-date"><strong>${day}</strong>${month}</div>
       <div>

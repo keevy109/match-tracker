@@ -20,6 +20,7 @@
   --text-faint: rgba(255, 255, 255, 0.35);
   --nav-bg:     rgba(7, 11, 18, 0.88);
   --modal-bg:   rgba(10, 14, 22, 0.88);
+  --embed-page: #101214;
   --veil:       0;
   --badge-bg:   rgba(255,180,0,0.1);
   --badge-text: #d4960a;
@@ -51,6 +52,7 @@
   --text-faint: rgba(24, 29, 16, 0.40);
   --nav-bg:     rgba(243, 245, 237, 0.90);
   --modal-bg:   rgba(255, 255, 255, 0.94);
+  --embed-page: #eef0f2;
   --veil:       1;
   --badge-bg:   rgba(255,180,0,0.15);
   --badge-text: #9a6800;

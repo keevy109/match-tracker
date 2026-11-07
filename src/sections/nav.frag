@@ -13,6 +13,6 @@
   </div>
   <!-- Kompakter Spielstand des letzten Tickers -->
   <div class="nav-score" id="navScore" hidden>
-    <iframe class="nav-score-frame" id="navScoreFrame" title="Aktueller Spielstand" loading="lazy"></iframe>
+    <iframe class="nav-score-frame" id="navScoreFrame" title="Aktueller Spielstand"></iframe>
   </div>
 </nav>

@@ -22,5 +22,7 @@ html:is([data-embed="score"],[data-embed="score-compact"]),
 body:is([data-embed="score"],[data-embed="score-compact"]) { overflow:hidden!important; height:100%; min-height:0!important; }
 body:is([data-embed="score"],[data-embed="score-compact"]) .feed-result-header { transition:none!important; }
 body[data-embed="score-compact"] .feed-result-space { height:100px!important; }
+/* Leiste mit Teamnamen: die Zeitplakette darf unten überhängen, die Aktualisierungszeile entfällt. */
+body[data-embed="score-compact"].cross-feed-navigation #tickerUpdated { display:none!important; }
 
 body.ticker-mode[data-embed] .reset-row { display:none!important; }

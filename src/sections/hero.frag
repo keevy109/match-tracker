@@ -35,6 +35,10 @@
         <div class="hero-stat-val" data-match-stat="losses">–</div>
         <div class="hero-stat-label">Spiel verloren</div>
       </div>
+      <div>
+        <div class="hero-stat-val" data-match-stat="abandoned">–</div>
+        <div class="hero-stat-label">Spiel abgebrochen</div>
+      </div>
     </div>
   </div>
 </section>
