@@ -835,8 +835,8 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
     box-shadow: 0px -20px 40px 10px rgba(17, 17, 17, var(--feed-shadow-opacity, 0));
   }
   @media (min-width: 1024px) {
-    /* Nur Reporter-/Dev-Ansichten sitzen rechts neben ihrer Bedienspalte mit Rahmen; der öffentliche Ticker bleibt zentriert und rahmenlos. */
-    body:is(.dev-mode, .entry-mode) { margin-left: auto; margin-right: 0; border: 1px solid var(--feed-text); }
+    /* Nur Reporter-/Dev-Ansichten sitzen rechts neben ihrer Bedienspalte; der öffentliche Ticker bleibt zentriert. */
+    body:is(.dev-mode, .entry-mode) { margin-left: auto; margin-right: 0; }
     body:is(.dev-mode, .entry-mode).feed-scrolled .feed-result-header { left: auto; right: 0; margin-inline: 0; }
   }
   body:is(.ticker-mode, .dev-mode, .entry-mode) .feed-result-names,
