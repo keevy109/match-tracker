@@ -20,7 +20,7 @@
 .kl-header,
 #kaderRows .kl-row {
   display: grid;
-  grid-template-columns: 34px 46px minmax(0, 1fr) 60px 64px 72px;
+  grid-template-columns: 34px 46px minmax(0, 1fr) 60px 44px 64px 72px;
   gap: 10px;
   align-items: center;
 }
@@ -126,12 +126,13 @@
 @media (max-width: 420px) {
   .kl-header,
   #kaderRows .kl-row {
-    grid-template-columns: 24px 46px minmax(0, 1fr) 40px 48px 56px;
-    gap: 7px;
+    grid-template-columns: 24px 46px minmax(0, 1fr) 38px 34px 38px 46px;
+    gap: 5px;
     padding-left: 10px;
     padding-right: 10px;
   }
   .kl-name { font-size: 12px; }
+  .kl-sort-btn { font-size: 8px; letter-spacing: 0.04em; }
   /* Klammerwert unter die Zahl: hält die Namensspalte breit genug */
   #kaderRows .kl-stat { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
   #kaderRows .kl-pct { font-size: 10px; }

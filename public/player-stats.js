@@ -6,12 +6,15 @@
     });
     const byId = new Map(list.map(p => [String(p.id), p]));
     let gamesTotal = 0;
+    let teamGoals = list.reduce((sum, p) => sum + (Number(p.goalAdjustment) || 0), 0);
     Object.entries(matches || {}).forEach(([id, match]) => {
       if (!match || id === 'null') return;
       gamesTotal++;
       const side = match.isHomeTeam === false ? 'away' : 'home';
       Object.values(match.events || {}).forEach(event => {
-        if ((event.typ || 'tor') !== 'tor' || event.isOwnGoal || event.team !== side) return;
+        if ((event.typ || 'tor') !== 'tor' || event.team !== side) return;
+        teamGoals++;
+        if (event.isOwnGoal) return;
         const player = byId.get(String(event.scorerId));
         if (player) player.goals++;
       });
@@ -21,6 +24,8 @@
     list.forEach(player => {
       player.gamesTotal = gamesTotal;
       player.goals = Math.max(0, player.goals);
+      player.teamGoals = Math.max(0, teamGoals);
+      player.goalsPerGame = player.games ? player.goals / player.games : 0;
       let attended = 0, total = 0;
       Object.values(training || {}).forEach(session => {
         if (!session || session.cancelled) return;

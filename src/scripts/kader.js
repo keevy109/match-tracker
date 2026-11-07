@@ -32,6 +32,7 @@ const SORT_COLS = [
   { field: null,       label: '',       right: false },
   { field: 'name',     label: 'Name',   right: false },
   { field: 'goals',    label: 'Tore',   right: true  },
+  { field: 'goalsPerGame', label: 'Ø Tore', right: true, title: 'Tore pro Spiel' },
   { field: 'games',    label: 'Spiele', right: true  },
   { field: 'training', label: 'Training', right: true  },
 ];
@@ -60,7 +61,7 @@ function renderSortHeader(container) {
     const active = sortField === col.field;
     const arrow  = active ? (sortDir > 0 ? ' ↑' : ' ↓') : '';
     const cls    = 'kl-sort-btn' + (active ? ' kl-sort-active' : '') + (col.right ? ' kl-sort-right' : ' kl-sort-num');
-    return `<button class="${cls}" data-sort="${col.field}">${col.label}${arrow}</button>`;
+    return `<button class="${cls}" data-sort="${col.field}"${col.title ? ` title="${col.title}"` : ''}>${col.label}${arrow}</button>`;
   }).join('');
 
   header.querySelectorAll('.kl-sort-btn').forEach(btn => {
@@ -103,7 +104,8 @@ function renderKader() {
       <div class="kl-date"><strong>${p.num ?? '–'}</strong>${pos}</div>
       ${avatar}
       <div class="kl-name">${p.name}</div>
-      <div class="kl-stat" data-col="goals" title="${p.goals ?? 0} Tore in ${p.games ?? 0} Spielen${goalRate(p) ? ` · ${goalRate(p)} pro Spiel` : ''}">${p.goals ?? 0}${goalRate(p) ? ` <span class="kl-pct">(${goalRate(p)})</span>` : ''}</div>
+      <div class="kl-stat" data-col="goals" title="${p.goals ?? 0} von ${p.teamGoals ?? 0} Mannschaftstoren">${p.goals ?? 0}${p.teamGoals ? ` <span class="kl-pct">(${goalShare(p)}%)</span>` : ''}</div>
+      <div class="kl-stat" data-col="rate" title="${p.goals ?? 0} Tore in ${p.games ?? 0} Spielen">${goalRate(p) ?? '–'}</div>
       <div class="kl-stat" data-col="games" title="${p.games ?? 0} von ${p.gamesTotal ?? 0} Spielen">${p.games ?? 0}${p.gamesTotal ? ` <span class="kl-pct">(${Math.round((p.games ?? 0) / p.gamesTotal * 100)}%)</span>` : ''}</div>
       <div class="kl-stat" data-col="training" title="${p.trainingAttended ?? 0} von ${p.trainingTotal ?? 0} Einheiten">${p.trainingAttended ?? 0}${p.trainingTotal ? ` <span class="kl-pct">(${p.training ?? 0}%)</span>` : ''}</div>
     </div>`;
@@ -250,16 +252,21 @@ function applyPlayerContent(player) {
   set('kdGes',    posLabel(pos));
   set('kdPos',    '');
   set('kdLN', (player.name || '–').toUpperCase());
-  setCountDetail('kdGoals', player.goals ?? 0, goalRate(player));
+  setCountDetail('kdGoals', player.goals ?? 0, player.teamGoals ? goalShare(player) + '%' : null);
+  set('kdRate', goalRate(player) ?? '–');
   setCountDetail('kdGames', player.games ?? 0, player.gamesTotal ? Math.round((player.games ?? 0) / player.gamesTotal * 100) + '%' : null);
   setCountDetail('kdTraining', player.trainingAttended ?? 0, player.trainingTotal ? (player.training ?? 0) + '%' : null);
 }
 
+// Anteil an den Mannschaftstoren in Prozent.
+function goalShare(player) {
+  return Math.round((player.goals ?? 0) / player.teamGoals * 100);
+}
+
 // Tore pro Einsatz, eine Nachkommastelle mit deutschem Komma; null ohne Einsätze.
 function goalRate(player) {
-  const games = player.games ?? 0;
-  if (!games) return null;
-  return (Math.round((player.goals ?? 0) / games * 10) / 10).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  if (!(player.games ?? 0)) return null;
+  return (Math.round((player.goalsPerGame ?? 0) * 10) / 10).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 function setCountDetail(id, count, detail) {
