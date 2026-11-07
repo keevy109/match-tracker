@@ -42,6 +42,13 @@ app.innerHTML = rawHtml
 initBackground();
 initNewsModal();
 initSplash();
+
+// Navi-Höhe als CSS-Variable: Bezugspunkt für sticky Elemente und Ankersprünge,
+// die Spielstand-Leiste macht die Navigation nachträglich höher.
+const nav = document.querySelector('.nav');
+const publishNavHeight = () => document.documentElement.style.setProperty('--nav-height', nav.offsetHeight + 'px');
+publishNavHeight();
+if (typeof ResizeObserver === 'function') new ResizeObserver(publishNavHeight).observe(nav);
 // Erst laden, dann den Splash zeigen: dahinter steht die Seite schon fertig.
 const loading = globalThis.MatchTrackerLoader.start(['site']);
 document.querySelector('.ticker-loading-overlay span').textContent = 'Webseite wird geladen …';

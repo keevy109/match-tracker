@@ -48,7 +48,7 @@
 }
 
 /* ── Spielstand-Leiste unter der Navigation ───────────────────── */
-/* Gleiche Farbe wie der Embed-Body (--feed-page), damit der Rahmen nicht absetzt. */
-.nav-score { border-top: 1px solid var(--border); background: var(--embed-page); }
+/* Das Embed malt mit transparent=1 keinen eigenen Hintergrund; die Leiste liegt auf dem Navi-Glas. */
+.nav-score { border-top: 1px solid var(--border); background: transparent; }
 /* 100px Header plus 24px Überhang der Zeitplakette */
 .nav-score-frame { display: block; width: 100%; max-width: 600px; height: 124px; margin: 0 auto; border: 0; }

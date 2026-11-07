@@ -23,7 +23,7 @@ export async function init() {
 
   const frames = [
     [document.getElementById('latestTickerFrame'), 'feed'],
-    [document.getElementById('navScoreFrame'), 'score-compact&names=1'],
+    [document.getElementById('navScoreFrame'), 'score-compact&names=1&transparent=1'],
   ].filter(([frame]) => frame);
   const theme = () => document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
   const empty = document.getElementById('latestTickerEmpty');

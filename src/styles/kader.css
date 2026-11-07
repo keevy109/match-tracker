@@ -179,7 +179,7 @@
 .kader-detail.kd-shown   { opacity: 1; transform: none; }
 
 @media (min-width: 900px) {
-  .kader-detail { position: sticky; top: 100px; }
+  .kader-detail { position: sticky; top: calc(var(--nav-height, 56px) + 44px); }
 }
 @media (max-width: 899px) {
   .kader-detail { transform: translateY(8px); }
