@@ -92,9 +92,10 @@ body::before {
   z-index: -2;
   background: url('/bkgr_main.png') right center / cover no-repeat;
 }
+/* Heller Modus: eigenes Hintergrundbild über dem Stadionfoto, per --veil ein- und ausgeblendet. */
 body::after {
   z-index: -1;
-  background: var(--bg);
+  background: url('/bkgr_light.jpg') center center / cover no-repeat, var(--bg);
   opacity: var(--veil);
   transition: opacity 0.5s ease;
 }
