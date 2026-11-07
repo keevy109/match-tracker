@@ -1,5 +1,6 @@
 import '../styles/base.css';
 import '../styles/admin.css';
+import '../../public/access-guard.js';
 import * as api from './api.js';
 import {init as initNewsAdmin} from './news-admin.js';
 
@@ -1073,6 +1074,7 @@ function initCropEvents() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────
 async function boot() {
+  if (!globalThis.MatchTrackerAccess.check()) { globalThis.MatchTrackerAccess.deny(); return; }
   document.querySelectorAll('.admin-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });

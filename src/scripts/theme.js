@@ -8,10 +8,7 @@ export function toggleTheme() {
 
 export function init() {
   const saved = localStorage.getItem('theme');
-  if (saved) {
-    document.documentElement.setAttribute('data-theme', saved);
-  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }
+  document.documentElement.setAttribute('data-theme',
+    saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   window.toggleTheme = toggleTheme;
 }

@@ -1158,6 +1158,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 <script src="./touch-scoreboard.js"></script>
 <link rel="stylesheet" href="./viewer-scoreboard.css">
 <script src="./viewer-scoreboard.js?v=20261106"></script>
+<script src="./access-guard.js"></script>
 <link rel="stylesheet" href="./scoreboard.css?v=20261023">
 <script src="./scoreboard.js?v=20261023"></script>
 <link rel="stylesheet" href="./ticker-loader.css?v=20261010-fast">
@@ -4572,14 +4573,11 @@ window.TrackerScoreboard = {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 // ─── ACCESS GUARD: block direct access without ?ticker ───────────────────────
-const ADMIN_PIN = '1909';
 function checkAccess() {
   const params = new URLSearchParams(window.location.search);
   if (params.has('ticker') || params.get('dev') === '1') return true; // Öffentliche Ansichten immer erlaubt
-  if (sessionStorage.getItem('mt_auth') === '1') return true;
-  const pin = prompt('Zugang gesperrt. PIN eingeben:');
-  if (pin === ADMIN_PIN) { sessionStorage.setItem('mt_auth', '1'); return true; }
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#888;font-family:sans-serif;font-size:18px">Zugang verweigert.</div>';
+  if (MatchTrackerAccess.check()) return true;
+  MatchTrackerAccess.deny();
   return false;
 }
 

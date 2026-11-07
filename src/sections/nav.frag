@@ -7,9 +7,12 @@
       <a class="nav-link" href="#spielplan">Spielplan</a>
       <a class="nav-link" href="#kader">Kader</a>
       <a class="nav-link" href="#aktuelles">Aktuelles</a>
-      <a class="nav-link" href="#kontakt">Kontakt</a>
-      <a class="nav-link highlight" href="match-tracker.html">Live-Ticker →</a>
+      <a class="nav-link highlight" id="navTickerLink" href="#ticker">Live-Ticker →</a>
       <button class="nav-theme" onclick="toggleTheme()" title="Farbschema wechseln">◐</button>
     </div>
+  </div>
+  <!-- Kompakter Spielstand des letzten Tickers -->
+  <div class="nav-score" id="navScore" hidden>
+    <iframe class="nav-score-frame" id="navScoreFrame" title="Aktueller Spielstand" loading="lazy"></iframe>
   </div>
 </nav>

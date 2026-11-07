@@ -35,6 +35,27 @@
     return items;
   }
 
+  // Newest tracked fixture; a match still in progress beats every finished one.
+  function latestTicker(schedule, matches) {
+    const records = matches || {};
+    const candidates = Object.entries(schedule || {})
+      .filter(([key, item]) => item && item.archived !== true && records[String(item.id ?? key)])
+      .map(([key, item]) => {
+        const id = String(item.id ?? key);
+        return {
+          id,
+          opponent: item.opponent || '',
+          home: typeof item.home === 'boolean' ? item.home : item.isHome !== false,
+          date: item.date || '',
+          time: item.time || '',
+          live: records[id].matchFinished !== true,
+        };
+      });
+    const live = candidates.filter(item => item.live);
+    const pool = live.length ? live : candidates;
+    return pool.sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`) || b.id.localeCompare(a.id))[0] || null;
+  }
+
   function visibleMatches(matches, schedule) {
     const archivedIds = new Set();
     const scheduledIds = new Set();
@@ -122,5 +143,5 @@
 
   }
 
-  root.MatchTrackerSchedule = {normalize, visibleMatches, mergeAdminSchedule, reporterSchedule, sortReporter};
+  root.MatchTrackerSchedule = {normalize, latestTicker, visibleMatches, mergeAdminSchedule, reporterSchedule, sortReporter};
 })(globalThis);

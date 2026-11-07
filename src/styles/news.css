@@ -4,11 +4,11 @@
   background: var(--surface);
   backdrop-filter: blur(16px) saturate(1.1);
   -webkit-backdrop-filter: blur(16px) saturate(1.1);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius); overflow: hidden;
   cursor: pointer; transition: border-color 0.15s;
 }
-.news-card:hover { border-color: rgba(255,255,255,0.18); }
+.news-card:hover { border-color: var(--glass-border-strong); }
 .news-image {
   height: 160px;
   display: flex; align-items: center; justify-content: center;
@@ -42,9 +42,9 @@
 }
 .news-modal-card {
   position: relative; z-index: 1;
-  background: rgba(10,14,22,0.88);
+  background: var(--modal-bg);
   backdrop-filter: blur(24px) saturate(1.2); -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid var(--glass-border);
   border-radius: 18px; overflow: hidden;
   width: 100%; max-width: 560px; max-height: 88vh;
   display: flex; flex-direction: column;

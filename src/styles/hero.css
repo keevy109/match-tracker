@@ -69,33 +69,8 @@
   border-bottom: 1px solid var(--dark-brd);
 }
 .mock-dot { width: 8px; height: 8px; border-radius: 50%; }
-.ticker-mockup-body { padding: 20px 16px; }
-.mock-teams {
-  display: flex; align-items: center; justify-content: center;
-  gap: 12px; margin-bottom: 16px;
-}
-.mock-score {
-  font-family: var(--mono); font-size: 40px; font-weight: 600;
-  color: var(--dark-text); letter-spacing: 0.05em;
-}
-.mock-team { font-size: 11px; color: var(--dark-muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.mock-live-badge {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-family: var(--mono); font-size: 10px; color: var(--red);
-  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px;
-}
-.mock-live-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--red);
-  animation: blink 1.4s ease-in-out infinite;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
-.mock-event {
-  display: flex; align-items: center; gap: 10px;
-  padding: 7px 8px; border-radius: 6px;
-  background: rgba(255,255,255,0.04); margin-bottom: 5px;
-  font-size: 13px; color: var(--dark-text);
-}
-.mock-event-min { font-family: var(--mono); font-size: 11px; color: var(--dark-muted); width: 28px; flex-shrink: 0; }
+.ticker-mockup-title { font-family: var(--mono); font-size: 11px; color: var(--dark-muted); margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticker-preview { display: block; width: 100%; height: 440px; border: 0; background: #101214; }
 .mock-no-live {
   text-align: center; padding: 28px 0;
   color: var(--dark-muted); font-family: var(--mono);

@@ -12,7 +12,3 @@
   @media (prefers-reduced-motion:reduce) { .tactics-loader path { animation:none; stroke-dashoffset:0; opacity:1; } }
   .ticker-loading-overlay button { padding:12px 20px; }
 
-body.club-site.ticker-loading #app { visibility:hidden; opacity:0; }
-body.club-site.ticker-loaded #app { animation:site-reveal .5s ease; }
-@keyframes site-reveal { from { opacity:0; } to { opacity:1; } }
-@media (prefers-reduced-motion:reduce) { body.club-site.ticker-loaded #app { animation:none; } }

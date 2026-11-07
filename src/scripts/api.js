@@ -52,6 +52,14 @@ export async function loadMatchRecords() {
   return globalThis.MatchTrackerSchedule.visibleMatches(matches, schedule);
 }
 
+export async function loadLatestTicker() {
+  const [schedule, matches, teams] = await Promise.all([remote('app/schedule'), remote('matches'), remote('app/teams')]);
+  const latest = globalThis.MatchTrackerSchedule.latestTicker(schedule, matches);
+  if (!latest) return null;
+  const club = globalThis.MatchTrackerTeams.find(teams, latest.opponent);
+  return club ? {...latest, opponent:club.name} : latest;
+}
+
 export async function loadTrackedSchedule() {
   const [schedule, matches, teams] = await Promise.all([remote('app/schedule'), remote('matches'), remote('app/teams')]);
   return globalThis.MatchTrackerSchedule.normalize(

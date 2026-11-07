@@ -123,9 +123,17 @@ test('tracker roster views use the current player portraits',()=>{
   assert.match(tracker,/\.player-avatar \{[^}]*object-fit:\s*contain[^}]*object-position:\s*center bottom/s);
 });
 
-test('website links to the isolated tracker test mode',()=>{
-  const ticker=fs.readFileSync(path.join(__dirname,'../src/sections/ticker.frag'),'utf8');
-  assert.match(ticker,/href="match-tracker\.html\?dev=1"[^>]*>Tracker testen</);
+test('website points visitors at the latest ticker, never at the reporter tool',()=>{
+  const read=relative=>fs.readFileSync(path.join(__dirname,'..',relative),'utf8');
+  const ticker=read('src/sections/ticker.frag');
+  assert.doesNotMatch(ticker,/match-tracker\.html/);
+  assert.match(ticker,/id="latestTickerLink"[^>]*>Live-Ticker öffnen</);
+  assert.match(ticker,/<iframe[^>]*id="latestTickerFrame"/);
+  for(const file of ['src/sections/nav.frag','src/sections/footer.frag'])assert.doesNotMatch(read(file),/match-tracker\.html|admin\.html/);
+  assert.match(read('src/scripts/ticker-link.js'),/embed=compact&style=dark/);
+  assert.match(read('src/scripts/ticker-link.js'),/embed=score-compact&style=dark/);
+  assert.match(read('src/sections/nav.frag'),/<iframe[^>]*id="navScoreFrame"/);
+  assert.match(read('src/scripts/admin.js'),/MatchTrackerAccess\.check\(\)/);
 });
 
 test('dev tracker previews goals and other events with the spectator overlay',()=>{

@@ -1,8 +1,8 @@
 /* ── Navigation ────────────────────────────────────────────────── */
 .nav {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(7, 11, 18, 0.88);
-  border-bottom: 1px solid rgba(40, 65, 100, 0.25);
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -46,3 +46,8 @@
 @media (max-width: 600px) {
   .nav-links .nav-link:not(.highlight) { display: none; }
 }
+
+/* ── Spielstand-Leiste unter der Navigation ───────────────────── */
+/* Gleiche Farbe wie der Embed-Body (--feed-page), damit der Rahmen nicht absetzt. */
+.nav-score { border-top: 1px solid var(--border); background: #101214; }
+.nav-score-frame { display: block; width: 100%; max-width: 600px; height: 100px; margin: 0 auto; border: 0; }

@@ -7,8 +7,8 @@
     </h1>
     <p class="hero-desc">
       Hier findet ihr Spielberichte, Live-Ergebnisse, den aktuellen Kader
-      und alle Termine der E-Jugend. Eltern können Spiele live im Ticker
-      mitverfolgen – direkt auf dem Handy.
+      und alle Termine der E-Jugend. Alle Spiele können live im Ticker
+      mitverfolgt werden – direkt auf dem Smartphone.
     </p>
     <div class="hero-actions">
       <a class="btn-primary" href="#ticker">Live-Ticker ↓</a>

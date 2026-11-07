@@ -73,7 +73,12 @@ function populateBanner(match, vereine) {
   }
 
   const navEl = document.querySelector('.nav');
-  if (navEl) banner.style.top = navEl.offsetHeight + 'px';
+  if (navEl) {
+    const place = () => { banner.style.top = navEl.offsetHeight + 'px'; };
+    place();
+    // Die Spielstand-Leiste kann die Navigation nachträglich höher machen.
+    if (typeof ResizeObserver === 'function') new ResizeObserver(place).observe(navEl);
+  }
   banner.classList.add('mdb-visible');
 }
 
