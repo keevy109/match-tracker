@@ -103,7 +103,7 @@ function renderKader() {
       <div class="kl-date"><strong>${p.num ?? '–'}</strong>${pos}</div>
       ${avatar}
       <div class="kl-name">${p.name}</div>
-      <div class="kl-stat" data-col="goals">${p.goals ?? 0}</div>
+      <div class="kl-stat" data-col="goals" title="${p.goals ?? 0} Tore in ${p.games ?? 0} Spielen${goalRate(p) ? ` · ${goalRate(p)} pro Spiel` : ''}">${p.goals ?? 0}${goalRate(p) ? ` <span class="kl-pct">(${goalRate(p)})</span>` : ''}</div>
       <div class="kl-stat" data-col="games" title="${p.games ?? 0} von ${p.gamesTotal ?? 0} Spielen">${p.games ?? 0}${p.gamesTotal ? ` <span class="kl-pct">(${Math.round((p.games ?? 0) / p.gamesTotal * 100)}%)</span>` : ''}</div>
       <div class="kl-stat" data-col="training" title="${p.trainingAttended ?? 0} von ${p.trainingTotal ?? 0} Einheiten">${p.trainingAttended ?? 0}${p.trainingTotal ? ` <span class="kl-pct">(${p.training ?? 0}%)</span>` : ''}</div>
     </div>`;
@@ -111,7 +111,7 @@ function renderKader() {
 
   container.querySelectorAll('.kl-row').forEach(row => {
     row.addEventListener('click', () => {
-      container.querySelectorAll('.kl-row').forEach(r => r.classList.remove('kl-selected'));
+      allRows().forEach(r => r.classList.remove('kl-selected'));
       row.classList.add('kl-selected');
       const pid    = Number(row.dataset.pid);
       const player = squad.find(p => p.id === pid);
@@ -250,19 +250,26 @@ function applyPlayerContent(player) {
   set('kdGes',    posLabel(pos));
   set('kdPos',    '');
   set('kdLN', (player.name || '–').toUpperCase());
-  set('kdGoals',    player.goals    ?? 0);
-  setCountPct('kdGames', player.games ?? 0, player.gamesTotal ? Math.round((player.games ?? 0) / player.gamesTotal * 100) : null);
-  setCountPct('kdTraining', player.trainingAttended ?? 0, player.trainingTotal ? player.training ?? 0 : null);
+  setCountDetail('kdGoals', player.goals ?? 0, goalRate(player));
+  setCountDetail('kdGames', player.games ?? 0, player.gamesTotal ? Math.round((player.games ?? 0) / player.gamesTotal * 100) + '%' : null);
+  setCountDetail('kdTraining', player.trainingAttended ?? 0, player.trainingTotal ? (player.training ?? 0) + '%' : null);
 }
 
-function setCountPct(id, count, pct) {
+// Tore pro Einsatz, eine Nachkommastelle mit deutschem Komma; null ohne Einsätze.
+function goalRate(player) {
+  const games = player.games ?? 0;
+  if (!games) return null;
+  return (Math.round((player.goals ?? 0) / games * 10) / 10).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function setCountDetail(id, count, detail) {
   const el = document.getElementById(id);
   if (!el) return;
   el.textContent = count;
-  if (pct === null) return;
+  if (detail === null) return;
   const span = document.createElement('span');
   span.className = 'kd-pct';
-  span.textContent = ` (${pct}%)`;
+  span.textContent = ` (${detail})`;
   el.appendChild(span);
 }
 
