@@ -7,8 +7,8 @@ export function toggleTheme() {
 }
 
 export function init() {
+  // Dunkel ist Standard; nur eine ausdrückliche Wahl des Besuchers überschreibt das.
   const saved = localStorage.getItem('theme');
-  document.documentElement.setAttribute('data-theme',
-    saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  document.documentElement.setAttribute('data-theme', saved || 'dark');
   window.toggleTheme = toggleTheme;
 }

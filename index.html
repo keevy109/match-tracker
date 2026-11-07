@@ -14,8 +14,7 @@
 /* Theme-Init: läuft synchron vor dem Paint, verhindert Flash */
 (function() {
   var saved = localStorage.getItem('theme');
-  document.documentElement.setAttribute('data-theme',
-    saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  document.documentElement.setAttribute('data-theme', saved || 'dark');
 })();
 </script>
 </head>
