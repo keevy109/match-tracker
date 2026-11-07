@@ -2,8 +2,8 @@ import '../../public/player-stats.js';
 import '../../public/schedule-data.js';
 import '../../public/team-data.js';
 const DATABASE = 'https://match-tracker-891ac-default-rtdb.europe-west1.firebasedatabase.app';
-async function remote(path) {
-  const res = await fetch(`${DATABASE}/${path}.json`, {signal:AbortSignal.timeout(8000), cache:'no-store'});
+async function remote(path, timeoutMs = 8000) {
+  const res = await fetch(`${DATABASE}/${path}.json`, {signal:AbortSignal.timeout(timeoutMs), cache:'no-store'});
   if (!res.ok) throw new Error('Gemeinsamer Kader nicht erreichbar');
   return res.json();
 }
@@ -53,7 +53,8 @@ export async function loadMatchRecords() {
 }
 
 export async function loadLatestTicker() {
-  const [schedule, matches, teams] = await Promise.all([remote('app/schedule'), remote('matches'), remote('app/teams')]);
+  // Läuft parallel zu Kader, Hero und Spielplan, die dieselben Pfade laden; matches/ ist groß.
+  const [schedule, matches, teams] = await Promise.all([remote('app/schedule', 20000), remote('matches', 20000), remote('app/teams', 20000)]);
   const latest = globalThis.MatchTrackerSchedule.latestTicker(schedule, matches);
   if (!latest) return null;
   const club = globalThis.MatchTrackerTeams.find(teams, latest.opponent);

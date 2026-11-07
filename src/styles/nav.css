@@ -1,6 +1,8 @@
 /* ── Navigation ────────────────────────────────────────────────── */
-.nav {
-  position: sticky; top: 0; z-index: 100;
+.nav { position: sticky; top: 0; z-index: 100; pointer-events: none; }
+.nav > * { pointer-events: auto; }
+/* Nur die Bar trägt das Glas; die Spielstand-Leiste darunter bleibt durchsichtig. */
+.nav-bar {
   background: var(--nav-bg);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(14px);
@@ -48,7 +50,7 @@
 }
 
 /* ── Spielstand-Leiste unter der Navigation ───────────────────── */
-/* Das Embed malt mit transparent=1 keinen eigenen Hintergrund; die Leiste liegt auf dem Navi-Glas. */
-.nav-score { border-top: 1px solid var(--border); background: transparent; }
-/* 100px Header plus 24px Überhang der Zeitplakette */
-.nav-score-frame { display: block; width: 100%; max-width: 600px; height: 124px; margin: 0 auto; border: 0; }
+/* Das Embed malt mit transparent=1 keinen Seitenhintergrund: nur die Karte, die Zeitplakette hängt als Fahne heraus. */
+.nav-score { background: transparent; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+/* 100px Karte plus Überhang der Zeitplakette */
+.nav-score-frame { display: block; width: 100%; height: 123px; border: 0; background: transparent; }

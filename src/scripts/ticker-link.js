@@ -3,7 +3,13 @@ import * as api from './api.js';
 // Richtet Button, Navigation und Vorschau auf den neuesten Ticker aus.
 export async function init() {
   let latest = null;
-  try { latest = await api.loadLatestTicker(); } catch (error) { console.warn('Letzter Ticker nicht ermittelbar.', error); }
+  for (let attempt = 0; attempt < 3 && !latest; attempt++) {
+    try { latest = await api.loadLatestTicker(); }
+    catch (error) {
+      console.warn('Letzter Ticker nicht ermittelbar.', error);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+  }
   if (!latest) return;
 
   const url = `${import.meta.env.BASE_URL}match-tracker.html?ticker=${encodeURIComponent(latest.id)}`;

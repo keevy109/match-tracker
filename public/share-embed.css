@@ -24,7 +24,9 @@ body:is([data-embed="score"],[data-embed="score-compact"]) .feed-result-header {
 body[data-embed="score-compact"] .feed-result-space { height:100px!important; }
 /* Leiste mit Teamnamen: die Zeitplakette darf unten überhängen, die Aktualisierungszeile entfällt. */
 body[data-embed="score-compact"].cross-feed-navigation #tickerUpdated { display:none!important; }
+/* Leiste auf Container-Breite: das Dokument füllt den Rahmen bis 1100px. */
+body[data-embed="score-compact"].cross-feed-navigation { max-width:1100px!important; }
 /* transparent=1: das Dokument malt keinen Seitenhintergrund, nur der Spielstand selbst bleibt sichtbar. */
-html[data-transparent="1"], html[data-transparent="1"] body, html[data-transparent="1"] #tabSpiel { background:transparent!important; }
+html[data-transparent="1"], html[data-transparent="1"] body, html[data-transparent="1"] #tabSpiel, html[data-transparent="1"] .ticker-footer { background:transparent!important; }
 
 body.ticker-mode[data-embed] .reset-row { display:none!important; }
