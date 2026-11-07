@@ -62,6 +62,7 @@
   -webkit-backdrop-filter: blur(18px) saturate(1.1);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 18px; overflow: hidden; font-family: var(--sans);
+  max-height: 508px;
 }
 .ticker-mockup-bar {
   background: var(--dark-bg); padding: 10px 16px;
