@@ -136,7 +136,7 @@
     dialog.className = 'sound-consent';
     dialog.setAttribute('aria-labelledby', 'soundConsentTitle');
     dialog.setAttribute('aria-describedby', 'soundConsentDescription');
-    dialog.innerHTML = '<h2 id="soundConsentTitle">Mit Torjubel mitfiebern?</h2><p id="soundConsentDescription">Dürfen bei neuen Toren von SSV Berghausen Torsounds auf diesem Gerät abgespielt werden?</p><p>Du kannst den Ton jederzeit mit dem Lautsprecher-Button <strong>ganz unten am Seitenende, neben dem Hell-/Dunkel-Schalter</strong>, ein- oder ausschalten.</p><div class="sound-consent-actions"><button type="button" data-choice="no" autofocus>Ohne Ton</button><button type="button" data-choice="yes">Torsound erlauben</button></div>';
+    dialog.innerHTML = '<h2 id="soundConsentTitle">Torjubel aktivieren?</h2><p id="soundConsentDescription">Dürfen bei Toren des SSV Berghausen Torsounds auf diesem Gerät abgespielt werden?</p><p>Du kannst diese Einstellung jederzeit ändern und den Ton mit dem Lautsprecher-Button <strong>ganz unten am Seitenende</strong> ein- oder ausschalten.</p><div class="sound-consent-actions"><button type="button" data-choice="no" autofocus>Ohne Ton</button><button type="button" data-choice="yes">Torsound erlauben</button></div>';
     document.body.appendChild(dialog);
     function finish(value) {
       choose(value);
