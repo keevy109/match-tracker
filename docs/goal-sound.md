@@ -3,12 +3,16 @@
 `match-tracker.html` verwendet `public/goal-sound.js` und die Datei
 `public/audio/tor-fuer-uns.mp3`. Die MP3 stammt aus „Tor für uns!.mp3“.
 
-Beim ersten Öffnen fragt ein vorgelagertes Dialogfenster nach der Erlaubnis für
+Nur in der Zuschaueransicht fragt beim ersten Öffnen ein vorgelagertes Dialogfenster nach der Erlaubnis für
 Torsounds und erklärt den Lautsprecher-Button ganz unten neben dem Hell-/Dunkel-
 Schalter. „Ohne Ton“ und Escape lassen den Ton aus. „Torsound erlauben“ schaltet
 neue Berghausener Tore frei, ohne hörbaren Testsound. Der runde Footer-Button
 schaltet den Ton um; Ausschalten beendet auch die laufende Wiedergabe.
 Es gibt keine Test- oder Stopp-Buttons und keinen zusätzlichen Bereich im Feed.
+
+Eintragende erhalten keinen Dialog und bedienen ausschließlich den Footer-Schalter.
+Bei `dev=1` erscheint der Dialog bei jedem initialen Laden, unabhängig von
+der gespeicherten Auswahl. Eingebettete Vorschauen bleiben davon ausgenommen.
 
 Die Wahl wird pro Gerät/Browser gespeichert, getrennt für Zuschauer und Reporter.
 Nach Neuladen wird eine erlaubte Wiedergabe bei der nächsten Seiteninteraktion

@@ -56,3 +56,24 @@ test('consent unlocks silently; only future goals play audibly; switching off st
   assert.deepEqual(x.mutedAtPlay,[true,false]);assert.equal(x.state.playing,true);
   await x.controller.setEnabled(false);assert.equal(x.state.playing,false);assert.equal(x.state.enabled,false);
 });
+
+for (const [search, preference, expected] of [
+  ['?ticker=123', null, 1],
+  ['?ticker=123', 'off', 0],
+  ['?ticker=123', 'on', 0],
+  ['', null, 0],
+  ['', 'on', 0],
+  ['?dev=1', 'off', 1],
+  ['?dev=1&ticker=123', 'on', 1],
+  ['?dev=1&ticker=123&embed=feed', null, 0],
+]) test(`consent dialog count: ${search || 'reporter'}, preference ${preference}`,()=>{
+  let dialogs=0;
+  const element=()=>({hidden:true,setAttribute(){},addEventListener(){},querySelector(){return element();},showModal(){dialogs++;}});
+  const c=vm.createContext({
+    URL,URLSearchParams,location:{search},localStorage:{getItem:()=>preference},
+    Audio:function(){this.addEventListener=()=>{};},addEventListener(){},
+    document:{getElementById:()=>element(),createElement:()=>element(),body:{appendChild(){}},
+      currentScript:{src:'https://example.com/goal-sound.js'},addEventListener(){}}
+  });
+  vm.runInContext(source,c);assert.equal(dialogs,expected);
+});

@@ -103,7 +103,9 @@
   const status = document.getElementById('goalSoundStatus');
   if (!button) return;
   button.hidden = false;
-  const preferenceKey = params.has('ticker') ? 'mt_goal_sound_viewer' : 'mt_goal_sound_reporter';
+  const viewer = params.has('ticker');
+  const dev = params.get('dev') === '1';
+  const preferenceKey = viewer ? 'mt_goal_sound_viewer' : 'mt_goal_sound_reporter';
   let preference = null;
   try { preference = localStorage.getItem(preferenceKey); } catch (_) {}
   const audio = new Audio(new URL('./audio/tor-fuer-uns.mp3', document.currentScript.src).href);
@@ -129,7 +131,7 @@
     void controller.setEnabled(value);
   }
   button.onclick = () => choose(button.getAttribute('aria-pressed') !== 'true');
-  if (preference === null) {
+  if (dev || (viewer && preference === null)) {
     const dialog = document.createElement('dialog');
     dialog.className = 'sound-consent';
     dialog.setAttribute('aria-labelledby', 'soundConsentTitle');
