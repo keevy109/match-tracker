@@ -31,7 +31,7 @@
     audio.addEventListener('ended', () => { playing = false; notify(); });
     audio.addEventListener('error', () => {
       enabled = false; playing = false;
-      error = 'Torsound konnte nicht geladen werden. Verbindung prüfen und erneut testen.';
+      error = 'Torsound konnte nicht geladen werden. Verbindung prüfen und Torsound erneut einschalten.';
       notify();
     });
     function eligible(event, data) {
@@ -44,7 +44,8 @@
     }
     function goal(id, event, data) {
       if (String(id) !== matchId) {
-        stop(); matchId = String(id); seen = new Set(); initialized = false;
+        if (matchId !== null) stop();
+        matchId = String(id); seen = new Set(); initialized = false;
       }
       const key = String(event.id);
       if (seen.has(key)) return;
@@ -53,7 +54,8 @@
     }
     function observe(id, data) {
       if (String(id) !== matchId) {
-        stop(); matchId = String(id); seen = new Set(); initialized = false;
+        if (matchId !== null) stop();
+        matchId = String(id); seen = new Set(); initialized = false;
       }
       const entries = Object.values(data.events || {}).filter(e => e && e.id != null);
       if (!initialized) {
@@ -66,36 +68,95 @@
     }
     return {
       observe, goal, stop,
-      toggle() { enabled = !enabled; error = ''; if (enabled) void play(); else stop(); notify(); },
-      test() { void play(); },
+      async setEnabled(value) {
+        error = '';
+        stop();
+        enabled = value;
+        notify();
+        if (!value) return;
+        // Unlock the same media element silently during the user's click.
+        // There is no audible test: only a future goal plays the MP3.
+        const attempt = generation;
+        audio.muted = true;
+        try {
+          await audio.play();
+          if (generation !== attempt) return;
+          audio.pause();
+          audio.currentTime = 0;
+        } catch (_) {
+          if (generation !== attempt) return;
+          enabled = false;
+          error = 'Ton konnte nicht starten. Bitte am Seitenende erneut einschalten.';
+        } finally {
+          audio.muted = false;
+          notify();
+        }
+      },
+      toggle() { return this.setEnabled(!enabled); },
     };
   }
   root.MatchTrackerGoalSound = { create };
   if (!root.document) return;
   const params = new URLSearchParams(location.search);
   if (params.has('embed')) return; // Embedded previews must stay silent.
-  const host = document.getElementById('goalSoundControls');
-  if (!host) return;
-  const viewer = params.has('ticker');
-  host.innerHTML = '<strong>Torsound · Berghausen</strong><div class="goal-sound-actions"><button type="button" data-sound="toggle" aria-pressed="false"></button><button type="button" data-sound="test">Testen</button><button type="button" data-sound="stop" disabled>Stoppen</button></div><p></p><span role="status" aria-live="polite"></span>';
-  const toggle = host.querySelector('[data-sound="toggle"]');
-  const stop = host.querySelector('[data-sound="stop"]');
-  host.querySelector('p').textContent = viewer
-    ? 'Nach Aktivierung erklingen neue Berghausener Tore auf diesem Gerät. Ticker geöffnet lassen.'
-    : 'Ton auf diesem Gerät aktivieren und testen. Neue Berghausener Tore erklingen nach erfolgreicher Übertragung.';
+  const button = document.getElementById('goalSoundToggle');
+  const status = document.getElementById('goalSoundStatus');
+  if (!button) return;
+  button.hidden = false;
+  const preferenceKey = params.has('ticker') ? 'mt_goal_sound_viewer' : 'mt_goal_sound_reporter';
+  let preference = null;
+  try { preference = localStorage.getItem(preferenceKey); } catch (_) {}
   const audio = new Audio(new URL('./audio/tor-fuer-uns.mp3', document.currentScript.src).href);
   audio.preload = 'auto';
   const controller = create({ audio, visible: () => !document.hidden, changed(state) {
-    toggle.textContent = state.enabled ? 'Torsound ausschalten' : viewer ? 'Torsound aktivieren' : 'Torsound am Eintragungsgerät aktivieren';
-    toggle.setAttribute('aria-pressed', String(state.enabled));
-    stop.disabled = !state.playing;
-    host.querySelector('[role="status"]').textContent = state.error || (state.enabled ? 'Aktiv · nur auf diesem Gerät' : 'Aus');
+    const label = state.enabled ? 'Torsound ausschalten' : 'Torsound einschalten';
+    button.setAttribute('aria-label', label);
+    button.setAttribute('title', label);
+    button.setAttribute('aria-pressed', String(state.enabled));
+    status.textContent = state.error;
   }});
-  toggle.onclick = controller.toggle;
-  stop.onclick = controller.stop;
-  host.querySelector('[data-sound="test"]').onclick = controller.test;
-  toggle.textContent = viewer ? 'Torsound aktivieren' : 'Torsound am Eintragungsgerät aktivieren';
-  root.addEventListener('pagehide', controller.stop);
-  root.document.addEventListener('visibilitychange', () => { if (document.hidden) controller.stop(); });
+  let resume = null;
+  function cancelResume() {
+    if (!resume) return;
+    document.removeEventListener('pointerdown', resume);
+    document.removeEventListener('keydown', resume);
+    resume = null;
+  }
+  function choose(value) {
+    cancelResume();
+    preference = value ? 'on' : 'off';
+    try { localStorage.setItem(preferenceKey, preference); } catch (_) {}
+    void controller.setEnabled(value);
+  }
+  button.onclick = () => choose(button.getAttribute('aria-pressed') !== 'true');
+  if (preference === null) {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'sound-consent';
+    dialog.setAttribute('aria-labelledby', 'soundConsentTitle');
+    dialog.setAttribute('aria-describedby', 'soundConsentDescription');
+    dialog.innerHTML = '<h2 id="soundConsentTitle">Mit Torjubel mitfiebern?</h2><p id="soundConsentDescription">Dürfen bei neuen Toren von SSV Berghausen Torsounds auf diesem Gerät abgespielt werden?</p><p>Du kannst den Ton jederzeit mit dem Lautsprecher-Button <strong>ganz unten am Seitenende, neben dem Hell-/Dunkel-Schalter</strong>, ein- oder ausschalten.</p><div class="sound-consent-actions"><button type="button" data-choice="no" autofocus>Ohne Ton</button><button type="button" data-choice="yes">Torsound erlauben</button></div>';
+    document.body.appendChild(dialog);
+    function finish(value) {
+      choose(value);
+      dialog.close();
+      button.focus({ preventScroll: true });
+    }
+    dialog.querySelector('[data-choice="yes"]').onclick = () => finish(true);
+    dialog.querySelector('[data-choice="no"]').onclick = () => finish(false);
+    dialog.addEventListener('cancel', event => { event.preventDefault(); finish(false); });
+    dialog.showModal();
+  } else if (preference === 'on') {
+    // Browsers can require a fresh gesture after navigation. Restore consent on
+    // the next interaction, silently, without showing the first-visit prompt again.
+    resume = event => {
+      if (event.target instanceof Element && event.target.closest('#goalSoundToggle')) return;
+      cancelResume();
+      void controller.setEnabled(true);
+    };
+    document.addEventListener('pointerdown', resume);
+    document.addEventListener('keydown', resume);
+  }
+  root.addEventListener('pagehide', () => { cancelResume(); controller.stop(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) controller.stop(); });
   root.MatchTrackerGoalSound.controller = controller;
 })(globalThis);

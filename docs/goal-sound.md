@@ -3,13 +3,20 @@
 `match-tracker.html` verwendet `public/goal-sound.js` und die Datei
 `public/audio/tor-fuer-uns.mp3`. Die MP3 stammt aus „Tor für uns!.mp3“.
 
-Zuschauer aktivieren den Torsound unter dem Spielstand. Die Aktivierung spielt
-die Datei einmal als Test und schaltet anschließend neue Berghausener Tore frei.
-Das Eintragungsgerät besitzt einen unabhängigen Schalter am gleichen Ort.
-Eine Bluetoothbox wird in den Audioeinstellungen des Geräts gekoppelt und als
-Ausgabe gewählt. „Testen“ spielt nur eine Probe, „Stoppen“ beendet die aktuelle
-Wiedergabe, „Torsound ausschalten“ deaktiviert außerdem weitere automatische
-Wiedergaben. Nach jedem Neuladen muss der Ton erneut aktiviert werden.
+Beim ersten Öffnen fragt ein vorgelagertes Dialogfenster nach der Erlaubnis für
+Torsounds und erklärt den Lautsprecher-Button ganz unten neben dem Hell-/Dunkel-
+Schalter. „Ohne Ton“ und Escape lassen den Ton aus. „Torsound erlauben“ schaltet
+neue Berghausener Tore frei, ohne hörbaren Testsound. Der runde Footer-Button
+schaltet den Ton um; Ausschalten beendet auch die laufende Wiedergabe.
+Es gibt keine Test- oder Stopp-Buttons und keinen zusätzlichen Bereich im Feed.
+
+Die Wahl wird pro Gerät/Browser gespeichert, getrennt für Zuschauer und Reporter.
+Nach Neuladen wird eine erlaubte Wiedergabe bei der nächsten Seiteninteraktion
+stumm freigeschaltet, da Browser eine neue Geste verlangen können. Bis dahin zeigt
+der Footer-Button den tatsächlich ausgeschalteten Zustand. Bei blockiertem Speicher
+funktioniert die Auswahl für die aktuelle Seite. Eingebettete Vorschauen fragen
+nicht nach und bleiben stumm. Eine Bluetoothbox wird weiterhin über die
+Audioeinstellungen des Geräts als Ausgabe gewählt.
 
 Neue bestätigte Tore werden über Ereignis-ID und Heim-/Auswärtszuordnung erkannt.
 Eigentore zählen für die begünstigte Mannschaft. Der erste Zuschauer-Snapshot
