@@ -1,0 +1,7 @@
+.goal-sound-controls { padding:16px 20px; width:100%; box-sizing:border-box; color:var(--feed-text, #111); font-size:14px; }
+.goal-sound-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.goal-sound-actions button { font:inherit; color:inherit; background:var(--feed-surface, #fff); border:1px solid var(--feed-border, #777); border-radius:8px; padding:9px 12px; cursor:pointer; }
+.goal-sound-actions button[aria-pressed="true"] { border-color:#ff7900; }
+.goal-sound-actions button:disabled { opacity:.45; cursor:default; }
+.goal-sound-controls p, .goal-sound-controls [role="status"] { font-size:12px; line-height:1.5; margin:8px 0 0; }
+body[data-embed] .goal-sound-controls, html[data-embed] .goal-sound-controls { display:none; }

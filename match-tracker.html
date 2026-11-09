@@ -1309,6 +1309,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
 
   </div>
   <div class="scoreboard-feed">
+  <section class="goal-sound-controls" id="goalSoundControls" aria-label="Torsound"></section>
   <div class="events-section">
     <div class="events-header">
       <span>Ticker</span>
@@ -1670,6 +1671,9 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   render();
 })();
 </script>
+
+<link rel="stylesheet" href="./goal-sound.css">
+<script src="./goal-sound.js"></script>
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -2154,7 +2158,15 @@ function addGoal(team, isOwnGoal, player) {
     const sp = squad.find(s => s.id === player.id);
     if (sp) { sp.goals = (sp.goals || 0) + 1; }
   }
+  const previousWrite = syncWritePromise;
   updateScore(true); renderEvents(); save();
+  const soundData = matchSnapshot();
+  const soundMatch = activeMatchId;
+  if (DEV_MODE) globalThis.MatchTrackerGoalSound?.controller?.goal(soundMatch, event, soundData);
+  else if (syncWritePromise !== previousWrite) syncWritePromise.then(saved => {
+    if (saved === true && String(activeMatchId) === String(soundMatch))
+      globalThis.MatchTrackerGoalSound?.controller?.goal(soundMatch, event, soundData);
+  });
   previewDevTickerOverlay(event);
 }
 
@@ -3855,9 +3867,11 @@ function syncToFirebase(finished = false, abandoned = false) {
   storageStatus('Live-Spielstand wird übertragen …');
   syncWritePromise = firebase.database().ref('matches/' + id).set(data).then(() => {
     storageStatus('Live-Spielstand online');
+    return true;
   }).catch(error => {
     console.warn('Firebase sync failed:', error);
     storageStatus('Live-Spielstand konnte nicht übertragen werden. Bitte Verbindung prüfen.', true);
+    return false;
   });
   return true;
 }
@@ -4016,6 +4030,7 @@ function initTickerMode(matchId) {
     data.participantsPublishedAt = liveParticipantsPublishedAt;
     data.coachIds = liveCoachIds;
     data.participantIds = liveParticipantIds ?? data.fixture?.participantIds ?? [];
+    globalThis.MatchTrackerGoalSound?.controller?.observe(matchId, data);
     tickerData = data;
     tickerDataReceivedAt = Date.now();
     updateTickerUI(data, lastScore);
