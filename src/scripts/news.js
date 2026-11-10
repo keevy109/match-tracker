@@ -1,14 +1,21 @@
 import * as api from './api.js';
 import {sanitizeNews,safeImage,newsDate} from './news-content.js';
+// Titelbilder erst laden, wenn die Karte in die Nähe des sichtbaren Bereichs kommt.
+function showImage(picture,value){
+  const load=()=>api.newsImage(value).then(source=>{const src=safeImage(source);if(!src)return;picture.textContent='';picture.style.backgroundImage=`url(${JSON.stringify(src)})`;});
+  if(!('IntersectionObserver' in window))return load();
+  const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){observer.disconnect();load();}},{rootMargin:'400px'});
+  observer.observe(picture);
+}
 export async function init() {
   const grid=document.getElementById('newsGrid');if(!grid)return;
   try {
     const items=await api.load('news');grid.replaceChildren();
     items.filter(n=>n.published!==false).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(n=>{
       const card=document.createElement('article');card.className='news-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',n.title);
-      Object.assign(card.dataset,{date:newsDate(n.date),title:n.title,text:sanitizeNews(n.body),image:safeImage(n.image),photos:JSON.stringify(n.photos||[]),icon:n.icon||'📰'});
+      Object.assign(card.dataset,{date:newsDate(n.date),title:n.title,text:sanitizeNews(n.body),image:n.image||'',photos:JSON.stringify(n.photos||[]),icon:n.icon||'📰'});
       const picture=document.createElement('div');picture.className='news-image';
-      if(card.dataset.image)picture.style.backgroundImage=`url(${JSON.stringify(card.dataset.image)})`;else picture.textContent=n.icon||'📰';
+      picture.textContent=n.icon||'📰';if(n.image)showImage(picture,n.image);
       picture.style.backgroundSize='cover';picture.style.backgroundPosition='center';
       const body=document.createElement('div');body.className='news-body';
       for(const [cls,text] of [['news-date',newsDate(n.date)],['news-title',n.title],['news-excerpt',n.excerpt||'']]){const el=document.createElement('div');el.className=cls;el.textContent=text;body.append(el);}

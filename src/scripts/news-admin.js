@@ -3,6 +3,8 @@ import {sanitizeNews,safeImage,newsDate,plainText,renderNewsPhotos} from './news
 let items=[],current=null,image='',imageData='',dirty=false,saving=false,imageToken=0,imageBusy=false;
 let photos=[],photosBusy=false,photosToken=0;
 const $=id=>document.getElementById(id);
+// Ausgelagerte Bilder (db:…) werden für Vorschauen nachgeladen.
+function showImage(img,value){img.removeAttribute('src');img.hidden=!value;if(!value)return;api.newsImage(value).then(source=>{const src=safeImage(source);if(img.dataset.value!==value)return;if(src)img.src=src;else img.hidden=true;});img.dataset.value=value;}
 function markDirty(){dirty=true;try{localStorage.setItem('ssv_news_draft_'+current,JSON.stringify(read()));}catch{$('newsSaveStatus').textContent='Der Browser-Entwurf ist zu groß. Bitte lokal speichern und diesen Tab bis dahin offen lassen.';}}
 function lockEditor(locked){$('newsEditorPanel').querySelectorAll('input,textarea,button').forEach(el=>el.disabled=locked);$('newsBody').contentEditable=String(!locked);}
 function render(){
@@ -26,7 +28,7 @@ function open(item){
   $('newsTitle').value=data?.title||'';$('newsDate').value=data?.date||new Date().toLocaleDateString('sv-SE');$('newsExcerpt').value=data?.excerpt||'';
   $('newsPublished').checked=!!data&&data.published!==false;$('newsBody').innerHTML=sanitizeNews(data?.body||'<p><br></p>');
   photos=Array.isArray(data?.photos)?[...data.photos]:[];renderPhotos();$('newsPhotos').value='';
-  image=data?.image||'';imageData='';$('newsImage').value='';$('newsImagePreview').src=safeImage(image);$('newsImagePreview').hidden=!image;
+  image=data?.image||'';imageData='';$('newsImage').value='';showImage($('newsImagePreview'),image);
   $('newsEditorPanel').hidden=false;$('newsSaveStatus').textContent='';$('newsPreview').hidden=true;dirty=false;$('newsTitle').focus();
 }
 function read(){return {...items.find(n=>n.id===current),id:current,title:$('newsTitle').value.trim(),date:$('newsDate').value,excerpt:$('newsExcerpt').value.trim(),published:$('newsPublished').checked,body:sanitizeNews($('newsBody').innerHTML),image:imageData||image,photos:[...photos]};}
@@ -45,7 +47,7 @@ async function save(){
   try{localStorage.setItem('ssv_news_draft_'+current,JSON.stringify(data));}catch{}
   if(imageData&&import.meta.env.DEV){const response=await fetch('/api/upload/news',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:crypto.randomUUID()+'.jpg',data:imageData})});if(!response.ok)throw Error('Bild konnte nicht gespeichert werden.');data.image=(await response.json()).url;}
   data.photos=await Promise.all(data.photos.map(uploadPhoto));
-  const next=items.filter(n=>n.id!==current).concat(data);await api.save('news',next);items=next;photos=data.photos;renderPhotos();image=data.image;imageData='';dirty=false;localStorage.removeItem('ssv_news_draft_'+current);render();$('newsSaveStatus').textContent='Gespeichert und auf der Website veröffentlicht.';
+  const next=items.filter(n=>n.id!==current).concat(data);const saved=await api.save('news',next)||next;items=saved;const stored=saved.find(n=>n.id===current)||data;photos=[...(stored.photos||[])];renderPhotos();image=stored.image||'';imageData='';dirty=false;localStorage.removeItem('ssv_news_draft_'+current);render();$('newsSaveStatus').textContent='Gespeichert und auf der Website veröffentlicht.';
  }catch(error){$('newsSaveStatus').textContent=error.message+' Bitte diesen Tab offen lassen und erneut speichern.';}finally{saving=false;lockEditor(false);}
 }
 export async function init(){
@@ -61,9 +63,9 @@ export async function init(){
   catch(error){if(token===photosToken)$('newsSaveStatus').textContent=error.message;}
   finally{if(token===photosToken){photosBusy=false;$('newsPhotos').value='';}}
  };
- $('newsImage').onchange=async event=>{const token=++imageToken;imageBusy=true;try{const result=await pickImage(event.target.files[0]);if(token!==imageToken)return;imageData=result||'';$('newsImagePreview').src=imageData||safeImage(image);$('newsImagePreview').hidden=!(imageData||image);markDirty();}catch(e){if(token===imageToken)$('newsSaveStatus').textContent=e.message;}finally{if(token===imageToken)imageBusy=false;}};
+ $('newsImage').onchange=async event=>{const token=++imageToken;imageBusy=true;try{const result=await pickImage(event.target.files[0]);if(token!==imageToken)return;imageData=result||'';showImage($('newsImagePreview'),imageData||image);markDirty();}catch(e){if(token===imageToken)$('newsSaveStatus').textContent=e.message;}finally{if(token===imageToken)imageBusy=false;}};
  $('newsRemoveImage').onclick=()=>{imageToken++;imageBusy=false;image='';imageData='';$('newsImagePreview').hidden=true;$('newsImage').value='';markDirty();};
- $('newsShowPreview').onclick=()=>{const data=read();$('newsPreview').hidden=false;$('newsPreviewTitle').textContent=data.title;$('newsPreviewDate').textContent=newsDate(data.date);$('newsPreviewBody').innerHTML=data.body;renderNewsPhotos($('newsPreviewPhotos'),data.photos);$('newsPreviewImage').src=safeImage(data.image);$('newsPreviewImage').hidden=!data.image;};
+ $('newsShowPreview').onclick=()=>{const data=read();$('newsPreview').hidden=false;$('newsPreviewTitle').textContent=data.title;$('newsPreviewDate').textContent=newsDate(data.date);$('newsPreviewBody').innerHTML=data.body;renderNewsPhotos($('newsPreviewPhotos'),data.photos,api.newsImage);showImage($('newsPreviewImage'),data.image);};
  window.addEventListener('beforeunload',event=>{if(dirty){try{localStorage.setItem('ssv_news_draft_'+current,JSON.stringify(read()));}catch{}event.preventDefault();event.returnValue='';}});
 }
 function safeLinkForEditor(value){try{const url=new URL(value);return ['https:','http:','mailto:'].includes(url.protocol)?url.href:'';}catch{return '';}}
@@ -79,7 +81,7 @@ function renderPhotos(){
  const list=$('newsPhotosList');list.replaceChildren();
  photos.forEach((photo,index)=>{
   const card=document.createElement('div');card.className='news-photo-item';
-  const img=document.createElement('img');img.src=safeImage(photo);img.alt=`Foto ${index+1}`;
+  const img=document.createElement('img');showImage(img,photo);img.alt=`Foto ${index+1}`;
   const remove=document.createElement('button');remove.type='button';remove.className='btn-secondary';remove.textContent=`Foto ${index+1} entfernen`;
   remove.onclick=()=>{if(saving)return;photos.splice(index,1);renderPhotos();markDirty();};
   card.append(img,remove);list.append(card);

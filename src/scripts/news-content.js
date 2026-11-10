@@ -29,16 +29,19 @@ export function newsDate(value) {
 }
 export function plainText(html) { const doc=new DOMParser().parseFromString(html,'text/html');return doc.body.textContent.trim(); }
 
-export function renderNewsPhotos(container, photos) {
+// resolve(value) -> Promise<Quelle>, z. B. api.newsImage für ausgelagerte Bilder.
+export function renderNewsPhotos(container, photos, resolve = value => value) {
   container.replaceChildren();
   for (const [index, photo] of (Array.isArray(photos) ? photos : []).entries()) {
-    const src = safeImage(photo);
-    if (!src) continue;
+    if (!photo) continue;
     const img = document.createElement('img');
-    img.src = src;
     img.alt = `Beitragsfoto ${index + 1}`;
     img.loading = 'lazy';
     img.style.cssText = 'display:block;width:100%;height:auto;margin-top:16px;border-radius:8px';
     container.append(img);
+    Promise.resolve(resolve(photo)).then(source => {
+      const src = safeImage(source);
+      if (src) img.src = src; else img.remove();
+    }, () => img.remove());
   }
 }

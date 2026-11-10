@@ -1,7 +1,17 @@
 import '../../public/player-stats.js';
 import '../../public/schedule-data.js';
 import '../../public/team-data.js';
-const DATABASE = 'https://match-tracker-891ac-default-rtdb.europe-west1.firebasedatabase.app';
+import '../../public/news-images.js';
+const LIVE_DATABASE = 'https://match-tracker-891ac-default-rtdb.europe-west1.firebasedatabase.app';
+// Nur in `npm run dev`: localStorage ssv_database_url (z. B. Emulator
+// "http://127.0.0.1:9000?ns=match-tracker-891ac-default-rtdb") ersetzt die Live-Datenbank.
+const DATABASE = (import.meta.env.DEV && globalThis.localStorage?.getItem('ssv_database_url')) || LIVE_DATABASE;
+function dbUrl(path, query = '') {
+  const url = new URL(DATABASE);
+  url.pathname = `${url.pathname.replace(/\/$/, '')}/${path}.json`;
+  new URLSearchParams(query).forEach((value, key) => url.searchParams.set(key, value));
+  return url.href;
+}
 
 // Mehrere Bereiche der Seite lesen beim Start dieselben Pfade. Gleichzeitige und
 // kurz aufeinanderfolgende Lesezugriffe teilen sich deshalb eine Anfrage.
@@ -9,7 +19,7 @@ const READ_CACHE_MS = 60000;
 const reads = new Map();
 async function fetchRemote(path, {timeoutMs = 20000, shallow = false} = {}) {
   const query = shallow ? '?shallow=true' : '';
-  const res = await fetch(`${DATABASE}/${path}.json${query}`, {signal:AbortSignal.timeout(timeoutMs), cache:'no-store'});
+  const res = await fetch(dbUrl(path, query), {signal:AbortSignal.timeout(timeoutMs), cache:'no-store'});
   if (!res.ok) throw new Error(`Gemeinsame Daten nicht erreichbar (${path})`);
   return res.json();
 }
@@ -105,17 +115,60 @@ export async function load(collection) {
 export async function save(collection, data) {
   forgetReads();
   if (collection === 'kader') {
-    const res = await fetch(`${DATABASE}/app/squad.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), signal:AbortSignal.timeout(10000)});
+    const res = await fetch(dbUrl(`app/squad`), {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), signal:AbortSignal.timeout(10000)});
     if (!res.ok) throw new Error('Gemeinsamer Kader konnte nicht gespeichert werden.');
   }
-  if (collection === 'trainer' || collection === 'news') {
-    const res = await fetch(`${DATABASE}/app/${collection}.json`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), signal:AbortSignal.timeout(10000)});
+  if (collection === 'news') return saveNews(data);
+  if (collection === 'trainer') {
+    const res = await fetch(dbUrl(`app/${collection}`), {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), signal:AbortSignal.timeout(10000)});
     if (!res.ok) throw new Error('Gemeinsame Inhalte konnten nicht gespeichert werden.');
     return;
   }
   if (!import.meta.env.DEV) return;
   const res = await fetch(`/api/${collection}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
   if (!res.ok) throw new Error(await res.text().catch(() => 'Unbekannter Fehler'));
+}
+
+// ─── News-Bilder ──────────────────────────────────────────────────────────────
+// Beiträge (app/news) tragen nur Verweise "db:{key}", die Bilder liegen unter
+// newsImages/{key}. So lädt die Website zuerst die Texte und Bilder erst bei Bedarf.
+const NewsImages = globalThis.MatchTrackerNewsImages;
+async function imageHash(value) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest).slice(0, 16), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+async function patchRoot(updates, timeoutMs) {
+  const res = await fetch(dbUrl(''), {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(updates), signal:AbortSignal.timeout(timeoutMs)});
+  if (!res.ok) throw new Error('Gemeinsame Inhalte konnten nicht gespeichert werden.');
+}
+// Speichert Beiträge und neue Bilder in einem Schritt und liefert die gespeicherte Liste.
+async function saveNews(data) {
+  const {items, images} = await NewsImages.extract(data, imageHash);
+  const updates = {'app/news': items};
+  Object.entries(images).forEach(([key, image]) => { updates[`newsImages/${key}`] = image; });
+  // Neue Bilder können mehrere MB groß sein; ohne neue Bilder reicht die übliche Frist.
+  await patchRoot(updates, Object.keys(images).length ? 60000 : 10000);
+  Object.entries(images).forEach(([key, image]) => newsImageCache.set(key, Promise.resolve(image)));
+  // Bilder, auf die kein Beitrag mehr verweist, entfernen. Ein Fehler hier ist harmlos.
+  try {
+    const keep = NewsImages.referenced(items);
+    const stored = await fetchRemote('newsImages', {shallow:true});
+    const stale = Object.keys(stored || {}).filter(key => !keep.has(key));
+    if (stale.length) await patchRoot(Object.fromEntries(stale.map(key => [`newsImages/${key}`, null])), 10000);
+  } catch (error) { console.warn('Alte News-Bilder nicht entfernt:', error); }
+  return items;
+}
+const newsImageCache = new Map();
+// Liefert die darstellbare Bildquelle: Verweise werden einmal geladen, alles andere bleibt.
+export function newsImage(value) {
+  const key = NewsImages.refKey(value);
+  if (!key) return Promise.resolve(value || '');
+  if (!newsImageCache.has(key)) {
+    const request = fetchRemote(`newsImages/${key}`, {timeoutMs:30000}).then(image => image || '');
+    request.catch(() => newsImageCache.delete(key));
+    newsImageCache.set(key, request);
+  }
+  return newsImageCache.get(key).catch(() => '');
 }
 
 export async function loadMatchRecords() {
@@ -158,7 +211,7 @@ export async function saveTrackedSchedule(items) {
     updates[`app/schedule/${id}`] = fixture;
   });
 
-  const res = await fetch(`${DATABASE}/.json`, {
+  const res = await fetch(dbUrl(''), {
     method:'PATCH',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(updates),
@@ -174,7 +227,7 @@ export async function loadTrackedTeams() {
 export async function saveTrackedTeams(clubs) {
   forgetReads();
   const teams = globalThis.MatchTrackerTeams.merge(await remote('app/teams', {fresh:true, timeoutMs:30000}), clubs);
-  const res = await fetch(`${DATABASE}/app/teams.json`, {
+  const res = await fetch(dbUrl(`app/teams`), {
     method:'PUT',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(teams),
@@ -189,7 +242,7 @@ export async function loadTrainingSessions() {
 
 export async function saveTrainingSession(id, session) {
   forgetReads();
-  const res = await fetch(`${DATABASE}/trainingSessions/${encodeURIComponent(id)}.json`, {
+  const res = await fetch(dbUrl(`trainingSessions/${encodeURIComponent(id)}`), {
     method:'PUT',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(session),
@@ -200,7 +253,7 @@ export async function saveTrainingSession(id, session) {
 
 export async function deleteTrainingSession(id) {
   forgetReads();
-  const res = await fetch(`${DATABASE}/trainingSessions/${encodeURIComponent(id)}.json`, {
+  const res = await fetch(dbUrl(`trainingSessions/${encodeURIComponent(id)}`), {
     method:'DELETE',
     signal:AbortSignal.timeout(10000),
   });

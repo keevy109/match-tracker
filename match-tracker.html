@@ -3961,8 +3961,11 @@ function saveGlobal() {
 async function loadGlobalFromFirebase(cb) {
   if (!firebaseReady) { cb && cb(); return; }
   try {
-    const snap = await readStoredValue(firebase.database().ref('app'));
-    const d = snap.val();
+    // Nur die Teile von app/, die der Tracker braucht; app/news (Bilder) bleibt draußen.
+    const parts = ['matchResetId', 'squad', 'trainer', 'schedule', 'teams'];
+    const snaps = await Promise.all(parts.map(part => readStoredValue(firebase.database().ref('app/' + part))));
+    const values = snaps.map(snap => snap.val());
+    const d = values.some(value => value != null) ? Object.fromEntries(parts.map((part, i) => [part, values[i]])) : null;
     if (d) {
       if (!DEV_MODE && d.matchResetId && localStorage.getItem('mt_reset_id') !== d.matchResetId) {
         localStorage.setItem('mt_before_reset_' + d.matchResetId, localStorage.getItem('matchtracker_v3') || '{}');
