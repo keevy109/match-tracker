@@ -5,7 +5,7 @@ const vm=require('node:vm');
 
 const source=fs.readFileSync('src/scripts/matchday.js','utf8');
 const start=source.indexOf('function localDateKey(');
-const end=source.indexOf('function populateBanner(',start);
+const end=source.indexOf('function populate(',start);
 const context=vm.createContext({Date});
 vm.runInContext(source.slice(start,end),context);
 

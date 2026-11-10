@@ -1,14 +1,3 @@
-<!-- ── Spieltags-Ergebnisbanner ───────────────────────────────────── -->
-<div class="matchday-banner" id="matchdayBanner">
-  <div class="mdb-slot">
-    <div class="mdb-badge" id="mdbHomeBadge"><img src="/ssvlogo.png" alt="SSV Berghausen"></div>
-  </div>
-  <div class="mdb-score" id="mdbScore">–&thinsp;:&thinsp;–</div>
-  <div class="mdb-slot">
-    <div class="mdb-badge mdb-badge-away" id="mdbAwayBadgeBanner">?</div>
-  </div>
-</div>
-
 <div class="matchday-modal" id="matchdayModal" aria-modal="true" role="dialog" aria-hidden="true">
   <div class="md-bg">
     <div class="md-bg-home" id="mdBgHome"></div>

@@ -29,7 +29,6 @@ async function checkAndOpen() {
     if (!match) return;
 
     populate(match, vereine);
-    populateBanner(match, vereine);
     open();
   } catch {}
 }
@@ -45,41 +44,6 @@ function isInMatchWeek(matchDate, today) {
   const daysSinceMonday = (matchDay.getDay() + 6) % 7;
   monday.setDate(matchDay.getDate() - daysSinceMonday);
   return today >= localDateKey(monday) && today <= matchDate;
-}
-
-function populateBanner(match, vereine) {
-  const banner = document.getElementById('matchdayBanner');
-  if (!banner) return;
-  const club = globalThis.MatchTrackerTeams.find(vereine, match.opponent);
-  const homeBadge = document.getElementById('mdbHomeBadge');
-  const awayBadge = document.getElementById('mdbAwayBadgeBanner');
-  const ownBadgeHtml = homeBadge?.innerHTML || '';
-
-  const scoreEl = document.getElementById('mdbScore');
-  if (scoreEl) {
-    scoreEl.textContent = match.result
-      ? match.result.replace(':', ' : ')
-      : (match.time || '– : –');
-  }
-
-  if (match.home) {
-    setClubBadge(awayBadge, club, match.opponent);
-  } else {
-    setClubBadge(homeBadge, club, match.opponent);
-    if (awayBadge) {
-      awayBadge.innerHTML = ownBadgeHtml;
-      awayBadge.style.background = '';
-    }
-  }
-
-  const navEl = document.querySelector('.nav');
-  if (navEl) {
-    const place = () => { banner.style.top = navEl.offsetHeight + 'px'; };
-    place();
-    // Die Spielstand-Leiste kann die Navigation nachträglich höher machen.
-    if (typeof ResizeObserver === 'function') new ResizeObserver(place).observe(navEl);
-  }
-  banner.classList.add('mdb-visible');
 }
 
 function populate(match, vereine) {
