@@ -1709,9 +1709,28 @@ window.addEventListener('pageshow', updateFeedScrollState);
 let devViewMode = 'admin';
 let devAdminTab = 'spiel';
 let devTickerClockInterval = null;
+// Anstoß fürs Vorschau-Scoreboard: „HEUTE“, „MORGEN“, sonst Datum (TT.MM.), jeweils mit Uhrzeit.
+function kickoffLabel(fixture, today = new Date()) {
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(fixture?.date || '') ? new Date(fixture.date + 'T12:00:00') : null;
+  const time = (fixture?.time || '').match(/^\d{1,2}:\d{2}/)?.[0] || '';
+  const pad = number => String(number).padStart(2, '0');
+  const key = value => `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const day = !date ? 'ANSTOSS'
+    : key(date) === key(today) ? 'HEUTE'
+    : key(date) === key(tomorrow) ? 'MORGEN'
+    : `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.`;
+  return time ? `${day} · ${time}` : day;
+}
+
 function updateFeedMatchTime(data) {
   const clock = document.getElementById('feedMatchTime');
   if (!clock) return;
+  if (data.teaser) {
+    clock.classList.remove('is-live');
+    clock.textContent = kickoffLabel(data.fixture);
+    return;
+  }
   if (data.matchFinished || data.abandoned) {
     const automationInfo=document.getElementById('automationInfo');if(automationInfo)automationInfo.textContent='';
     clock.classList.remove('is-live');
@@ -4099,16 +4118,44 @@ function initTickerMode(matchId) {
     clockEl.textContent = timing.clock + (base !== null ? '' : ' – Pause');
   }, 1000);
 
+  // Noch kein Spiel angelegt: angesetzte Partie als Vorschau mit 0:0 und Anstoßzeit.
+  // Sobald der Reporter anpfeift, liefert matches/{id} die echten Daten.
+  async function showFixtureTeaser() {
+    const schedule = (await firebase.database().ref('app/schedule').once('value')).val() || {};
+    const fixture = Object.entries(schedule)
+      .map(([key, item]) => item && {...item, id:item.id ?? key})
+      .find(item => item && !item.archived && String(item.id) === String(matchId)
+        && (!item.date || item.date >= new Date().toLocaleDateString('sv-SE')));
+    if (!fixture || (tickerData && !tickerData.teaser)) return Boolean(fixture);
+    const home = typeof fixture.home === 'boolean' ? fixture.home : fixture.isHome !== false;
+    const opponent = getCanonicalTeamName(fixture.opponent || 'Gegner');
+    tickerData = {
+      teaser:true, fixture, isHomeTeam:home, homeScore:0, awayScore:0, events:[],
+      homeTeam: home ? getOurTeamName() : opponent, awayTeam: home ? opponent : getOurTeamName(),
+    };
+    tickerDataReceivedAt = Date.now();
+    updateTickerUI(tickerData, null);
+    // Ein angesetztes Spiel bekommt Torjubel-Abfrage und Button wie ein laufendes.
+    globalThis.MatchTrackerGoalSound?.update?.(tickerData);
+    document.getElementById('tickerUpdated').textContent = 'Noch nicht angepfiffen';
+    loading.ready('match');
+    return true;
+  }
+
   firebase.database().ref('matches/' + matchId).on('value', snapshot => {
     const data = snapshot.val();
     if (!data) {
-      document.getElementById('tickerUpdated').textContent = 'Kein Spiel gefunden';
-      loading.fail('Kein Spiel gefunden.');
+      showFixtureTeaser().catch(() => false).then(shown => {
+        if (shown) return;
+        document.getElementById('tickerUpdated').textContent = 'Kein Spiel gefunden';
+        loading.fail('Kein Spiel gefunden.');
+      });
       return;
     }
     data.participantsPublishedAt = liveParticipantsPublishedAt;
     data.coachIds = liveCoachIds;
     data.participantIds = liveParticipantIds ?? data.fixture?.participantIds ?? [];
+    globalThis.MatchTrackerGoalSound?.update?.(data);
     globalThis.MatchTrackerGoalSound?.controller?.observe(matchId, data);
     const photosLoaded = hydrateEventPhotos(matchId, data.events);
     tickerData = data;
@@ -4391,7 +4438,9 @@ function updateTickerUI(data, lastScore, headerOnly = false) {
   }
 
   const liveBadge = document.getElementById('tickerLiveBadge');
-  if (liveBadge) liveBadge.innerHTML = data.abandoned
+  if (liveBadge) liveBadge.innerHTML = data.teaser
+    ? '<div class="ticker-live-dot"></div> NÄCHSTES SPIEL'
+    : data.abandoned
     ? '<div class="ticker-live-dot"></div> ABBRUCH'
     : data.matchFinished
       ? '<div class="ticker-live-dot"></div> ENDE'
@@ -4496,6 +4545,7 @@ function updateTickerUI(data, lastScore, headerOnly = false) {
   }
 
   // Page title
+  if (data.teaser) { document.title = `${data.homeTeam||''} vs ${data.awayTeam||''} – ${kickoffLabel(data.fixture)}`; return; }
   const statusTag = data.abandoned ? '– Abbruch' : data.matchFinished ? '– Abpfiff' : '– LIVE';
   document.title = `${data.homeScore ?? 0}:${data.awayScore ?? 0} ${data.homeTeam||''} vs ${data.awayTeam||''} ${statusTag}`;
 }

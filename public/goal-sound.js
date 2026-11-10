@@ -102,7 +102,6 @@
   const button = document.getElementById('goalSoundToggle');
   const status = document.getElementById('goalSoundStatus');
   if (!button) return;
-  button.hidden = false;
   const viewer = params.has('ticker');
   const dev = params.get('dev') === '1';
   const preferenceKey = viewer ? 'mt_goal_sound_viewer' : 'mt_goal_sound_reporter';
@@ -131,33 +130,53 @@
     void controller.setEnabled(value);
   }
   button.onclick = () => choose(button.getAttribute('aria-pressed') !== 'true');
-  if (dev || (viewer && preference === null)) {
-    const dialog = document.createElement('dialog');
-    dialog.className = 'sound-consent';
-    dialog.setAttribute('aria-labelledby', 'soundConsentTitle');
-    dialog.setAttribute('aria-describedby', 'soundConsentDescription');
-    dialog.innerHTML = '<h2 id="soundConsentTitle">Torjubel aktivieren?</h2><p id="soundConsentDescription">Dürfen bei Toren des SSV Berghausen Torsounds auf diesem Gerät abgespielt werden?</p><p>Du kannst diese Einstellung jederzeit ändern und den Ton mit dem Lautsprecher-Button <strong>ganz unten am Seitenende</strong> ein- oder ausschalten.</p><div class="sound-consent-actions"><button type="button" data-choice="no" autofocus>Ohne Ton</button><button type="button" data-choice="yes">Torsound erlauben</button></div>';
-    document.body.appendChild(dialog);
-    function finish(value) {
-      choose(value);
-      dialog.close();
-      button.focus({ preventScroll: true });
+  let dialog = null, started = false;
+  // Button, Erstabfrage und Wiederherstellung der Erlaubnis.
+  function start() {
+    if (started) return;
+    started = true;
+    button.hidden = false;
+    if (dev || (viewer && preference === null)) {
+      dialog = document.createElement('dialog');
+      dialog.className = 'sound-consent';
+      dialog.setAttribute('aria-labelledby', 'soundConsentTitle');
+      dialog.setAttribute('aria-describedby', 'soundConsentDescription');
+      dialog.innerHTML = '<h2 id="soundConsentTitle">Torjubel aktivieren?</h2><p id="soundConsentDescription">Dürfen bei Toren des SSV Berghausen Torsounds auf diesem Gerät abgespielt werden?</p><p>Du kannst diese Einstellung jederzeit ändern und den Ton mit dem Lautsprecher-Button <strong>ganz unten am Seitenende</strong> ein- oder ausschalten.</p><div class="sound-consent-actions"><button type="button" data-choice="no" autofocus>Ohne Ton</button><button type="button" data-choice="yes">Torsound erlauben</button></div>';
+      document.body.appendChild(dialog);
+      function finish(value) {
+        choose(value);
+        dialog.close();
+        button.focus({ preventScroll: true });
+      }
+      dialog.querySelector('[data-choice="yes"]').onclick = () => finish(true);
+      dialog.querySelector('[data-choice="no"]').onclick = () => finish(false);
+      dialog.addEventListener('cancel', event => { event.preventDefault(); finish(false); });
+      dialog.showModal();
+    } else if (preference === 'on') {
+      // Browsers can require a fresh gesture after navigation. Restore consent on
+      // the next interaction, silently, without showing the first-visit prompt again.
+      resume = event => {
+        if (event.target instanceof Element && event.target.closest('#goalSoundToggle')) return;
+        cancelResume();
+        void controller.setEnabled(true);
+      };
+      document.addEventListener('pointerdown', resume);
+      document.addEventListener('keydown', resume);
     }
-    dialog.querySelector('[data-choice="yes"]').onclick = () => finish(true);
-    dialog.querySelector('[data-choice="no"]').onclick = () => finish(false);
-    dialog.addEventListener('cancel', event => { event.preventDefault(); finish(false); });
-    dialog.showModal();
-  } else if (preference === 'on') {
-    // Browsers can require a fresh gesture after navigation. Restore consent on
-    // the next interaction, silently, without showing the first-visit prompt again.
-    resume = event => {
-      if (event.target instanceof Element && event.target.closest('#goalSoundToggle')) return;
-      cancelResume();
-      void controller.setEnabled(true);
-    };
-    document.addEventListener('pointerdown', resume);
-    document.addEventListener('keydown', resume);
   }
+  // Ein beendetes Spiel bringt keine neuen Tore mehr: kein Button, keine Abfrage.
+  function finished() {
+    button.hidden = true;
+    cancelResume();
+    if (dialog?.open) dialog.close();
+  }
+  // Zuschauer warten auf den ersten Spielstand (update), Eintragende und dev=1 nicht.
+  if (viewer && !dev) {
+    root.MatchTrackerGoalSound.update = data => {
+      if (data?.matchFinished || data?.abandoned) finished();
+      else start();
+    };
+  } else start();
   root.addEventListener('pagehide', () => { cancelResume(); controller.stop(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) controller.stop(); });
   root.MatchTrackerGoalSound.controller = controller;

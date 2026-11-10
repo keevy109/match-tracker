@@ -131,8 +131,8 @@ test('website points visitors at the latest ticker, never at the reporter tool',
   assert.match(ticker,/<iframe[^>]*id="latestTickerFrame"/);
   for(const file of ['src/sections/nav.frag','src/sections/footer.frag'])assert.doesNotMatch(read(file),/match-tracker\.html|admin\.html/);
   const link=read('src/scripts/ticker-link.js');
-  assert.match(link,/getElementById\('latestTickerFrame'\), 'feed'\]/);
-  assert.match(link,/getElementById\('navScoreFrame'\), 'score-compact&names=1&transparent=1'\]/);
+  assert.match(link,/getElementById\('latestTickerFrame'\), 'feed', url\]/);
+  assert.match(link,/getElementById\('navScoreFrame'\), 'score-compact&names=1&transparent=1', navUrl\]/);
   assert.match(read('public/share-embed.css'),/html\[data-transparent="1"\][^{]*\{ background:transparent!important; \}/);
   assert.match(link,/style=\$\{theme\(\)\}/);
   assert.match(link,/attributeFilter: \['data-theme'\]/);

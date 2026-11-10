@@ -75,5 +75,34 @@ for (const [search, preference, expected] of [
     document:{getElementById:()=>element(),createElement:()=>element(),body:{appendChild(){}},
       currentScript:{src:'https://example.com/goal-sound.js'},addEventListener(){}}
   });
-  vm.runInContext(source,c);assert.equal(dialogs,expected);
+  vm.runInContext(source,c);c.MatchTrackerGoalSound.update?.({matchFinished:false});assert.equal(dialogs,expected);
+});
+
+for (const [label, data] of [['finished', {matchFinished:true}], ['abandoned', {matchFinished:true, abandoned:true}]]) test(`past ticker (${label}) shows neither consent dialog nor sound button`,()=>{
+  let dialogs=0;const button={hidden:true,setAttribute(){},focus(){}};
+  const element=()=>({hidden:true,setAttribute(){},addEventListener(){},querySelector(){return element();},showModal(){dialogs++;}});
+  const c=vm.createContext({
+    URL,URLSearchParams,location:{search:'?ticker=123'},localStorage:{getItem:()=>null},
+    Audio:function(){this.addEventListener=()=>{};},addEventListener(){},
+    document:{getElementById:id=>id==='goalSoundToggle'?button:element(),createElement:()=>element(),body:{appendChild(){}},
+      currentScript:{src:'https://example.com/goal-sound.js'},addEventListener(){}}
+  });
+  vm.runInContext(source,c);
+  assert.equal(button.hidden,true,'nothing before the first snapshot');
+  c.MatchTrackerGoalSound.update(data);
+  assert.equal(dialogs,0);assert.equal(button.hidden,true);
+});
+
+test('a live ticker that ends hides the sound button and closes an open prompt',()=>{
+  let closed=0;const button={hidden:true,setAttribute(){},focus(){}};
+  const element=()=>({hidden:true,open:true,setAttribute(){},addEventListener(){},querySelector(){return element();},showModal(){},close(){closed++;}});
+  const c=vm.createContext({
+    URL,URLSearchParams,location:{search:'?ticker=123'},localStorage:{getItem:()=>null},
+    Audio:function(){this.addEventListener=()=>{};},addEventListener(){},
+    document:{getElementById:id=>id==='goalSoundToggle'?button:element(),createElement:()=>element(),body:{appendChild(){}},
+      currentScript:{src:'https://example.com/goal-sound.js'},addEventListener(){}}
+  });
+  vm.runInContext(source,c);
+  c.MatchTrackerGoalSound.update({matchFinished:false});assert.equal(button.hidden,false);
+  c.MatchTrackerGoalSound.update({matchFinished:true});assert.equal(button.hidden,true);assert.equal(closed,1);
 });

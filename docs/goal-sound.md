@@ -9,6 +9,10 @@ Schalter. „Ohne Ton“ und Escape lassen den Ton aus. „Torsound erlauben“ 
 neue Berghausener Tore frei, ohne hörbaren Testsound. Der runde Footer-Button
 schaltet den Ton um; Ausschalten beendet auch die laufende Wiedergabe.
 Es gibt keine Test- oder Stopp-Buttons und keinen zusätzlichen Bereich im Feed.
+Zuschauer sehen Dialog und Button erst, wenn der Spielstand geladen ist. Bei einem
+beendeten oder abgebrochenen Spiel erscheinen beide nicht. Endet ein Spiel, während der
+Ticker offen ist, verschwindet der Button. Ein angesetztes, noch nicht angepfiffenes
+Spiel (Vorschau mit 0:0 und Anstoßzeit) fragt wie ein laufendes.
 
 Eintragende erhalten keinen Dialog und bedienen ausschließlich den Footer-Schalter.
 Bei `dev=1` erscheint der Dialog bei jedem initialen Laden, unabhängig von
