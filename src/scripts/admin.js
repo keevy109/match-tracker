@@ -872,13 +872,35 @@ function bindFormEvents() {
     const file = e.target.files[0];
     if (!file) { pendingBadge = null; return; }
     const reader = new FileReader();
-    reader.onload = ev => {
-      pendingBadge = ev.target.result;
+    reader.onload = async ev => {
+      pendingBadge = await shrinkBadge(ev.target.result);
       const preview = document.getElementById('fClubBadgePreview');
       if (preview) preview.innerHTML = `<img src="${pendingBadge}" alt="">`;
     };
     reader.readAsDataURL(file);
   });
+}
+
+// Wappen werden überall klein gezeigt; Originale (oft mehrere 100 KB) würden mit
+// jedem Laden von app/teams und jedem Spielstand mitgeschickt.
+const BADGE_MAX_PX = 160;
+async function shrinkBadge(dataUrl) {
+  try {
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = dataUrl; });
+    const scale = Math.min(1, BADGE_MAX_PX / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const webp = canvas.toDataURL('image/webp', 0.9);
+    const result = webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/png');
+    return result.length < dataUrl.length ? result : dataUrl;
+  } catch {
+    return dataUrl;
+  }
 }
 
 // ── Vereine ───────────────────────────────────────────────────────

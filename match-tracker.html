@@ -1869,6 +1869,7 @@ function applyMatchSnapshot(id, data) {
   activeMatchId = id;
   homeScore = data.homeScore || 0; awayScore = data.awayScore || 0;
   events = Array.isArray(data.events) ? data.events : Object.values(data.events || {});
+  hydrateEventPhotos(id, events).then(changed => { if (changed && String(activeMatchId) === String(id)) renderEvents(); });
   isHomeTeam = data.isHomeTeam !== false;
   timerBase = data.timerRunning ? data.timerBase : null;
   timerOffset = data.timerOffset || 0;
@@ -2185,6 +2186,7 @@ function deleteEvent(id) {
     }
   }
   events.splice(idx, 1);
+  if (ev.photoRef || isCommentPhoto(ev.photo)) removeEventPhoto(activeMatchId, ev.id);
   if (isGoal) {
     let h=0, a=0;
     [...events].filter(e => !e.typ || e.typ === 'tor').sort((x,y)=>x.id-y.id).forEach(e => {
@@ -2219,7 +2221,7 @@ function eventCssClass(e) {
 }
 
 function isImageOnlyComment(e) {
-  return e.typ === 'kommentar' && !String(e.text || '').trim() && isCommentPhoto(e.photo);
+  return e.typ === 'kommentar' && !String(e.text || '').trim() && (isCommentPhoto(e.photo) || e.photoRef === true);
 }
 
 function hasMatchStarted(data) {
@@ -3855,6 +3857,76 @@ function initFirebase() {
   }
 }
 
+// ─── KOMMENTARFOTOS ──────────────────────────────────────────────────────────
+// Fotos liegen unter matchPhotos/{spiel}/{event}; matches/{spiel} trägt nur photoRef.
+// So bleibt der Spielstand klein, und Fotos werden nur geladen, wenn sie gezeigt werden.
+const EMBEDDED_PLAYER_PHOTO_FIELDS = ['scorerPhoto', 'rausPhoto', 'reinPhoto', 'playerPhoto'];
+const eventPhotoCache = new Map();
+const storedEventPhotos = new Set();
+function eventPhotoKey(matchId, eventId) { return `${matchId}/${eventId}`; }
+
+function remoteMatchData(matchId, data) {
+  const photos = {};
+  const events = (Array.isArray(data.events) ? data.events : Object.values(data.events || {})).map(event => {
+    if (!event) return event;
+    const copy = {...event};
+    // Spielerfotos kommen aus dem Kader; eingebettete Kopien blähen jedes Spiel auf.
+    EMBEDDED_PLAYER_PHOTO_FIELDS.forEach(field => { if (String(copy[field] || '').startsWith('data:')) delete copy[field]; });
+    if (copy.typ === 'kommentar' && isCommentPhoto(copy.photo)) {
+      const key = eventPhotoKey(matchId, copy.id);
+      eventPhotoCache.set(key, copy.photo);
+      if (!storedEventPhotos.has(key)) photos[key] = copy.photo;
+      delete copy.photo;
+      copy.photoRef = true;
+    }
+    return copy;
+  });
+  const fixture = data.fixture ? {...data.fixture} : null;
+  // Ergebnis samt Events steht schon im Spiel selbst.
+  if (fixture) delete fixture.result;
+  return {data:{...data, events, fixture}, photos};
+}
+
+function storeEventPhotos(photos) {
+  const keys = Object.keys(photos);
+  if (!keys.length) return Promise.resolve();
+  const updates = Object.fromEntries(keys.map(key => ['matchPhotos/' + key, photos[key]]));
+  return firebase.database().ref().update(updates).then(() => keys.forEach(key => storedEventPhotos.add(key)));
+}
+
+function removeEventPhoto(matchId, eventId) {
+  if (DEV_MODE || !firebaseReady || !matchId) return;
+  const key = eventPhotoKey(matchId, eventId);
+  eventPhotoCache.delete(key);
+  storedEventPhotos.delete(key);
+  firebase.database().ref('matchPhotos/' + key).remove().catch(error => console.warn('Kommentarfoto nicht gelöscht:', error));
+}
+
+// Ergänzt referenzierte Fotos: aus dem Cache sofort, sonst per Abruf. Liefert true,
+// wenn nachgeladen wurde und neu gezeichnet werden sollte.
+async function hydrateEventPhotos(matchId, rawEvents) {
+  const list = Array.isArray(rawEvents) ? rawEvents : Object.values(rawEvents || {});
+  const missing = [];
+  list.forEach(event => {
+    if (!event?.photoRef || isCommentPhoto(event.photo)) return;
+    const key = eventPhotoKey(matchId, event.id);
+    if (eventPhotoCache.has(key)) event.photo = eventPhotoCache.get(key);
+    else missing.push([event, key]);
+  });
+  // Ticker-Ansichten nutzen Firebase ohne firebaseReady; maßgeblich ist die initialisierte App.
+  if (!missing.length || typeof firebase === 'undefined' || !firebase.apps?.length) return false;
+  await Promise.all(missing.map(async ([event, key]) => {
+    try {
+      const photo = (await firebase.database().ref('matchPhotos/' + key).once('value')).val();
+      if (!isCommentPhoto(photo)) return;
+      eventPhotoCache.set(key, photo);
+      storedEventPhotos.add(key);
+      event.photo = photo;
+    } catch (error) { console.warn('Kommentarfoto konnte nicht geladen werden:', error); }
+  }));
+  return true;
+}
+
 function syncToFirebase(finished = false, abandoned = false) {
   if (DEV_MODE) {
     storageStatus('Testmodus: keine Übertragung an den Live-Ticker.');
@@ -3866,9 +3938,10 @@ function syncToFirebase(finished = false, abandoned = false) {
   // A saved fixture result is authoritative. A stale open tab must never
   // turn a completed match back into a live match.
   if (fixture?.result) finished = true;
-  const data = {...matchSnapshot(finished, abandoned), updatedAt:firebase.database.ServerValue.TIMESTAMP};
+  const {data, photos} = remoteMatchData(id, {...matchSnapshot(finished, abandoned), updatedAt:firebase.database.ServerValue.TIMESTAMP});
   storageStatus('Live-Spielstand wird übertragen …');
-  syncWritePromise = firebase.database().ref('matches/' + id).set(data).then(() => {
+  // Foto zuerst: Zuschauer sehen photoRef erst, wenn das Foto abrufbar ist.
+  syncWritePromise = storeEventPhotos(photos).then(() => firebase.database().ref('matches/' + id).set(data)).then(() => {
     storageStatus('Live-Spielstand online');
     return true;
   }).catch(error => {
@@ -4034,12 +4107,20 @@ function initTickerMode(matchId) {
     data.coachIds = liveCoachIds;
     data.participantIds = liveParticipantIds ?? data.fixture?.participantIds ?? [];
     globalThis.MatchTrackerGoalSound?.controller?.observe(matchId, data);
+    const photosLoaded = hydrateEventPhotos(matchId, data.events);
     tickerData = data;
     tickerDataReceivedAt = Date.now();
     updateTickerUI(data, lastScore);
     loading.ready('match');
-    for (const event of detectNewEvents(data.events)) enqueueTickerOverlay(event, data);
+    const fresh = detectNewEvents(data.events);
+    // Neue Fotomeldungen erst zeigen, wenn ihr Foto da ist.
+    if (fresh.some(event => event.photoRef && !isCommentPhoto(event.photo))) {
+      photosLoaded.then(() => fresh.forEach(event => enqueueTickerOverlay(event, data)));
+    } else {
+      fresh.forEach(event => enqueueTickerOverlay(event, data));
+    }
     lastScore = { h: data.homeScore, a: data.awayScore };
+    photosLoaded.then(changed => { if (changed && tickerData === data) updateTickerUI(data, lastScore); });
   });
 }
 
