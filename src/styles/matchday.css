@@ -1,146 +1,216 @@
-/* ── Spieltags-Modal ─────────────────────────────────────────────── */
+/* ── Spieltags-Ankündigung als Poster ─────────────────────────────── */
 .matchday-modal {
+  --md-fire: #ff7a1a;
+  --md-fire-deep: #ff3d00;
+  --md-ember: #ffc46b;
+  --md-crest: min(30vw, 32vh, 260px);
   position: fixed; inset: 0; z-index: 900;
   display: none; align-items: center; justify-content: center;
-  overflow: hidden;
-  background: #07090f;
+  overflow: hidden auto;
+  background: #070403;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
 }
 .matchday-modal.md-open { display: flex; }
 
-/* Hintergrund */
-.md-bg {
-  position: absolute; inset: 0; overflow: hidden;
-  background: #07090f;
-}
-.md-bg-home,
-.md-bg-away {
+/* Hintergrund: Stadionbild, immer bildschirmfüllend (cover). Für breitere Formate gibt
+   es Fassungen, in denen nur Rauch- und Rasenbänder gestreckt sind; Flutlichter, Ränder
+   und Mittellinie bleiben unverändert. So wird kaum beschnitten. */
+.md-bg { position: fixed; inset: 0; overflow: hidden; pointer-events: none; background: #050302; }
+.md-bg-art {
   position: absolute; inset: 0;
+  background: url('../assets/matchday/bg.webp') center / cover no-repeat;
 }
-.md-bg-home {
-  background: radial-gradient(ellipse 70% 110% at 10% 60%, rgba(255,131,65,0.22) 0%, transparent 65%);
-}
-.md-bg-away {
-  --club-color: #1e3a8a;
-  background: radial-gradient(ellipse 70% 110% at 90% 60%, color-mix(in srgb, var(--club-color) 40%, transparent) 0%, transparent 65%);
-}
-.md-bg-center {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 40% 60% at 50% 50%, rgba(255,255,255,0.025) 0%, transparent 70%);
+@media (min-aspect-ratio: 106/100) { .md-bg-art { background-image: url('../assets/matchday/bg-m.webp'); } }
+@media (min-aspect-ratio: 165/100) { .md-bg-art { background-image: url('../assets/matchday/bg-l.webp'); } }
+@media (min-aspect-ratio: 230/100) { .md-bg-art { background-image: url('../assets/matchday/bg-xl.webp'); } }
+.md-sparks {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 3;
 }
 
 /* Schließen */
 .md-close {
-  position: absolute; top: 20px; right: 20px; z-index: 10;
-  width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.4); color: rgba(255,255,255,0.5);
+  position: fixed; top: 20px; right: 20px; z-index: 10;
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.45); color: rgba(255,255,255,0.7);
   font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: background 0.15s, color 0.15s; backdrop-filter: blur(8px);
 }
-.md-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.md-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
-/* Innerer Container */
-.md-inner {
-  position: relative; z-index: 1;
-  width: 100%; max-width: 1100px; padding: 0 24px;
-  display: flex; flex-direction: column; align-items: center; gap: 28px;
+/* Poster */
+.md-poster {
+  position: relative; z-index: 2;
+  width: 100%; max-width: 1100px; margin: auto; padding: 4vh 24px 5vh;
+  display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2vh, 22px);
+  text-align: center;
 }
-
-/* Eyebrow */
 .md-eyebrow {
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
-  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  display: flex; align-items: center; gap: 14px; width: min(560px, 90%);
+  margin-bottom: clamp(4px, 1.4vh, 14px);
+  font-family: var(--sans); font-weight: 800; font-size: clamp(11px, 1.6vh, 15px);
+  letter-spacing: 0.28em; text-transform: uppercase; color: rgba(255,255,255,0.88);
+}
+.md-eyebrow::before, .md-eyebrow::after {
+  content: ''; flex: 1; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--md-fire));
+  box-shadow: 0 0 10px var(--md-fire);
+}
+.md-eyebrow::after { background: linear-gradient(270deg, transparent, var(--md-fire)); }
+
+.md-display, .md-title, .md-vs, .md-name, .md-date, .md-kickoff {
+  font-family: 'Anton', 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif;
+  font-weight: 400; text-transform: uppercase; line-height: 0.95;
+}
+.md-title {
+  margin: 0; padding-top: 0.16em; font-size: min(13.5vw, 15vh, 156px); letter-spacing: 0.01em;
+  background: linear-gradient(180deg, #ffffff 0%, #f1ece8 38%, #b9b2ad 62%, #f7f4f2 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 4px 0 rgba(0,0,0,0.55)) drop-shadow(0 0 22px rgba(255,110,30,0.35));
 }
 
-/* Bühne – drei Spalten */
+/* Bühne mit Wappen */
 .md-stage {
-  display: grid;
-  grid-template-columns: 56px 1fr auto 1fr 56px;
-  align-items: center; gap: 16px; width: 100%;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  gap: clamp(8px, 3vw, 48px); width: 100%;
 }
-
-/* Seitenbeschriftung HEIM / GAST */
-.md-side-label {
-  font-family: var(--mono); font-size: 52px; font-weight: 900;
-  letter-spacing: 0.06em; text-transform: uppercase;
-  color: rgba(255,255,255,0.04); line-height: 1;
-  writing-mode: vertical-lr; user-select: none;
+.md-crest { margin: 0; display: flex; justify-content: center; perspective: 900px; }
+.md-crest-tilt {
+  transform-style: preserve-3d;
+  transform: rotateY(calc(var(--md-face, 0deg) + var(--md-px, 0) * 10deg)) rotateX(calc(var(--md-py, 0) * -8deg));
+  transition: transform 0.25s ease-out;
 }
-.md-label-home { transform: rotate(180deg); }
-
-/* Team-Block */
-.md-team {
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
-  padding: 20px 0;
+.md-crest-home { --md-face: 14deg; }
+.md-crest-away { --md-face: -14deg; }
+.md-crest-float {
+  position: relative; width: var(--md-crest); aspect-ratio: 1;
+  transform-style: preserve-3d;
+  animation: mdFloat 6s ease-in-out infinite;
 }
+.md-crest-away .md-crest-float { animation-delay: -3s; }
 
-/* Badge */
 .md-badge {
-  width: 110px; height: 110px; border-radius: 50%;
-  background: rgba(255,131,65,0.15);
-  border: 2px solid rgba(255,131,65,0.3);
+  position: relative; z-index: 1; width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 22px; font-weight: 900;
-  color: var(--accent); overflow: hidden; flex-shrink: 0;
-  transition: transform 0.3s ease;
-}
-.md-badge-away {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.5);
+  font-family: 'Anton', 'Impact', sans-serif; font-size: calc(var(--md-crest) * 0.28);
+  color: #fff;
 }
 .md-badge img {
-  width: 100%; height: 100%; object-fit: contain; padding: 10px;
+  width: 100%; height: 100%; object-fit: contain; display: block;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55));
 }
-.matchday-modal.md-open .md-badge { transform: scale(1); }
-
-/* Teamname */
-.md-team-name {
-  font-family: var(--serif); font-size: 18px; font-weight: 700;
-  color: #fff; text-align: center; line-height: 1.3;
-}
-.md-team-sub {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: rgba(255,255,255,0.3);
+/* Ohne Wappenbild: Kürzel auf rundem Schild */
+.md-badge:not(:has(img)) {
+  border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3a2a22, #140c08);
+  border: 3px solid var(--md-fire);
 }
 
-/* Mitte – VS */
-.md-center-block {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  padding: 0 12px; flex-shrink: 0;
+/* Ohne Bild: Kürzel-Schild bekommt keinen Schein */
+.md-badge:not(:has(img)) ~ .md-crest-sheen { display: none; }
+
+/* Glanzlicht, das über das Wappen wandert */
+.md-crest-sheen {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  -webkit-mask: var(--md-crest-image, none) center / contain no-repeat;
+  mask: var(--md-crest-image, none) center / contain no-repeat;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.0) 42%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 58%, transparent 62%) 0 0 / 300% 100%;
+  mix-blend-mode: screen;
+  animation: mdSheen 5.5s ease-in-out infinite;
 }
+.md-crest-away .md-crest-sheen { animation-delay: -2.75s; }
+
 .md-vs {
-  font-family: var(--mono); font-size: 42px; font-weight: 900;
-  letter-spacing: 0.06em; color: rgba(255,255,255,0.12); line-height: 1;
-}
-.md-datetime {
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
-  color: var(--accent); text-align: center; line-height: 1.6;
+  font-size: min(11vw, 12vh, 120px); font-style: italic; letter-spacing: -0.02em;
+  padding: 0.12em 0.22em 0.04em 0.12em; overflow: visible;
+  transform: skewX(-8deg);
+  background: linear-gradient(180deg, #fff 0%, #d9d2cc 55%, #fff 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,0.6)) drop-shadow(0 0 16px rgba(255,110,30,0.65));
 }
 
-/* Spielort */
+/* Namen unter den Wappen */
+.md-names {
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 8vw, 120px);
+  width: 100%;
+}
+.md-name {
+  font-size: min(6.4vw, 7vh, 64px); letter-spacing: 0.01em; text-wrap: balance;
+  color: #fff; padding-bottom: 12px; position: relative;
+  text-shadow: 0 3px 0 rgba(0,0,0,0.55);
+}
+.md-name::after {
+  content: ''; position: absolute; left: 20%; right: 20%; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--md-fire), transparent);
+  box-shadow: 0 0 10px var(--md-fire);
+}
+
+/* Termin */
+.md-when {
+  display: flex; flex-direction: column; align-items: center; gap: clamp(2px, 0.8vh, 8px);
+  margin-top: clamp(12px, 4vh, 44px);
+}
+.md-date {
+  font-size: min(4.4vw, 4.6vh, 40px); color: #f3efec;
+  text-shadow: 0 3px 0 rgba(0,0,0,0.6), 0 0 18px rgba(255,110,30,0.35);
+}
+.md-kickoff {
+  display: flex; align-items: center; gap: 18px;
+  font-size: min(6vw, 6.4vh, 58px); color: #fff; white-space: nowrap;
+  text-shadow: 0 3px 0 rgba(0,0,0,0.6), 0 0 22px rgba(255,110,30,0.45);
+}
+.md-kickoff:empty { display: none; }
+.md-kickoff::before, .md-kickoff::after {
+  content: ''; width: clamp(30px, 8vw, 120px); height: 2px;
+  background: linear-gradient(90deg, transparent, var(--md-fire));
+  box-shadow: 0 0 10px var(--md-fire);
+}
+.md-kickoff::after { background: linear-gradient(270deg, transparent, var(--md-fire)); }
 .md-venue-line {
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
-  text-transform: uppercase; color: rgba(255,255,255,0.25);
-  text-align: center; padding-bottom: 8px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255,255,255,0.45);
 }
 
-/* Animation */
-@keyframes mdFadeIn {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
+/* Auftritt */
+.matchday-modal.md-open .md-eyebrow { animation: mdRise 0.6s 0.05s ease-out both; }
+.matchday-modal.md-open .md-title { animation: mdSlam 0.7s 0.1s cubic-bezier(0.2, 0.9, 0.25, 1.15) both; }
+.matchday-modal.md-open .md-crest-home { animation: mdEnterLeft 0.9s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.matchday-modal.md-open .md-crest-away { animation: mdEnterRight 0.9s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.matchday-modal.md-open .md-vs { animation: mdPop 0.6s 0.75s cubic-bezier(0.3, 1.6, 0.4, 1) both; }
+.matchday-modal.md-open .md-names { animation: mdRise 0.6s 0.9s ease-out both; }
+.matchday-modal.md-open .md-when { animation: mdRise 0.6s 1.05s ease-out both; }
+.matchday-modal.md-open .md-venue-line { animation: mdRise 0.6s 1.2s ease-out both; }
+
+@keyframes mdRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes mdSlam {
+  from { opacity: 0; transform: scale(1.35); filter: blur(10px); }
+  to { opacity: 1; transform: scale(1); }
 }
-.matchday-modal.md-open .md-inner {
-  animation: mdFadeIn 0.35s ease both;
+@keyframes mdEnterLeft { from { opacity: 0; transform: translateX(-18vw) rotate(-8deg) scale(0.8); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes mdEnterRight { from { opacity: 0; transform: translateX(18vw) rotate(8deg) scale(0.8); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes mdPop { from { opacity: 0; transform: skewX(-8deg) scale(0.3); } to { opacity: 1; transform: skewX(-8deg) scale(1); } }
+@keyframes mdFloat {
+  0%, 100% { transform: translateY(0) rotateY(-4deg) rotateZ(-0.6deg); }
+  50% { transform: translateY(-2.2%) rotateY(4deg) rotateZ(0.6deg); }
+}
+@keyframes mdSheen { 0%, 35% { background-position: 100% 0; } 75%, 100% { background-position: 0% 0; } }
+
+/* Hochformat / Mobil */
+@media (max-width: 700px) {
+  .matchday-modal { --md-crest: min(32vw, 24vh); }
+  .md-poster { padding-left: 16px; padding-right: 16px; }
+  .md-poster { padding-top: 64px; }
+  .md-crest-home { --md-face: 10deg; }
+  .md-crest-away { --md-face: -10deg; }
+  .md-names { gap: 12px; }
+  .md-name { font-size: min(7.4vw, 5.4vh); }
+  .md-date { font-size: min(6vw, 4vh); }
+  .md-kickoff { font-size: min(7.4vw, 5vh); gap: 8px; }
+  .md-kickoff::before, .md-kickoff::after { width: 16px; }
 }
 
-/* Mobile */
-@media (max-width: 600px) {
-  .md-stage {
-    grid-template-columns: 0 1fr auto 1fr 0;
-    gap: 8px;
-  }
-  .md-side-label { display: none; }
-  .md-badge { width: 80px; height: 80px; font-size: 16px; }
-  .md-team-name { font-size: 14px; }
-  .md-vs { font-size: 28px; }
+@media (prefers-reduced-motion: reduce) {
+  .matchday-modal *, .matchday-modal *::before, .matchday-modal *::after { animation: none !important; }
+  .md-crest-tilt { transition: none; }
+  .md-sparks { display: none; }
 }

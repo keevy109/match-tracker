@@ -881,9 +881,9 @@ function bindFormEvents() {
   });
 }
 
-// Wappen werden überall klein gezeigt; Originale (oft mehrere 100 KB) würden mit
-// jedem Laden von app/teams und jedem Spielstand mitgeschickt.
-const BADGE_MAX_PX = 160;
+// Originale (oft mehrere 100 KB) würden mit jedem Laden von app/teams mitgeschickt.
+// 320 px reichen für die größte Darstellung (Spieltag-Poster) auch auf Retina-Displays.
+const BADGE_MAX_PX = 320;
 async function shrinkBadge(dataUrl) {
   try {
     const img = new Image();

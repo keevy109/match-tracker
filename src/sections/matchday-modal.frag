@@ -1,38 +1,46 @@
-<div class="matchday-modal" id="matchdayModal" aria-modal="true" role="dialog" aria-hidden="true">
-  <div class="md-bg">
-    <div class="md-bg-home" id="mdBgHome"></div>
-    <div class="md-bg-away" id="mdBgAway"></div>
-    <div class="md-bg-center"></div>
+<div class="matchday-modal" id="matchdayModal" aria-modal="true" role="dialog" aria-hidden="true" aria-labelledby="mdTitle">
+  <div class="md-bg" aria-hidden="true">
+    <div class="md-bg-art"></div>
   </div>
+  <canvas class="md-sparks" id="mdSparks" aria-hidden="true"></canvas>
 
   <button class="md-close" id="mdClose" aria-label="Schließen">✕</button>
 
-  <div class="md-inner">
-    <div class="md-eyebrow" id="mdEyebrow">Spieltag · Saison 2026/27</div>
+  <div class="md-poster">
+    <div class="md-eyebrow"><span id="mdEyebrow">Saisonspiel</span></div>
+    <h2 class="md-title" id="mdTitle">Heimspiel</h2>
 
     <div class="md-stage">
-      <div class="md-side-label md-label-home">HEIM</div>
+      <figure class="md-crest md-crest-home" id="mdHomeCrest">
+        <div class="md-crest-tilt">
+          <div class="md-crest-float">
+            <div class="md-badge" id="mdHomeBadge"><img src="/ssvlogo.png" alt="SSV Berghausen"></div>
+            <div class="md-crest-sheen" aria-hidden="true"></div>
+          </div>
+        </div>
+      </figure>
 
-      <div class="md-team md-team-home">
-        <div class="md-badge" id="mdHomeBadge"><img src="/ssvlogo.png" alt="SSV Berghausen"></div>
-        <div class="md-team-name" id="mdHomeName">SSV Berghausen</div>
-        <div class="md-team-sub" id="mdHomeShort">E-Jugend</div>
-      </div>
+      <div class="md-vs" aria-label="gegen">VS</div>
 
-      <div class="md-center-block">
-        <div class="md-vs">VS</div>
-        <div class="md-datetime" id="mdDatetime">Datum wird geladen …</div>
-      </div>
-
-      <div class="md-team md-team-away">
-        <div class="md-badge md-badge-away" id="mdAwayBadge">?</div>
-        <div class="md-team-name" id="mdAwayName">Gegner</div>
-        <div class="md-team-sub" id="mdAwayShort">–</div>
-      </div>
-
-      <div class="md-side-label md-label-away">GAST</div>
+      <figure class="md-crest md-crest-away" id="mdAwayCrest">
+        <div class="md-crest-tilt">
+          <div class="md-crest-float">
+            <div class="md-badge" id="mdAwayBadge">?</div>
+            <div class="md-crest-sheen" aria-hidden="true"></div>
+          </div>
+        </div>
+      </figure>
     </div>
 
+    <div class="md-names">
+      <div class="md-name" id="mdHomeName">SSV Berghausen</div>
+      <div class="md-name" id="mdAwayName">Gegner</div>
+    </div>
+
+    <div class="md-when">
+      <div class="md-date" id="mdDatetime">Datum wird geladen …</div>
+      <div class="md-kickoff" id="mdKickoff"></div>
+    </div>
     <div class="md-venue-line" id="mdVenueLine"></div>
   </div>
 </div>
