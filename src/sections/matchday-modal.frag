@@ -14,7 +14,7 @@
       <figure class="md-crest md-crest-home" id="mdHomeCrest">
         <div class="md-crest-tilt">
           <div class="md-crest-float">
-            <div class="md-badge" id="mdHomeBadge"><img src="/ssvlogo.png" alt="SSV Berghausen"></div>
+            <div class="md-badge" id="mdHomeBadge"><img src="/ssvlogo.webp" alt="SSV Berghausen"></div>
             <div class="md-crest-sheen" aria-hidden="true"></div>
           </div>
         </div>

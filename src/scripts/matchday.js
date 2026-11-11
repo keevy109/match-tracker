@@ -11,8 +11,6 @@ export async function init() {
   document.getElementById('mdClose')?.addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-  modal.addEventListener('pointermove', tilt);
-  modal.addEventListener('pointerleave', () => { modal.style.setProperty('--md-px', 0); modal.style.setProperty('--md-py', 0); });
 
   window.closeMatchdayModal = close;
 
@@ -120,13 +118,6 @@ function setCrest(crest, badge, {name, badge: image, club, fallback}) {
   }
 }
 
-function tilt(event) {
-  if (event.pointerType === 'touch') return;
-  const modal = event.currentTarget;
-  modal.style.setProperty('--md-px', ((event.clientX / innerWidth) * 2 - 1).toFixed(3));
-  modal.style.setProperty('--md-py', ((event.clientY / innerHeight) * 2 - 1).toFixed(3));
-}
-
 function open() {
   const modal = document.getElementById('matchdayModal');
   if (!modal) return;
@@ -169,32 +160,36 @@ function startSparks(canvas, crests) {
     particles.push({x, y, vx: (Math.random() - 0.5) * 40 + Math.cos(angle) * 18, vy: -40 - Math.random() * 90,
       life: 0, max: 0.9 + Math.random() * 1.6, size: 0.8 + Math.random() * 2.2, wobble: Math.random() * 6});
   }
-  function color(t) {
-    // hell-gelb → orange → tiefrot, ausblendend
-    const r = 255, g = Math.round(230 - 170 * t), b = Math.round(150 - 150 * Math.min(1, t * 1.6));
-    return `rgba(${r},${g},${b},${(1 - t) * 0.95})`;
-  }
+  // Glühpunkt einmal vorrendern; shadowBlur pro Partikel und Frame ruckelt auf Mobilgeräten.
+  const sprite = document.createElement('canvas');
+  sprite.width = sprite.height = 32;
+  const sctx = sprite.getContext('2d');
+  const glow = sctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  glow.addColorStop(0, 'rgba(255,240,200,1)');
+  glow.addColorStop(0.25, 'rgba(255,170,60,0.9)');
+  glow.addColorStop(0.6, 'rgba(255,90,10,0.25)');
+  glow.addColorStop(1, 'rgba(255,60,0,0)');
+  sctx.fillStyle = glow;
+  sctx.fillRect(0, 0, 32, 32);
   function tick(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     const rects = crests.map(el => el.getBoundingClientRect()).filter(r => r.width);
-    for (const rect of rects) for (let i = 0; i < 3; i++) if (Math.random() < 0.55) spawn(rect);
+    for (const rect of rects) for (let i = 0; i < 2; i++) if (Math.random() < 0.6) spawn(rect);
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.globalAlpha = 1;
     ctx.clearRect(0, 0, width, height);
     ctx.globalCompositeOperation = 'lighter';
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.life += dt;
       const t = p.life / p.max;
-      if (t >= 1 || particles.length > 420) { particles.splice(i, 1); continue; }
+      if (t >= 1 || particles.length > 240) { particles.splice(i, 1); continue; }
       p.vx += Math.sin((p.life + p.wobble) * 5) * 18 * dt;
       p.vy -= 12 * dt;
       p.x += p.vx * dt; p.y += p.vy * dt;
-      ctx.fillStyle = color(t);
-      ctx.shadowColor = 'rgba(255,110,20,0.9)';
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * (1 - t * 0.5), 0, Math.PI * 2);
-      ctx.fill();
+      const r = p.size * (1 - t * 0.5) * 3;
+      ctx.globalAlpha = (1 - t) * 0.95;
+      ctx.drawImage(sprite, p.x - r, p.y - r, r * 2, r * 2);
     }
     frame = requestAnimationFrame(tick);
   }

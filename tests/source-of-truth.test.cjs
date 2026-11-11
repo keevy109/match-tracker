@@ -35,9 +35,9 @@ test('new crest is limited to team contexts while branding keeps the white logo'
   assert.match(read('src/sections/nav.frag'),/ssvlogo_white\.png/);
   assert.match(read('src/sections/splash.frag'),/ssvlogo_white\.png/);
   assert.match(read('src/sections/kader.frag'),/ssvlogo_white\.png/);
-  assert.match(read('src/sections/matchday-modal.frag'),/ssvlogo\.png/);
-  assert.match(read('src/scripts/spielplan.js'),/ssvlogo\.png/);
-  assert.match(tracker,/const OUR_TEAM_LOGO = '\.\/ssvlogo\.png'/);
+  assert.match(read('src/sections/matchday-modal.frag'),/ssvlogo\.webp/);
+  assert.match(read('src/scripts/spielplan.js'),/ssvlogo\.webp/);
+  assert.match(tracker,/const OUR_TEAM_LOGO = '\.\/ssvlogo\.webp'/);
 });
 
 test('abandoned fixtures retain image export with an explicit intermediate-score label',()=>{

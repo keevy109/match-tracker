@@ -14,7 +14,7 @@ import matchdayHtml    from '../sections/matchday-modal.frag?raw';
 
 import brandLogoUrl from '/ssvlogo_white.png';
 
-const clubLogoUrl = `${import.meta.env.BASE_URL}ssvlogo.png`;
+const clubLogoUrl = `${import.meta.env.BASE_URL}ssvlogo.webp`;
 
 import { init as initNews } from './news.js';
 import { init as initHero } from './hero.js';
@@ -36,7 +36,7 @@ const rawHtml = splashHtml + navHtml + heroHtml + tickerHtml + spielplanHtml +
   kaderHtml + aktuellesHtml + footerHtml + modalHtml + matchdayHtml;
 app.innerHTML = rawHtml
   .replaceAll('/ssvlogo_white.png', brandLogoUrl)
-  .replaceAll('/ssvlogo.png', clubLogoUrl);
+  .replaceAll('/ssvlogo.webp', clubLogoUrl);
 
 // Module initialisieren
 initBackground();

@@ -19,7 +19,7 @@ function escAttr(str) {
 
 function teamLabel(name, ownTeam, clubs) {
   const club = ownTeam ? null : globalThis.MatchTrackerTeams.find(clubs, name);
-  const logo = ownTeam ? `${import.meta.env.BASE_URL}ssvlogo.png` : club?.badge;
+  const logo = ownTeam ? `${import.meta.env.BASE_URL}ssvlogo.webp` : club?.badge;
   return `<span class="match-card-team">${logo ? `<img class="match-card-club-logo" src="${escAttr(logo)}" alt="">` : ''}<span>${esc(ownTeam ? 'SSV Berghausen' : (club?.name || name))}</span></span>`;
 }
 
