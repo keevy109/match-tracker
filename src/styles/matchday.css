@@ -109,6 +109,11 @@
 /* Ohne Bild: Kürzel-Schild bekommt keinen Schein */
 .md-badge:not(:has(img)) ~ .md-crest-sheen { display: none; }
 
+/* Das SSV-Logo trägt Lichtschweif und Funken im Bild; das Schild selbst ist dadurch
+   kleiner als die Gegnerwappen. Etwas größer gezeichnet wirken beide gleich groß. */
+.md-crest[data-own] .md-badge,
+.md-crest[data-own] .md-crest-sheen { transform: scale(1.2); }
+
 /* Glanzlicht, das über das Wappen wandert */
 .md-crest-sheen {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
