@@ -30,11 +30,9 @@
           </div>
         </div>
       </figure>
-    </div>
 
-    <div class="md-names">
-      <div class="md-name" id="mdHomeName">SSV Berghausen</div>
-      <div class="md-name" id="mdAwayName">Gegner</div>
+      <div class="md-name md-name-home" id="mdHomeName">SSV Berghausen</div>
+      <div class="md-name md-name-away" id="mdAwayName">Gegner</div>
     </div>
 
     <div class="md-when">
