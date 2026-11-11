@@ -59,10 +59,11 @@
         previous.find(team => !team.isOurTeam && team.name === club.name) || {};
       const badge = club.badge || old.badge || old.logo || '';
       const primary = color(club.color1 || old.color1 || old.color);
+      // Das Wappen steht nur noch in badge; ein altes logo-Duplikat fällt beim Speichern weg.
+      const {logo, ...kept} = old;
       return {
-        ...old,
+        ...kept,
         ...club,
-        logo:badge,
         badge,
         color:primary,
         color1:primary,

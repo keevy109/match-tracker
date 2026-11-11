@@ -3232,7 +3232,8 @@ function editScheduleMatch(id) {
 function editTeam(id) {
   const t = teams.find(tm => tm.id === id);
   if (!t) return;
-  const logoPreview = t.logo ? `<img src="${t.logo}" style="height:40px;margin-bottom:4px;object-fit:contain">` : '';
+  const teamImage = t.badge || t.logo;
+  const logoPreview = teamImage ? `<img src="${teamImage}" style="height:40px;margin-bottom:4px;object-fit:contain">` : '';
   openEditSheet((t.isOurTeam ? 'Unser Team bearbeiten' : 'Team bearbeiten'), `
     <label>Name
       <input id="es-tname" type="text" value="${esc(t.name || '')}">
@@ -3266,7 +3267,8 @@ function editTeam(id) {
     };
     if (file) {
       resizeLogo(file, base64 => {
-        t.logo = base64;
+        t.badge = base64;
+        delete t.logo;
         // Dominante Farbe aus neuem Logo extrahieren
         extractDominantColor(base64, color => {
           t.color = color || t.color || '';
@@ -3323,7 +3325,7 @@ function addTeam() {
   const nameInput = document.getElementById('newTeamName');
   const name = nameInput?.value.trim();
   if (!name) { showToast('Name fehlt'); return; }
-  const newTeam = { id: Date.now(), name, logo: pendingLogoBase64 || '', color: '', isOurTeam: false };
+  const newTeam = { id: Date.now(), name, badge: pendingLogoBase64 || '', color: '', isOurTeam: false };
   teams.push(newTeam);
   const logoForExtract = pendingLogoBase64;
   pendingLogoBase64 = '';

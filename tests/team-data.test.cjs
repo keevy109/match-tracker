@@ -28,8 +28,8 @@ test('admin team changes retain the protected own team and ticker fields', () =>
   ]);
   assert.equal(teams.length, 2);
   assert.equal(teams[0].isOurTeam, true);
-  assert.equal(teams[1].logo, 'new.png');
   assert.equal(teams[1].badge, 'new.png');
+  assert.equal('logo' in teams[1], false, 'old logo duplicate is dropped');
   assert.equal(teams[1].color, '#112233');
 });
 

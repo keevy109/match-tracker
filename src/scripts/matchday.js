@@ -66,8 +66,12 @@ function eyebrowText(match, spielplan) {
   return number ? `${number}. Saisonspiel` : 'Saisonspiel';
 }
 
-function dateText(match) {
+// „Heute“ bzw. „Morgen“, wenn es zutrifft; sonst Wochentag und Datum.
+function dateText(match, now = new Date()) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(match.date || '')) return '';
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
+  if (match.date === localDateKey(now)) return 'Heute';
+  if (match.date === localDateKey(tomorrow)) return 'Morgen';
   const d = new Date(match.date + 'T12:00:00');
   return `${WEEKDAYS[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.`;
 }
