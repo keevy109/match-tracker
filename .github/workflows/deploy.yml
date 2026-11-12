@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -17,8 +17,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: version
+        run: node scripts/next-build-version.mjs
 
       - uses: actions/setup-node@v4
         with:
@@ -30,6 +37,7 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /match-tracker/
+          VITE_BUILD_VERSION: ${{ steps.version.outputs.version }}
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -44,3 +52,17 @@ jobs:
     steps:
       - id: deploy
         uses: actions/deploy-pages@v4
+
+      # Der Tag entsteht erst nach dem erfolgreichen Pages-Deployment.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Store deployed build version
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "build/v${VERSION}" -m "Successful deployment: ${VERSION}"
+          git push origin "build/v${VERSION}"

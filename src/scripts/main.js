@@ -36,7 +36,8 @@ const rawHtml = splashHtml + navHtml + heroHtml + tickerHtml + spielplanHtml +
   kaderHtml + aktuellesHtml + footerHtml + modalHtml + matchdayHtml;
 app.innerHTML = rawHtml
   .replaceAll('/ssvlogo_white.png', brandLogoUrl)
-  .replaceAll('/ssvlogo.webp', clubLogoUrl);
+  .replaceAll('/ssvlogo.webp', clubLogoUrl)
+  .replaceAll('{{BUILD_VERSION}}', import.meta.env.VITE_BUILD_VERSION || '2.5.6');
 
 // Module initialisieren
 initBackground();
