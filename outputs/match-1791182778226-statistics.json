@@ -1,0 +1,103 @@
+{
+  "matchId": "1791182778226",
+  "result": "20:0",
+  "team": {
+    "played": 1,
+    "scored": 20,
+    "conceded": 0,
+    "wins": 1,
+    "losses": 0
+  },
+  "players": [
+    {
+      "id": 1774617538359,
+      "name": "Leo",
+      "games": 1,
+      "goals": 0
+    },
+    {
+      "id": 1774617499524,
+      "name": "Caspar",
+      "games": 1,
+      "goals": 0
+    },
+    {
+      "id": 1774617487657,
+      "name": "Florian",
+      "games": 1,
+      "goals": 0
+    },
+    {
+      "id": 1774617519712,
+      "name": "Mika",
+      "games": 1,
+      "goals": 2
+    },
+    {
+      "id": 1774617526584,
+      "name": "Mats",
+      "games": 1,
+      "goals": 1
+    },
+    {
+      "id": 1774612465173,
+      "name": "Till",
+      "games": 1,
+      "goals": 6
+    },
+    {
+      "id": 1774612459953,
+      "name": "Jonah",
+      "games": 1,
+      "goals": 5
+    },
+    {
+      "id": 1774612473166,
+      "name": "Pan",
+      "games": 1,
+      "goals": 1
+    },
+    {
+      "id": 1774621069940,
+      "name": "Marlon",
+      "games": 1,
+      "goals": 0
+    },
+    {
+      "id": 1774617543726,
+      "name": "Klaas",
+      "games": 1,
+      "goals": 0
+    },
+    {
+      "id": 1783802789533,
+      "name": "Grigorios",
+      "games": 1,
+      "goals": 2
+    },
+    {
+      "id": 1783802799906,
+      "name": "Max",
+      "games": 1,
+      "goals": 1
+    },
+    {
+      "id": 1783802813299,
+      "name": "Linus",
+      "games": 1,
+      "goals": 0
+    },
+    {
+      "id": 3573174242563,
+      "name": "Tom",
+      "games": 1,
+      "goals": 0
+    },
+    {
+      "id": 3573174372953,
+      "name": "Aleciano",
+      "games": 1,
+      "goals": 1
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+Built-in image_gen; initial revision and targeted correction.
+Use case: identity-preserve compositing. Create a professional youth football team photograph matching the formal arrangement and distant camera framing of image5 (the adult team example), using ONLY the actual people from portrait sheets1-4. Image5 is composition guidance ONLY: no people, logos, sponsors or uniforms from it.
+MOST IMPORTANT: faithfully retain every original face and expression, face shape, eyes, nose, mouth, hairstyle, glasses, headband. Treat faces as photographic cutouts to preserve, not inspiration to redesign. No face averaging, beautifying or swapping. Exact count 22 distinct people: 19 children and 3 adult coaches.
+Each sheet is a 3-column grid read left-to-right then next row:
+Sheet1: Leo (green GK, dark swept hair), Caspar, Florian, Mika, Mats, Emil.
+Sheet2: Paul (green GK, short light brown hair and rounded face), Till (orange long sleeves), Jonah, Pan (center part), Marlon, Alex child.
+Sheet3: Klaas, Grigorios (large curls), Max(headband), Linus(long wavy hair), Benjamin(glasses), Tom.
+Sheet4: Aleciano(child), Patrick(blond adult coach), Geo(sunglasses adult coach), Alex(bearded adult coach). Empty cells contain nobody.
+Formal organized THREE ROWS, tiered on discreet team-photo risers as in example. Front row SEATED on a bench, seven children, left-to-right: Caspar, Mika, Leo, Paul, Benjamin, Alex child, Marlon. Middle standing row seven children: Emil, Mats, Florian, Jonah, Till, Pan, Tom. Back standing row eight people: Klaas, Grigorios, Patrick coach, Geo coach, Alex coach, Max, Linus, Aleciano. All faces unobstructed and all22 counted once. Both goalkeepers next to each other centered front: Paul MUST have exactly sheet2 upper-left face, Leo sheet1 upper-left face. Do not dress any other child in green.
+Natural different child heights and physiques, not uniformly scaled identical dolls. Adult coaches realistically about 25-35% taller and broader than the children, normal proportional adult heads; adults clearly look larger than youth even in back. Preserve age, children must not look like miniature adults. Original orange JAKO jerseys white crests, two original green GK jerseys, gray polo coaches; black shorts/socks for children. Relaxed original facial expressions, no newly invented smiles.
+Landscape professional club photo, camera set farther back like image5, entire team with breathing room and grass foreground, green trees and fence background. Clean natural daylight, consistent lighting, realistic proportions and perspective. No sponsor board unless needed for framing; prefer unobstructed team without text or added graphics. A coherent real photograph, not portrait tiles. Prioritize identity fidelity over stylization.
+
+Edit image1 with precise face/identity corrections only. Preserve the entire team layout, coaches, background, clothing, seating and camera. 22 people stay. Images2-5 are original identity reference sheets (3 columns read left-right then lower row). Fix these EXACT positions, counting people in each row from left to right. There are8 people BACK row,7 MIDDLE,7 FRONT.
+Middle row person1: use Emil = image2 lower-right.
+Middle row person2: use Mats = image2 lower-center. This is currently a duplicate of goalkeeper Leo; replace his face and hair with Mats, keeping orange shirt.
+Middle row person3: use Florian = image2 upper-right. Currently duplicate Caspar, replace.
+Middle row person4: use Jonah = image3 upper-right. Currently duplicate Paul, replace.
+Middle row person7: use Tom = image4 lower-right.
+Front row person6: use Alex child = image3 lower-right.
+Front row person7: use Marlon = image3 lower-center.
+Keep middle row person5 Till and person6 Pan exactly unchanged.
+Keep front row persons1 Caspar,2 Mika,3 Leo green goalkeeper,4 Paul green goalkeeper,5 Benjamin exactly unchanged.
+Keep all8 back row people unchanged (Klaas,Grigorios,Patrick,Geo,Alex coach,Max,Linus,Aleciano).
+Face replacements must reproduce the reference person's exact face, hair, expression, eyes, nose and mouth, not a generic approximation. Natural facial proportions. Do not duplicate other faces. No other changes.

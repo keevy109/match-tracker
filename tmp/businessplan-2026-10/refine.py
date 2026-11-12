@@ -1,0 +1,11 @@
+from pathlib import Path
+p=Path('tmp/businessplan-2026-10/build.py');s=p.read_text()
+s=s.replace('active=[5,8,12,20,30,45,60,80,105,130,160,200]','active=[0,0,5,20,30,45,60,80,105,130,160,200]')
+s=s.replace("doc.add_page_break(); sections.append((n,title));p(f'{n:02d}   /   BUSINESSPLAN').runs[0].font.size=Pt(9);doc.add_heading(title,1)","sections.append((n,title)); marker=p(f'{n:02d}   /   BUSINESSPLAN');marker.paragraph_format.page_break_before=True;marker.runs[0].font.size=Pt(9);doc.add_heading(title,1)")
+s=s.replace("doc.add_paragraph().paragraph_format.space_after=Pt(1)","spacer=doc.add_paragraph();spacer.paragraph_format.space_after=Pt(0);spacer.paragraph_format.space_before=Pt(0);spacer.paragraph_format.line_spacing=Pt(2);spacer.add_run(' ').font.size=Pt(1)")
+s=s.replace("def pic(name):doc.add_picture(str(TMP/name),width=Inches(6.8))", "def pic(name):\n par=doc.add_paragraph();par.paragraph_format.space_after=Pt(3);par.add_run().add_picture(str(TMP/name),width=Inches(5.8 if name=='cash.png' else 6.3))")
+s=s.replace("doc.add_page_break();doc.add_heading('Technische und weitere Quellen',1)","doc.add_heading('Technische und weitere Quellen',1).paragraph_format.page_break_before=True")
+s=s.replace("Die Datenbank bleibt die verbindliche Quelle.')", "Die Datenbank bleibt die verbindliche Quelle. Broadcast Kanäle erlauben Zuschauern ausschließlich Empfang; Senden bleibt serverseitig autorisiert. Private Kanäle und getrennte RLS Regeln sichern dies ab. [Q23]')")
+s=s.replace("('Vorsichtig',900,80,1440,15)","('Vorsichtig',500,80,1440,15)")
+s=s.replace('Der Pilot ist im ersten Quartal kostenlos.', 'Der kostenlose Pilot beginnt im März mit fünf aktiven Teams.')
+p.write_text(s)

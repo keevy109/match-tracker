@@ -78,6 +78,15 @@ function renderSortHeader(container) {
   });
 }
 
+function syncNameColumnWidth(container) {
+  requestAnimationFrame(() => {
+    const names = [...container.querySelectorAll('.kl-name')];
+    const widest = Math.ceil(Math.max(0, ...names.map(name => name.scrollWidth)));
+    const list = container.closest('.kader-list');
+    if (list) list.style.setProperty('--kl-name-min', `${widest}px`);
+  });
+}
+
 function renderKader() {
   const container = document.getElementById('kaderRows');
   const badge     = document.getElementById('kaderCount');
@@ -110,6 +119,8 @@ function renderKader() {
       <div class="kl-stat" data-col="training" title="${p.trainingAttended ?? 0} von ${p.trainingTotal ?? 0} Einheiten">${p.trainingAttended ?? 0}${p.trainingTotal ? ` <span class="kl-pct">(${p.training ?? 0}%)</span>` : ''}</div>
     </div>`;
   }).join('');
+
+  syncNameColumnWidth(container);
 
   container.querySelectorAll('.kl-row').forEach(row => {
     row.addEventListener('click', () => {
