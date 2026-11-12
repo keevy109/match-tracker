@@ -71,7 +71,13 @@
 }
 .mock-dot { width: 8px; height: 8px; border-radius: 50%; }
 .ticker-mockup-title { font-family: var(--mono); font-size: 11px; color: var(--dark-muted); margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ticker-preview { display: block; width: 100%; height: 720px; border: 0; background: var(--embed-page); }
+.ticker-preview {
+  display: block;
+  width: 100%;
+  height: 508px;
+  border: 0;
+  background: var(--embed-page);
+}
 .mock-no-live {
   text-align: center; padding: 28px 0;
   color: var(--dark-muted); font-family: var(--mono);

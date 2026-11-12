@@ -31,13 +31,29 @@
 
 /* Schließen */
 .md-close {
-  position: fixed; top: 20px; right: 20px; z-index: 10;
-  width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(0,0,0,0.45); color: rgba(255,255,255,0.7);
-  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s, color 0.15s; backdrop-filter: blur(8px);
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,1);
+  background: rgba(255,255,255,1);
+  color: rgba(0,0,0,1);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px 0 rgba(0,0,0,1);
 }
-.md-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.md-close:hover {
+  background: rgba(0,0,0,1);
+  color: rgba(255,255,255,1);
+}
 
 /* Poster */
 .md-poster {
