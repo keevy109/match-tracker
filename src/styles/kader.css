@@ -20,7 +20,7 @@
 .kl-header,
 #kaderRows .kl-row {
   display: grid;
-  grid-template-columns: 34px 46px minmax(var(--kl-name-min, 0px), 1fr) 60px 44px 64px 72px;
+  grid-template-columns: 34px 46px minmax(0, 1fr) 60px 44px 64px 72px;
   gap: 10px;
   align-items: center;
 }
@@ -105,7 +105,7 @@
 .kl-name {
   font-size: 13px; font-weight: 600; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  min-width: var(--kl-name-min, 0px);
+  min-width: 0;
 }
 
 /* Stat-Spalten in Player-Rows */
@@ -126,7 +126,7 @@
 @media (max-width: 420px) {
   .kl-header,
   #kaderRows .kl-row {
-    grid-template-columns: 24px 46px minmax(var(--kl-name-min, 0px), 1fr) 38px 34px 38px 46px;
+    grid-template-columns: 24px 46px minmax(0, 1fr) 38px 34px 38px 46px;
     gap: 5px;
     padding-left: 10px;
     padding-right: 10px;
