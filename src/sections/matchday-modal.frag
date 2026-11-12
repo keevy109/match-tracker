@@ -39,6 +39,5 @@
       <div class="md-date" id="mdDatetime">Datum wird geladen …</div>
       <div class="md-kickoff" id="mdKickoff"></div>
     </div>
-    <div class="md-venue-line" id="mdVenueLine"></div>
   </div>
 </div>

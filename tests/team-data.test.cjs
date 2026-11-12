@@ -37,7 +37,7 @@ test('club lookup tolerates official squad suffixes', () => {
   const teams = [
     {name:'1. Spvg. Solingen-Wald 03', logo:'wald.png'},
     {name:'TuSpo Richrath', logo:'richrath.png'},
-    {name:'FC Monheim', logo:'monheim.png'},
+    {name:'1. FC Monheim', logo:'monheim.png'},
   ];
   assert.equal(find(teams, '1. Spvg. Solingen-Wald 03 III').logo, 'wald.png');
   assert.equal(find(teams, 'TuSpo Richrath U11-2016').logo, 'richrath.png');
@@ -46,7 +46,7 @@ test('club lookup tolerates official squad suffixes', () => {
 });
 
 test('club lookup does not confuse unrelated similarly named clubs', () => {
-  const teams = [{name:'FC Monheim', logo:'monheim.png'}];
+  const teams = [{name:'1. FC Monheim', logo:'monheim.png'}];
   assert.equal(find(teams, 'Inter Monheim E1'), undefined);
 });
 
