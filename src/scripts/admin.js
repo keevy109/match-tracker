@@ -3,6 +3,20 @@ import '../styles/admin.css';
 import '../../public/access-guard.js';
 import * as api from './api.js';
 import {init as initNewsAdmin} from './news-admin.js';
+import {MATCHDAY_ANNOUNCE_KEY} from './matchday.js';
+
+// Testschalter: Spielankündigung nur in diesem Browser ein-/ausschalten.
+function initMatchdayTestToggle() {
+  const box = document.getElementById('matchdayAnnounceToggle');
+  if (!box) return;
+  try { box.checked = localStorage.getItem(MATCHDAY_ANNOUNCE_KEY) !== 'off'; } catch {}
+  box.addEventListener('change', () => {
+    try {
+      if (box.checked) localStorage.removeItem(MATCHDAY_ANNOUNCE_KEY);
+      else localStorage.setItem(MATCHDAY_ANNOUNCE_KEY, 'off');
+    } catch {}
+  });
+}
 
 // ── Storage Keys (nur noch für Migration) ─────────────────────────
 const KEY_KADER    = 'ssv_kader';
@@ -1100,6 +1114,7 @@ async function boot() {
   document.querySelectorAll('.admin-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
+  initMatchdayTestToggle();
   const newsReady = initNewsAdmin();
   await loadAll();
 

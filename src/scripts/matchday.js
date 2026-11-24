@@ -21,7 +21,14 @@ export async function init() {
   }
 }
 
+// Testschalter aus dem Admin-Bereich („Test“): nur in diesem Browser wirksam.
+export const MATCHDAY_ANNOUNCE_KEY = 'ssv_matchday_announce';
+function announcementDisabled() {
+  try { return localStorage.getItem(MATCHDAY_ANNOUNCE_KEY) === 'off'; } catch { return false; }
+}
+
 async function checkAndOpen() {
+  if (announcementDisabled()) return;
   try {
     const [spielplan, vereine] = await Promise.all([
       api.loadTrackedSchedule().catch(() => api.load('spielplan')),

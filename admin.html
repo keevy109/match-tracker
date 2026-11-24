@@ -32,6 +32,7 @@
       <button class="admin-tab" data-tab="training">Training</button>
       <button class="admin-tab" data-tab="vereine">Vereine</button>
       <button class="admin-tab" data-tab="news">Aktuelles</button>
+      <button class="admin-tab" data-tab="test">Test</button>
     </nav>
     <a class="admin-back" href="index.html">← Website</a>
   </div>
@@ -107,6 +108,12 @@
     <label class="form-field">Fotos unterhalb des Textes<input id="newsPhotos" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif"></label><div id="newsPhotosList"></div>
     <article id="newsPreview" hidden><img id="newsPreviewImage" alt="Titelbild" hidden><div id="newsPreviewDate"></div><h2 id="newsPreviewTitle"></h2><div id="newsPreviewBody" class="news-richtext"></div><div id="newsPreviewPhotos"></div></article>
   </div>
+</section>
+
+<section class="admin-section" data-section="test">
+  <div class="section-header"><span class="section-title">Test · Spielankündigung</span></div>
+  <p>Schaltet das Spieltags-Popup (Spielankündigung nach dem Splash) nur in diesem Browser ein oder aus. Für andere Besucher ändert sich nichts.</p>
+  <label class="news-publish"><input id="matchdayAnnounceToggle" type="checkbox" checked> Spielankündigung anzeigen</label>
 </section>
 
 </main>
