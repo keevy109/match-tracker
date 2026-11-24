@@ -3,18 +3,30 @@ import '../styles/admin.css';
 import '../../public/access-guard.js';
 import * as api from './api.js';
 import {init as initNewsAdmin} from './news-admin.js';
-import {MATCHDAY_ANNOUNCE_KEY} from './matchday.js';
+import {MATCHDAY_PREVIEW_KEY} from './matchday.js';
 
-// Testschalter: Spielankündigung nur in diesem Browser ein-/ausschalten.
-function initMatchdayTestToggle() {
-  const box = document.getElementById('matchdayAnnounceToggle');
-  if (!box) return;
-  try { box.checked = localStorage.getItem(MATCHDAY_ANNOUNCE_KEY) !== 'off'; } catch {}
-  box.addEventListener('change', () => {
-    try {
-      if (box.checked) localStorage.removeItem(MATCHDAY_ANNOUNCE_KEY);
-      else localStorage.setItem(MATCHDAY_ANNOUNCE_KEY, 'off');
-    } catch {}
+// Test: Spielankündigung für ein gewähltes Spiel einmalig auf der Website zeigen.
+function renderMatchdayTest() {
+  const select = document.getElementById('matchdayTestMatch');
+  if (!select) return;
+  const sorted = spielplan.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  select.innerHTML = sorted.length
+    ? sorted.map(m => {
+        const { day, month } = formatDate(m.date);
+        const teams = m.home ? `SSV Berghausen vs. ${m.opponent}` : `${m.opponent} vs. SSV Berghausen`;
+        const sel = m.status === 'next' ? ' selected' : '';
+        return `<option value="${escHtml(String(m.id))}"${sel}>${escHtml(`${day}. ${month} · ${teams}`)}</option>`;
+      }).join('')
+    : '<option value="">Keine Spiele im Spielplan</option>';
+}
+
+function initMatchdayTest() {
+  try { localStorage.removeItem('ssv_matchday_announce'); } catch {}
+  document.getElementById('matchdayTestShow')?.addEventListener('click', () => {
+    const id = document.getElementById('matchdayTestMatch')?.value;
+    if (!id) return;
+    try { localStorage.setItem(MATCHDAY_PREVIEW_KEY, id); } catch { return; }
+    location.href = 'index.html';
   });
 }
 
@@ -175,6 +187,7 @@ function switchTab(name) {
     s.classList.toggle('active', s.dataset.section === name));
   if (name === 'vereine') renderVereine();
   if (name === 'training') renderTraining();
+  if (name === 'test') renderMatchdayTest();
 }
 
 // ── Kader-Rendering ───────────────────────────────────────────────
@@ -1114,7 +1127,7 @@ async function boot() {
   document.querySelectorAll('.admin-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
-  initMatchdayTestToggle();
+  initMatchdayTest();
   const newsReady = initNewsAdmin();
   await loadAll();
 

@@ -21,22 +21,26 @@ export async function init() {
   }
 }
 
-// Testschalter aus dem Admin-Bereich („Test“): nur in diesem Browser wirksam.
-export const MATCHDAY_ANNOUNCE_KEY = 'ssv_matchday_announce';
-function announcementDisabled() {
-  try { return localStorage.getItem(MATCHDAY_ANNOUNCE_KEY) === 'off'; } catch { return false; }
+// Test aus dem Admin-Bereich: gewähltes Spiel wird einmalig angekündigt,
+// bis das Popup geschlossen wird (nur in diesem Browser).
+export const MATCHDAY_PREVIEW_KEY = 'ssv_matchday_preview';
+function storedPreview() {
+  try { return localStorage.getItem(MATCHDAY_PREVIEW_KEY); } catch { return null; }
+}
+function clearStoredPreview() {
+  try { localStorage.removeItem(MATCHDAY_PREVIEW_KEY); } catch {}
 }
 
 async function checkAndOpen() {
-  if (announcementDisabled()) return;
   try {
     const [spielplan, vereine] = await Promise.all([
       api.loadTrackedSchedule().catch(() => api.load('spielplan')),
       api.loadTrackedTeams().catch(() => api.load('vereine')),
     ]);
 
-    // Nur lokal: ?matchday=<id> zeigt ein beliebiges Spiel als Vorschau.
-    const preview = import.meta.env.DEV ? new URLSearchParams(location.search).get('matchday') : null;
+    // Admin-Test (localStorage) oder lokal ?matchday=<id> zeigt ein beliebiges Spiel.
+    const preview = storedPreview()
+      || (import.meta.env.DEV ? new URLSearchParams(location.search).get('matchday') : null);
     const today = localDateKey(new Date());
     const match = preview
       ? spielplan.find(m => String(m.id) === preview)
@@ -141,6 +145,7 @@ function close() {
   if (!modal) return;
   modal.classList.remove('md-open');
   modal.setAttribute('aria-hidden', 'true');
+  clearStoredPreview();
   document.body.style.overflow = '';
   sparks?.stop(); sparks = null;
 }

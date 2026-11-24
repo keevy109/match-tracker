@@ -112,8 +112,11 @@
 
 <section class="admin-section" data-section="test">
   <div class="section-header"><span class="section-title">Test · Spielankündigung</span></div>
-  <p>Schaltet das Spieltags-Popup (Spielankündigung nach dem Splash) nur in diesem Browser ein oder aus. Für andere Besucher ändert sich nichts.</p>
-  <label class="news-publish"><input id="matchdayAnnounceToggle" type="checkbox" checked> Spielankündigung anzeigen</label>
+  <p>Wähle ein Spiel. Die Website zeigt danach einmalig dessen Spielankündigung (nach dem Splash), bis du sie schließt. Nur in diesem Browser, für andere Besucher ändert sich nichts.</p>
+  <div class="form-row">
+    <label class="form-field">Spiel<select class="form-input" id="matchdayTestMatch"></select></label>
+  </div>
+  <button class="btn-primary" id="matchdayTestShow" type="button">Spielankündigung anzeigen</button>
 </section>
 
 </main>
