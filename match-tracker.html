@@ -181,7 +181,8 @@ try { document.documentElement.dataset.theme = localStorage.getItem('matchtracke
   .timing-info { flex-shrink:0; color:var(--feed-text); background:var(--feed-surface); font-size:13px; padding:8px 12px; margin:0; text-align:center; }
   body.ticker-mode .timing-setup,body.ticker-mode #btnPeriodBreak { display:none; }
   [hidden] { display:none !important; }
-  .automation-info { margin:0; padding:12px; color:var(--feed-text); background:var(--feed-surface); text-align:center; }
+  .automation-info { margin:0; padding:12px; display:flex; flex-direction:column; gap:8px; color:var(--feed-text); }
+  .automation-card { margin:0; padding:12px 14px; border:1px solid var(--feed-border); border-radius:12px; background:var(--feed-surface); color:var(--feed-text); font-size:15px; line-height:1.4; text-align:left; box-shadow:0 2px 8px rgba(0,0,0,.25); }
   .automation-info:empty { display:none; }
   .timing-info:empty, body.ticker-mode .timing-info { display:none; }
   #btnPeriodBreak,.timing-setup button { padding:12px 16px; border:1px solid var(--feed-border); border-radius:8px; background:var(--feed-surface); color:var(--feed-text); font:inherit; font-weight:700; cursor:pointer; margin-bottom:12px; }
@@ -1741,7 +1742,7 @@ function updateFeedMatchTime(data) {
   const running = data.timerBase != null;
   const seconds = Math.max(0, (Number(data.timerOffset) || 0) + (running ? Math.floor((Date.now() - data.timerBase) / 1000) : 0));
   const description = typeof MatchTiming!=='undefined' ? MatchTiming.describe(data.matchTiming,seconds,{...data,started:data.timerStarted||seconds>0,running,finished:data.matchFinished,now:Date.now()}) : null;
-  const automationInfo=document.getElementById('automationInfo');if(automationInfo)automationInfo.textContent=(description?.messages||[]).join(' ');
+  const automationInfo=document.getElementById('automationInfo');if(automationInfo)automationInfo.replaceChildren(...(description?.messages||[]).map(text=>{const card=document.createElement('p');card.className='automation-card';card.textContent=text;return card;}));
   const time = description?.clock || `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   if(description){const info=document.getElementById('timingInfo');if(info)info.textContent=description.baseText||description.text;}
   const live = running || seconds === 0;
